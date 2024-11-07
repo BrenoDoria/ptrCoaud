@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patrimônios COAUD</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>PATRIMÔNIOS COAUD</h1>
+
+        <!-- Input de arquivo para carregar a planilha -->
+        <input type="file" id="fileInput" accept=".xlsx">
+        <div class="progress-container">
+            <div id="spinner" class="spinner"></div>
+            <p id="progressText"></p>
+        </div>
+        <button onclick="iniciarEscaneamento()">Escanear Código de Barras</button>
+        <div id="qr-reader" style="display: none;"></div>
+
+        <!-- Entrada para o patrimônio -->
+        <div>
+            <input type="text" id="patrimonioInput" placeholder="Digite o Patrimônio" autofocus>
+            <button onclick="addPatrimonio()">Adicionar Patrimônio</button>
+        </div>
+
+        <table id="patrimonioTable">
+            <thead>
+                <tr>
+                    <th>NRP</th>
+                    <th>Material</th>
+                    <th>Responsável</th>
+                </tr>
+            </thead>
+            <tbody id="patrimonioList"></tbody>
+        </table>
+
+        <!-- Lista de patrimônios e botão de exportação -->
+        <ul id="patrimonioList"></ul>
+        <button onclick="exportExcel()">Exportar Dados</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="html5-qrcode.min.js"></script> <!-- Atualize o caminho aqui -->
+
+    <script src="script.js"></script>
+</body>
+</html>

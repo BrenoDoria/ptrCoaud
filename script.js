@@ -56,8 +56,8 @@ function iniciarEscaneamento() {
     html5QrCode.start(
         { facingMode: "environment" }, // Usa a câmera traseira no celular
         {
-            fps: 10,    // Frames por segundo (velocidade de escaneamento)
-            qrbox: { width: 250, height: 250 } // Área de escaneamento
+            fps: 20,    // Frames por segundo (velocidade de escaneamento)
+            qrbox: { width: 200, height: 200 } // Área de escaneamento
         },
         (decodedText) => {
             // Preenche o campo de patrimônio com o código escaneado
@@ -116,6 +116,14 @@ function addPatrimonio() {
         return;
     }
 
+    // Verifica se o patrimônio já foi coletado
+    const jaColetado = patrimoniosColetados.some(item => item.NRP == patrimonioInput);
+    
+    if (jaColetado) {
+        alert("Este patrimônio já foi coletado.");
+        return;
+    }
+
     const encontrado = patrimonioData.find(
         (row) => row[0] == patrimonioInput
     );
@@ -133,6 +141,7 @@ function addPatrimonio() {
         alert("Patrimônio não encontrado.");
     }
 }
+
 
 // Atualiza a lista de patrimônios coletados na tela
 function updateList() {

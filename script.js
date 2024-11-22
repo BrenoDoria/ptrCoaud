@@ -1,6 +1,7 @@
 let patrimonioData = [];
 let patrimoniosColetados = [];
 
+
 // Carrega a planilha de dados
 document.getElementById("fileInput").addEventListener("change", handleFile);
 
@@ -109,23 +110,33 @@ function iniciarEscaneamento() {
 
 // Função para adicionar patrimônio digitado ou bipado
 function addPatrimonio() {
-    const patrimonioInput = document.getElementById("patrimonioInput").value.trim();
+
+    
+    // Obtém o valor do campo de entrada e remove pontos
+    let patrimonioInput = document.getElementById("patrimonioInput").value.trim();
+    patrimonioInput = patrimonioInput.replace(/\./g, ""); // Remove tudo que não é número
 
     if (!patrimonioInput) {
         alert("Digite ou bip o número de patrimônio.");
         return;
     }
 
+    const patrimonioSemZeros = patrimonioInput.replace(/^0+/, ""); // Remove todos os zeros iniciais
+
+
     // Verifica se o patrimônio já foi coletado
     const jaColetado = patrimoniosColetados.some(item => item.NRP == patrimonioInput);
-    
+
     if (jaColetado) {
         alert("Este patrimônio já foi coletado.");
+        document.getElementById("patrimonioInput").value = ""; // Limpa o campo
+        document.getElementById("patrimonioInput").focus(); // Reaplica o foco
         return;
     }
 
-    const encontrado = patrimonioData.find(
-        (row) => row[0] == patrimonioInput
+     // Busca o patrimônio na lista carregada
+     const encontrado = patrimonioData.find(
+        (row) => row[0] && row[0].toString().replace(/^0+/, "") === patrimonioSemZeros
     );
 
     if (encontrado) {
@@ -136,11 +147,23 @@ function addPatrimonio() {
             Responsável: encontrado[3],
         });
         updateList();
-        document.getElementById("patrimonioInput").value = ""; // Limpa o campo para o próximo bip
+        document.getElementById("patrimonioInput").value = ""; // Limpa o campo
+        document.getElementById("patrimonioInput").focus(); // Reaplica o foco
     } else {
         alert("Patrimônio não encontrado.");
+        document.getElementById("patrimonioInput").value = ""; // Limpa o campo
+        document.getElementById("patrimonioInput").focus(); // Reaplica o foco
     }
 }
+
+
+
+document.getElementById("patrimonioInput").addEventListener("keydown", function (event) {
+    if (event.key === "Enter") { // Quando o Enter for pressionado
+        addPatrimonio();
+    }
+});
+
 
 
 // Atualiza a lista de patrimônios coletados na tela
@@ -160,6 +183,11 @@ function updateList() {
         const materialCell = document.createElement("td");
         materialCell.textContent = item.Material;
         row.appendChild(materialCell);
+
+        // Coluna Localização
+        const LocalizaçãoCell = document.createElement("td");
+        LocalizaçãoCell.textContent = item.Localização;
+        row.appendChild(LocalizaçãoCell);
 
         // Coluna Responsável
         const responsavelCell = document.createElement("td");
@@ -188,3 +216,74 @@ function exportExcel() {
 
     XLSX.writeFile(workbook, `patrimonios_coletados_${Date.now()}.xlsx`);
 }
+
+console.log(patrimoniosColetados);
+
+function exportPlanilhaEspecifica() {
+    // Lista de responsáveis específicos
+    const responsaveisEspecificos = [
+        "ALBERTO CESAR SOUZA ALMEIDA (5302)", 
+        "PAULO FERNANDO VOLPE (5933)"
+    ];
+
+    // Filtrar patrimônios dos responsáveis específicos
+    const dadosFiltrados = patrimoniosColetados.filter(item => 
+        responsaveisEspecificos.some(responsavel =>
+            responsavel.trim() === item.Responsável.trim() // Remove espaços ao comparar
+        )
+    );
+
+    if (dadosFiltrados.length === 0) {
+        alert("Nenhum patrimônio encontrado para os responsáveis específicos.");
+        return;
+    }
+
+    // Preparar os dados para exportação
+    const newData = [
+        ["NRP", "Material", "Localização", "Responsável"],
+        ...dadosFiltrados.map(item => [item.NRP, item.Material,item.Localização, item.Responsável]),
+    ];
+
+    // Criar e exportar o arquivo XLSX
+    const worksheet = XLSX.utils.aoa_to_sheet(newData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Responsaveis_Especificos");
+
+    XLSX.writeFile(workbook, `responsaveis_especificos_${Date.now()}.xlsx`);
+}
+
+function exportPlanilhaOutros() {
+    // Lista de responsáveis específicos para exclusão
+    const responsaveisEspecificos = [
+        "ALBERTO CESAR SOUZA ALMEIDA (5302)", 
+        "PAULO FERNANDO VOLPE (5933)"
+    ];
+
+    // Filtrar patrimônios dos outros responsáveis
+    const dadosFiltrados = patrimoniosColetados.filter(item => 
+        !responsaveisEspecificos.some(responsavel =>
+            responsavel.trim() === item.Responsável.trim() // Remove espaços ao comparar
+        )
+    );
+
+    if (dadosFiltrados.length === 0) {
+        alert("Nenhum patrimônio encontrado para outros responsáveis.");
+        return;
+    }
+
+    // Preparar os dados para exportação
+    const newData = [
+        ["NRP", "Material", "Localização", "Responsável"],
+        ...dadosFiltrados.map(item => [item.NRP, item.Material,item.Localização, item.Responsável]),
+    ];
+
+    // Criar e exportar o arquivo XLSX
+    const worksheet = XLSX.utils.aoa_to_sheet(newData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Outros_Responsaveis");
+
+    XLSX.writeFile(workbook, `outros_responsaveis_${Date.now()}.xlsx`);
+}
+
+
+

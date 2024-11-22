@@ -16,13 +16,13 @@
             <div id="spinner" class="spinner"></div>
             <p id="progressText"></p>
         </div>
-        <button onclick="iniciarEscaneamento()">Escanear Código de Barras</button>
-        <div id="qr-reader" style="display: none;"></div>
+        <!--<button onclick="iniciarEscaneamento()">Escanear Código de Barras</button>
+        <div id="qr-reader" style="display: none;"></div>-->
 
         <!-- Entrada para o patrimônio -->
         <div>
             <input type="text" id="patrimonioInput" placeholder="Digite o Patrimônio" autofocus>
-            <button onclick="addPatrimonio()">Adicionar Patrimônio</button>
+            <!-- <button onclick="addPatrimonio()">Adicionar Patrimônio</button> -->
         </div>
 
         <table id="patrimonioTable">
@@ -30,6 +30,7 @@
                 <tr>
                     <th>NRP</th>
                     <th>Material</th>
+                    <th>Localização</th>
                     <th>Responsável</th>
                 </tr>
             </thead>
@@ -38,7 +39,9 @@
 
         <!-- Lista de patrimônios e botão de exportação -->
         <ul id="patrimonioList"></ul>
-        <button onclick="exportExcel()">Exportar Dados</button>
+        <!-- <button onclick="exportExcel()">Exportar Dados</button> -->
+        <button onclick="exportPlanilhaEspecifica()">Exportar Planilha - Responsáveis Específicos</button>
+        <button onclick="exportPlanilhaOutros()">Exportar Planilha - Outros Responsáveis</button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>

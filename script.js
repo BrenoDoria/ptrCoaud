@@ -57,8 +57,8 @@ function iniciarEscaneamento() {
     html5QrCode.start(
         { facingMode: "environment" }, // Usa a câmera traseira no celular
         {
-            fps: 100,    // Frames por segundo (velocidade de escaneamento)
-            qrbox: { width: 100, height: 400 } // Área de escaneamento
+            fps: 120,    // Frames por segundo (velocidade de escaneamento)
+            qrbox: { width: 100, height: 100 } // Área de escaneamento
         },
         (decodedText) => {
             // Preenche o campo de patrimônio com o código escaneado
@@ -85,7 +85,7 @@ function iniciarEscaneamento() {
     html5QrCode.start(
         { facingMode: "environment" }, // Usa a câmera traseira no celular
         {
-            fps: 90,    // Frames por segundo (velocidade de escaneamento)
+            fps: 120,    // Frames por segundo (velocidade de escaneamento)
             qrbox: { width: 400, height: 200 } // Área de escaneamento
         },
         (decodedText) => {

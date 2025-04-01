@@ -58,7 +58,7 @@ function iniciarEscaneamento() {
         { facingMode: "environment" }, // Usa a câmera traseira no celular
         {
             fps: 100,    // Frames por segundo (velocidade de escaneamento)
-            qrbox: { width: 400, height: 400 } // Área de escaneamento
+            qrbox: { width: 100, height: 400 } // Área de escaneamento
         },
         (decodedText) => {
             // Preenche o campo de patrimônio com o código escaneado

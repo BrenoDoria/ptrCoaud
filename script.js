@@ -1,7 +1,32 @@
-let patrimonioData = [];
+// Variáveis globais
+let salaSelecionada = "";
 let patrimoniosColetados = [];
+let patrimonioData = [];
 
+// Função auxiliar para formatar a data no formato DD-MM-YYYY
+function formatarData() {
+    const data = new Date();
+    const dia = String(data.getDate()).padStart(2, '0'); // Garante 2 dígitos
+    const mes = String(data.getMonth() + 1).padStart(2, '0'); // +1 porque meses começam em 0
+    const ano = data.getFullYear();
+    return `${dia}-${mes}-${ano}`;
+}
 
+// Ao carregar a página, esconde a tela de carregamento após os dois fade ins
+window.addEventListener("load", function () {
+    const loadingScreen = document.getElementById("loading-screen");
+    const container = document.querySelector(".container");
+
+    // Espera os dois fade ins (2s cada = 4s) + fade out (0.5s)
+    setTimeout(() => {
+        loadingScreen.style.opacity = "0"; // Inicia o fade out
+        setTimeout(() => {
+            loadingScreen.style.display = "none"; // Remove a tela
+            container.style.display = "block"; // Mostra o sistema
+            document.body.style.overflow = "auto"; // Restaura a rolagem
+        }, 500); // Tempo do fade out
+    }, 8000); // Tempo total dos dois fade ins (2s + 5s)
+});
 // Carrega a planilha de dados
 document.getElementById("fileInput").addEventListener("change", handleFile);
 
@@ -9,7 +34,6 @@ function handleFile(event) {
     const file = event.target.files[0];
     const reader = new FileReader();
 
-    // Exibe o spinner e define o texto de progresso
     document.getElementById("spinner").style.display = "inline-block";
     document.getElementById("progressText").innerText = "AGUARDE...";
 
@@ -19,19 +43,16 @@ function handleFile(event) {
             const workbook = XLSX.read(data, { type: "array" });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             patrimonioData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-            
-            // Exibe a primeira mensagem por 4 segundos
-            document.getElementById("progressText").innerText = "BANCO DE DADOS ATUALIZADO!";
+
+            document.getElementById("progressText").innerText = "BANCO DE DADOS ATUALIZANDO!";
             setTimeout(() => {
                 document.getElementById("progressText").innerText = "AUTORIZADA CONSULTA";
-            }, 4000); // Aguarda 4 segundos (4000 milissegundos) antes de mudar o texto
-
+            }, 4000);
         } catch (error) {
             alert("Erro ao carregar a planilha. Verifique se o arquivo está em formato XLSX válido.");
             console.error(error);
             document.getElementById("progressText").innerText = "Erro no carregamento.";
         } finally {
-            // Oculta o spinner
             document.getElementById("spinner").style.display = "none";
         }
     };
@@ -44,98 +65,63 @@ function handleFile(event) {
     };
 
     reader.readAsArrayBuffer(file);
-}
 
-// Função para iniciar o escaneamento
-function iniciarEscaneamento() {
-    const qrReader = document.getElementById("qr-reader");
-    qrReader.style.display = "block"; // Exibe a área do leitor
-
-    const html5QrCode = new Html5Qrcode("qr-reader");
+    document.getElementById("salaInput").focus();
     
-    // Inicia o scanner com a câmera
-    html5QrCode.start(
-        { facingMode: "environment" }, // Usa a câmera traseira no celular
-        {
-            fps: 120,    // Frames por segundo (velocidade de escaneamento)
-            qrbox: { width: 100, height: 100 } // Área de escaneamento
-        },
-        (decodedText) => {
-            // Preenche o campo de patrimônio com o código escaneado
-            document.getElementById("patrimonioInput").value = decodedText;
-            html5QrCode.stop(); // Para o scanner após o escaneamento
-            qrReader.style.display = "none"; // Oculta o leitor
-        },
-        (errorMessage) => {
-            // Pode adicionar mensagens de erro, se necessário
-            console.log("Erro ao escanear:", errorMessage);
-        }
-    ).catch((err) => {
-        console.error("Erro ao acessar a câmera:", err);
-        alert("Erro ao acessar a câmera. Verifique as permissões.");
-    });
 }
 
-function iniciarEscaneamento() {
-    const qrReader = document.getElementById("qr-reader");
-    qrReader.style.display = "block"; // Exibe a área do leitor
+// Confirmação da sala
+document.getElementById("confirmarSala").addEventListener("click", function () {
+    salaSelecionada = document.getElementById("salaInput").value.trim();
 
-    const html5QrCode = new Html5Qrcode("qr-reader");
-    
-    html5QrCode.start(
-        { facingMode: "environment" }, // Usa a câmera traseira no celular
-        {
-            fps: 120,    // Frames por segundo (velocidade de escaneamento)
-            qrbox: { width: 400, height: 200 } // Área de escaneamento
-        },
-        (decodedText) => {
-            // Remove pontos do código escaneado
-            const cleanedText = decodedText.replace(/\./g, ""); // Substitui todos os pontos por vazio
-            document.getElementById("patrimonioInput").value = cleanedText;
-            
-            html5QrCode.stop(); // Para o scanner após o escaneamento
-            qrReader.style.display = "none"; // Oculta o leitor
-        },
-        (errorMessage) => {
-            console.log("Erro ao escanear:", errorMessage);
-        }
-    ).catch((err) => {
-        console.error("Erro ao acessar a câmera:", err);
-        alert("Erro ao acessar a câmera. Verifique as permissões.");
-    });
-}
+    if (!salaSelecionada) {
+        alert("Por favor, digite o nome da sala antes de confirmar!");
+        return;
+    }
+
+    document.getElementById("salaInput").disabled = true;
+    document.getElementById("confirmarSala").disabled = true;
+
+    alert(`ATENÇÃO! A sala '${salaSelecionada}' foi selecionada com sucesso! A partir de agora, todos os equipamentos escaneados serão registrados nesta sala`);
 
 
+// Move o cursor para o campo de patrimônio após a confirmação
+document.getElementById("patrimonioInput").focus();
+});
 
+// Adicionar patrimônio com "Enter"
+document.getElementById("patrimonioInput").addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        addPatrimonio();
+    }
+});
 
-// Função para adicionar patrimônio digitado ou bipado
+// Função para adicionar patrimônio
 function addPatrimonio() {
-
-    
-    // Obtém o valor do campo de entrada e remove pontos
     let patrimonioInput = document.getElementById("patrimonioInput").value.trim();
-    patrimonioInput = patrimonioInput.replace(/\./g, ""); // Remove tudo que não é número
+    patrimonioInput = patrimonioInput.replace(/\./g, "");
 
     if (!patrimonioInput) {
         alert("Digite ou bip o número de patrimônio.");
         return;
     }
 
-    const patrimonioSemZeros = patrimonioInput.replace(/^0+/, ""); // Remove todos os zeros iniciais
+    if (!salaSelecionada) {
+        alert("Selecione e confirme uma sala antes de adicionar patrimônios!");
+        return;
+    }
 
-
-    // Verifica se o patrimônio já foi coletado
+    const patrimonioSemZeros = patrimonioInput.replace(/^0+/, "");
     const jaColetado = patrimoniosColetados.some(item => item.NRP == patrimonioInput);
 
     if (jaColetado) {
         alert("Este patrimônio já foi coletado.");
-        document.getElementById("patrimonioInput").value = ""; // Limpa o campo
-        document.getElementById("patrimonioInput").focus(); // Reaplica o foco
+        document.getElementById("patrimonioInput").value = "";
+        document.getElementById("patrimonioInput").focus();
         return;
     }
 
-     // Busca o patrimônio na lista carregada
-     const encontrado = patrimonioData.find(
+    const encontrado = patrimonioData.find(
         (row) => row[0] && row[0].toString().replace(/^0+/, "") === patrimonioSemZeros
     );
 
@@ -143,53 +129,39 @@ function addPatrimonio() {
         patrimoniosColetados.push({
             NRP: encontrado[0],
             Material: encontrado[1],
-            Localização: encontrado[2],
+            Localização: salaSelecionada, // Salva a sala atual com o item
             Responsável: encontrado[3],
         });
         updateList();
-        document.getElementById("patrimonioInput").value = ""; // Limpa o campo
-        document.getElementById("patrimonioInput").focus(); // Reaplica o foco
+        document.getElementById("patrimonioInput").value = "";
+        document.getElementById("patrimonioInput").focus();
     } else {
         alert("Patrimônio não encontrado.");
-        document.getElementById("patrimonioInput").value = ""; // Limpa o campo
-        document.getElementById("patrimonioInput").focus(); // Reaplica o foco
+        document.getElementById("patrimonioInput").value = "";
+        document.getElementById("patrimonioInput").focus();
     }
 }
 
-
-
-document.getElementById("patrimonioInput").addEventListener("keydown", function (event) {
-    if (event.key === "Enter") { // Quando o Enter for pressionado
-        addPatrimonio();
-    }
-});
-
-
-
-// Atualiza a lista de patrimônios coletados na tela
+// Atualiza a lista na tela
 function updateList() {
     const listElement = document.getElementById("patrimonioList");
-    listElement.innerHTML = ""; // Limpa a tabela antes de adicionar novos itens
+    listElement.innerHTML = "";
 
     patrimoniosColetados.forEach((item) => {
         const row = document.createElement("tr");
 
-        // Coluna NRP
         const nrpCell = document.createElement("td");
         nrpCell.textContent = item.NRP;
         row.appendChild(nrpCell);
 
-        // Coluna Material
         const materialCell = document.createElement("td");
         materialCell.textContent = item.Material;
         row.appendChild(materialCell);
 
-        // Coluna Localização
-        const LocalizaçãoCell = document.createElement("td");
-        LocalizaçãoCell.textContent = item.Localização;
-        row.appendChild(LocalizaçãoCell);
+        const localizacaoCell = document.createElement("td");
+        localizacaoCell.textContent = item.Localização;
+        row.appendChild(localizacaoCell);
 
-        // Coluna Responsável
         const responsavelCell = document.createElement("td");
         responsavelCell.textContent = item.Responsável;
         row.appendChild(responsavelCell);
@@ -198,38 +170,27 @@ function updateList() {
     });
 }
 
-// Exporta os dados coletados para uma nova planilha
-function exportExcel() {
-    const newData = [
-        ["NRP", "Material", "Localização", "Responsável"],
-        ...patrimoniosColetados.map((item) => [
-            item.NRP,
-            item.Material,
-            item.Localização,
-            item.Responsável,
-        ]),
-    ];
+// Nova coleta: apenas desbloqueia a sala
+document.getElementById("resetarColeta").addEventListener("click", function () {
+    document.getElementById("salaInput").disabled = false;
+    document.getElementById("salaInput").value = "";
+    document.getElementById("confirmarSala").disabled = false;
+    salaSelecionada = "";
 
-    const worksheet = XLSX.utils.aoa_to_sheet(newData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Patrimonios Coletados");
+    alert("Campo de sala desbloqueado. Digite uma nova sala e confirme para continuar a coleta.");
+});
 
-    XLSX.writeFile(workbook, `patrimonios_coletados_${Date.now()}.xlsx`);
-}
-
-console.log(patrimoniosColetados);
-
+// Exportar planilha - Responsáveis Específicos
 function exportPlanilhaEspecifica() {
-    // Lista de responsáveis específicos
     const responsaveisEspecificos = [
-        "ALBERTO CESAR SOUZA ALMEIDA (5302)", 
-        "PAULO FERNANDO VOLPE (5933)"
+        "ALBERTO CESAR SOUZA ALMEIDA (5302)",
+        "PAULO FERNANDO VOLPE (5933)",
+        "JOSE HENRIQUE FERREIRA DA SILVA (7913)"
     ];
 
-    // Filtrar patrimônios dos responsáveis específicos
-    const dadosFiltrados = patrimoniosColetados.filter(item => 
+    const dadosFiltrados = patrimoniosColetados.filter(item =>
         responsaveisEspecificos.some(responsavel =>
-            responsavel.trim() === item.Responsável.trim() // Remove espaços ao comparar
+            responsavel.trim() === item.Responsável.trim()
         )
     );
 
@@ -238,31 +199,28 @@ function exportPlanilhaEspecifica() {
         return;
     }
 
-    // Preparar os dados para exportação
     const newData = [
         ["NRP", "Material", "Localização", "Responsável"],
-        ...dadosFiltrados.map(item => [item.NRP, item.Material,item.Localização, item.Responsável]),
+        ...dadosFiltrados.map(item => [item.NRP, item.Material, item.Localização, item.Responsável]),
     ];
 
-    // Criar e exportar o arquivo XLSX
     const worksheet = XLSX.utils.aoa_to_sheet(newData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Responsaveis_Especificos");
-
-    XLSX.writeFile(workbook, `responsaveis_especificos_${Date.now()}.xlsx`);
+    XLSX.writeFile(workbook, `Responsaveis_COAUD_${formatarData()}.xlsx`);
 }
 
+// Exportar planilha - Outros Responsáveis
 function exportPlanilhaOutros() {
-    // Lista de responsáveis específicos para exclusão
     const responsaveisEspecificos = [
-        "ALBERTO CESAR SOUZA ALMEIDA (5302)", 
-        "PAULO FERNANDO VOLPE (5933)"
+        "ALBERTO CESAR SOUZA ALMEIDA (5302)",
+        "PAULO FERNANDO VOLPE (5933)",
+        "JOSE HENRIQUE FERREIRA DA SILVA (7913)"
     ];
 
-    // Filtrar patrimônios dos outros responsáveis
-    const dadosFiltrados = patrimoniosColetados.filter(item => 
+    const dadosFiltrados = patrimoniosColetados.filter(item =>
         !responsaveisEspecificos.some(responsavel =>
-            responsavel.trim() === item.Responsável.trim() // Remove espaços ao comparar
+            responsavel.trim() === item.Responsável.trim()
         )
     );
 
@@ -271,19 +229,31 @@ function exportPlanilhaOutros() {
         return;
     }
 
-    // Preparar os dados para exportação
     const newData = [
         ["NRP", "Material", "Localização", "Responsável"],
-        ...dadosFiltrados.map(item => [item.NRP, item.Material,item.Localização, item.Responsável]),
+        ...dadosFiltrados.map(item => [item.NRP, item.Material, item.Localização, item.Responsável]),
     ];
 
-    // Criar e exportar o arquivo XLSX
     const worksheet = XLSX.utils.aoa_to_sheet(newData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Outros_Responsaveis");
-
-    XLSX.writeFile(workbook, `outros_responsaveis_${Date.now()}.xlsx`);
+    XLSX.writeFile(workbook, `Outros_Responsaveis_${formatarData()}.xlsx`);
 }
 
+// Refresh: apaga tudo exceto a planilha carregada
+document.getElementById("refreshButton").addEventListener("click", function () {
+    const confirmacao = confirm("Tem certeza que deseja resetar tudo? Isso apagará todos os dados coletados, exceto a planilha carregada.");
+    if (confirmacao) {
+        // Reseta variáveis e interface
+        salaSelecionada = "";
+        patrimoniosColetados = [];
+        document.getElementById("salaInput").value = "";
+        document.getElementById("salaInput").disabled = false;
+        document.getElementById("confirmarSala").disabled = false;
+        document.getElementById("patrimonioInput").value = "";
+        document.getElementById("patrimonioList").innerHTML = "";
+        document.getElementById("progressText").innerText = "AUTORIZADA CONSULTA"; // Mantém mensagem de planilha carregada
 
-
+        alert("Reset concluído com sucesso! A planilha carregada foi mantida.");
+    }
+});

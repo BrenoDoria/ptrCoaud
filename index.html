@@ -7,7 +7,17 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    
+    <!-- Tela de carregamento com duas imagens -->
+    <div id="loading-screen">
+        <img src="marca-camara.jpg" alt="Primeira Imagem" id="loading-image-1">
+        <img src="LOGOCOAUD.png" alt="Segunda Imagem" id="loading-image-2">
+    </div>
+    
+    
+    <div class="container" style="display: none;">
+
+        
         <h1>PATRIMÔNIOS COAUD</h1>
 
         <!-- Input de arquivo para carregar a planilha -->
@@ -16,15 +26,28 @@
             <div id="spinner" class="spinner"></div>
             <p id="progressText"></p>
         </div>
-        <!--<button onclick="iniciarEscaneamento()">Escanear Código de Barras</button>
-        <div id="qr-reader" style="display: none;"></div>-->
+
+        <!-- Campo para digitar a sala -->
+        <div>
+            <input type="text" id="salaInput" placeholder="Digite o nome da sala" autofocus>
+        </div>
+        <div>
+            <button id="confirmarSala">Confirmar Sala</button>
+            <!--<button id="patrimoniosBaixados">Patrimônios Baixados</button>-->
+        </div>
 
         <!-- Entrada para o patrimônio -->
         <div>
             <input type="text" id="patrimonioInput" placeholder="Digite o Patrimônio" autofocus>
-            <!-- <button onclick="addPatrimonio()">Adicionar Patrimônio</button> -->
+        </div>
+         <!-- Botões de exportação e nova coleta -->
+        <button onclick="exportPlanilhaEspecifica()">Exportar Planilha - Responsáveis Específicos</button>
+        <button onclick="exportPlanilhaOutros()">Exportar Planilha - Outros Responsáveis</button>
+        <div>
+            <button id="resetarColeta">Nova Coleta</button>
         </div>
 
+        <!-- Tabela de patrimônios coletados -->
         <table id="patrimonioTable">
             <thead>
                 <tr>
@@ -36,22 +59,18 @@
             </thead>
             <tbody id="patrimonioList"></tbody>
         </table>
-
-        <!-- Lista de patrimônios e botão de exportação -->
-        <ul id="patrimonioList"></ul>
-        <!-- <button onclick="exportExcel()">Exportar Dados</button> -->
-        <button onclick="exportPlanilhaEspecifica()">Exportar Planilha - Responsáveis Específicos</button>
-        <button onclick="exportPlanilhaOutros()">Exportar Planilha - Outros Responsáveis</button>
+        <div>
+            <button class="refreshButton" id="refreshButton">RESET</button>
+        </div>
+       
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <script src="html5-qrcode.min.js"></script> <!-- Atualize o caminho aqui -->
-
-    <script src="script.js"></script>
-
     <footer class="author-signature">
-        © 2025 COAUD 
-        @ BrenoDoria
+        © 2024 BrenoDoria
     </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

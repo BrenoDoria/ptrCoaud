@@ -118,7 +118,7 @@
                 return response.json();
             })
             .then(data => {
-                document.getElementById("progressText").textContent = " ";
+                document.getElementById("progressText").textContent = "AUTORIZADA CONSULTA";
                 dadosPlanilha = data.values || [];
                 document.getElementById("spinner").style.display = "none";
                 document.getElementById("patrimonioTable").style.display = "table";

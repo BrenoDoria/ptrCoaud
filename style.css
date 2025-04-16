@@ -1,49 +1,13 @@
-
-
-
+/* Estilos gerais */
 body {
     font-family: Arial, sans-serif;
     background-color: #e7e7e7;
     color: #333;
     margin: 0;
     padding: 0;
-    overflow: hidden; /* Evita rolagem durante o carregamento */
+    overflow-y: auto; 
+    overflow-x: hidden
 }
-
-/* Tela de carregamento */
-#loading-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #ffffff; /* Mesmo fundo do body */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999; /* Acima de tudo */
-    transition: opacity 0.1s ease-out; /* Fade out da tela */
-}
-
-#loading-image-1, #loading-image-2 {
-    max-width: 50%; /* Ajuste o tamanho */
-    position: absolute; /* Sobreposição para centralizar */
-    opacity: 0; /* Começa invisível */
-}
-
-#loading-image-1 {
-    animation: fadeIn 1s ease-in forwards; /* Primeira imagem: 0s a 2s */
-}
-
-#loading-image-2 {
-    animation: fadeIn 4s ease-in 1s forwards; /* Segunda imagem: 8s a 10s */
-}
-
-@keyframes fadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-}
-
 
 .container {
     width: 90%;
@@ -61,33 +25,9 @@ h1 {
     color: #333;
 }
 
-#header-logo {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 0 auto;
-    max-height: 100px; /* Ajuste conforme necessário */
-}
-
-
-/* Spinner */
-.spinner {
-    display: none;
-    border: 4px solid #ecf0ed;
-    border-top: 4px solid #0c9153;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-input[type="text"] {
+input[type="text"],
+input[type="password"],
+input[type="file"] {
     padding: 10px;
     width: 80%;
     margin-top: 10px;
@@ -105,9 +45,77 @@ button {
 }
 
 button:hover {
-    background-color: #0c9153;
+    background-color: #0c9153; /* Mantém a cor ao passar o mouse (pode ajustar se quiser efeito) */
 }
 
+.backButton {
+    background-color: #888888; /* Cinza para diferenciar */
+}
+
+.backButton:hover {
+    background-color: #666666;
+}
+
+.author-signature {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    font-size: 12px;
+    color: #666;
+    opacity: 0.7;
+}
+
+.author-signature:hover {
+    opacity: 1;
+}
+
+/* Tela de carregamento (index.html) */
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.1s ease-out;
+}
+
+#loading-image-1, #loading-image-2 {
+    max-width: 50%;
+    position: absolute;
+    opacity: 0;
+}
+
+#loading-image-1 {
+    animation: fadeIn 2s ease-in forwards;
+}
+
+#loading-image-2 {
+    animation: fadeIn 5s ease-in 2s forwards;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* Estilos específicos do index.html */
+#system-options button {
+    display: block;
+    width: 50%;
+    margin: 10px auto;
+}
+
+#loginMessage {
+    margin-top: 10px;
+    color: #666;
+}
+
+/* Estilos de tabelas (usado em Comparador e Escanear) */
 table {
     width: 100%;
     margin-top: 20px;
@@ -132,19 +140,29 @@ tr:hover {
     background-color: #f1f1f1;
 }
 
-.author-signature {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    font-size: 12px;
-    color: #666;
-    opacity: 0.7;
+/* Spinner (usado em Comparador e Escanear) */
+.spinner {
+    display: none;
+    border: 4px solid #ecf0ed;
+    border-top: 4px solid #0c9153;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
 }
 
-.author-signature:hover {
-    opacity: 1;
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
+/* Estilos específicos do Escanear */
 .refreshButton {
     background-color: #546c8f;
+}
+
+/* Estilos específicos do Localizador */
+.result-container {
+    margin-top: 20px;
 }

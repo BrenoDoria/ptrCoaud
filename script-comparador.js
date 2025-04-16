@@ -1,3 +1,26 @@
+// Usuários e permissões
+const usuarios = {
+    "supervisor": { senha: "12345", permissao: "Supervisor" },
+    "operador": { senha: "12345", permissao: "Operador" }
+};
+
+// Verificação de permissão ao carregar a página
+window.onload = () => {
+    const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+    if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
+        alert("Usuário não está logado. Faça login novamente.");
+        window.location.href = "index.html";
+        return;
+    }
+
+    // Verifica se o usuário tem permissão para acessar o Comparador
+    if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
+        alert("Acesso negado: Você não tem permissão para acessar o Comparador de Patrimônios.");
+        window.location.href = "index.html";
+        return;
+    }
+}
+
 const FILE_ID = '1jc1S2fnw1GEdDA8ykCgQAE5PNUF-BKuN';
 let dadosOriginais = [];
 let dadosExportados = [];

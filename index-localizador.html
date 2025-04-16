@@ -16,10 +16,10 @@
         </div>
         <div class="progress-container" id="progress-container" style="display: none;">
             <div id="spinner" class="spinner"></div>
-            <p id="progressText">Aguardando dados do Google Sheets...</p>
+            <p id="progressText">Consultando Servidor</p>
         </div>
         <div id="busca-section" style="display: none;">
-            <input type="text" id="patrimonioInput" placeholder="Digite o Número do Patrimônio (NRP)" autofocus>
+            <input type="text" id="patrimonioInput" placeholder="Digite o Número do Patrimônio" autofocus>
             <button onclick="buscarPatrimonio()">Buscar Localização</button>
         </div>
         <table id="patrimonioTable" style="display: none;">
@@ -87,7 +87,7 @@
         function carregarPatrimoniosDoSheets(retryCount = 0) {
             const maxRetries = 3;
             document.getElementById("spinner").style.display = "inline-block";
-            document.getElementById("progressText").textContent = "Consultando Google Sheets...";
+            document.getElementById("progressText").textContent = "Consultando Servidor";
 
             fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A:D`, {
                 headers: {
@@ -118,7 +118,7 @@
                 return response.json();
             })
             .then(data => {
-                document.getElementById("progressText").textContent = "Dados carregados com sucesso! Digite o NRP.";
+                document.getElementById("progressText").textContent = " ";
                 dadosPlanilha = data.values || [];
                 document.getElementById("spinner").style.display = "none";
                 document.getElementById("patrimonioTable").style.display = "table";

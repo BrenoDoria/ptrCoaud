@@ -23,7 +23,7 @@ window.addEventListener("load", function () {
 
 function carregarPatrimoniosDoSheets(accessToken) {
     document.getElementById("spinner").style.display = "inline-block";
-    document.getElementById("progressText").innerText = "Consultando Google Sheets...";
+    document.getElementById("progressText").innerText = "Consultando Servidor";
 
     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A:D`, {
         headers: {

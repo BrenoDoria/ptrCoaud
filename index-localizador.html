@@ -38,7 +38,7 @@
     <footer class="author-signature">© 2025 BrenoDoria</footer>
     <script>
 
-        // Usuários e permissões (copiado do script.js para verificação local)
+         // Usuários e permissões
         const usuarios = {
             "supervisor": { senha: "12345", permissao: "Supervisor" },
             "operador": { senha: "12345", permissao: "Operador" }
@@ -52,14 +52,13 @@
                 window.location.href = "index.html";
                 return;
             }
-
-            // Verifica se o usuário tem permissão para acessar o Localizador
+        
+            // Verifica se o usuário tem permissão para acessar o Comparador
             if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
                 alert("Acesso negado: Você não tem permissão para acessar o Localizador de Patrimônios.");
                 window.location.href = "index.html";
                 return;
             }
-
         }
 
         const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';

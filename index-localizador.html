@@ -37,6 +37,31 @@
     </div>
     <footer class="author-signature">© 2025 BrenoDoria</footer>
     <script>
+
+        // Usuários e permissões (copiado do script.js para verificação local)
+        const usuarios = {
+            "supervisor": { senha: "12345", permissao: "Supervisor" },
+            "operador": { senha: "12345", permissao: "Operador" }
+        };
+
+        // Verificação de permissão ao carregar a página
+        window.onload = () => {
+            const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+            if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
+                alert("Usuário não está logado. Faça login novamente.");
+                window.location.href = "index.html";
+                return;
+            }
+
+            // Verifica se o usuário tem permissão para acessar o Localizador
+            if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
+                alert("Acesso negado: Você não tem permissão para acessar o Localizador de Patrimônios.");
+                window.location.href = "index.html";
+                return;
+            }
+
+        }
+
         const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';
         const FILE_ID = '1q9RCwJ4P--QIH4kkMszffrN8ZwzkSsNoZtPH-Usk4Zw';
         let tokenClient;

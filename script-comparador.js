@@ -21,7 +21,7 @@ window.addEventListener("load", function () {
 
 function carregarPatrimoniosDoDrive(accessToken) {
     document.getElementById("spinner").style.display = "inline-block";
-    document.getElementById("progressText").innerText = "Carregando planilha original do Google Drive...";
+    document.getElementById("progressText").innerText = "Consultando Servidor";
 
     fetch(`https://www.googleapis.com/drive/v3/files/${FILE_ID}?alt=media`, {
         headers: {
@@ -36,7 +36,7 @@ function carregarPatrimoniosDoDrive(accessToken) {
         const workbook = XLSX.read(new Uint8Array(data), { type: "array" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         dadosOriginais = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        document.getElementById("progressText").innerText = "Planilha original carregada!";
+        document.getElementById("progressText").innerText = "Consulta Autorizada";
         document.getElementById("spinner").style.display = "none";
         if (dadosExportados.length > 0) compararPlanilhas();
     })

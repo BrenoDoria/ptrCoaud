@@ -1,0 +1,38 @@
+<!DOCTYPE html> 
+<html lang="pt-BR"> 
+    <head> <meta charset="UTF-8"> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+        <title>Patrimônios COAUD</title> <link rel="stylesheet" href="style_escanear.css"> 
+    </head> 
+    <body> 
+        <div class="container"> 
+            <h1>PATRIMÔNIOS COAUD</h1> <!-- Input de arquivo para carregar a planilha --> <!--<input type="file" id="fileInput" accept=".xlsx">--> 
+            <div class="progress-container"> <div id="spinner" class="spinner"></div> 
+            <p id="progressText"></p> </div> <!-- Campo para digitar a sala --> <div> 
+                <input type="text" id="salaInput" placeholder="Digite o nome da sala" autofocus> 
+            </div> <div> <button id="confirmarSala">Confirmar Sala</button> 
+            </div> <!-- Entrada para o patrimônio --> 
+            <div> <input type="text" id="patrimonioInput" placeholder="Digite o Patrimônio" autofocus> 
+            </div> <!-- Botões de exportação e nova coleta -->
+    <button onclick="exportPlanilhaEspecifica()">Exportar Planilha - Responsáveis Específicos</button>
+    <button onclick="exportPlanilhaOutros()">Exportar Planilha - Outros Responsáveis</button>
+    
+    <div> <button id="resetarColeta">Nova Coleta</button> </div> <!-- Botão Voltar adicionado aqui -->
+    <button class="backButton" onclick="window.location.href='index.html'">Voltar</button>
+    
+    <!-- Tabela de patrimônios coletados --> <table id="patrimonioTable"> 
+        <thead> 
+            <tr> 
+                <th>NRP</th> 
+                <th>Material</th> 
+                <th>Localização</th> 
+                <th>Responsável</th> 
+            </tr> 
+        </thead> 
+        <tbody id="patrimonioList"></tbody> 
+    </table> 
+    <div> 
+        <button class="refreshButton" id="refreshButton">RESET</button> 
+    </div> </div> <footer class="author-signature"> © 2024 BrenoDoria </footer> 
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script> 
+    <script src="script-escanear.js"></script> </body> </html>

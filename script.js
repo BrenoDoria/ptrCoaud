@@ -47,6 +47,9 @@ tokenClient = google.accounts.oauth2.initTokenClient({
             systemsContainer.style.display = "block";
             if (usuarios[usuarioLogado.username].permissao === "Supervisor") {
                 document.getElementById("compareSystem").style.display = "block";
+                document.getElementById("locateSystem").style.display = "block";
+            }else {
+                document.getElementById("locateSystem").style.display = "none"; // Adicionado: Esconde o Localizador para Operador
             }
         } else {
             loginContainer.style.display = "block";
@@ -94,6 +97,9 @@ function verificarLogin() {
         document.getElementById("systems-container").style.display = "block";
         if (usuarios[usuarioLogado.username].permissao === "Supervisor") {
             document.getElementById("compareSystem").style.display = "block";
+            document.getElementById("locateSystem").style.display = "block"; // Mostra o Localizador apenas para Supervisor
+        } else {
+            document.getElementById("locateSystem").style.display = "none"; // Esconde o Localizador para Operador
         }
         document.getElementById("loginMessage").textContent = "";
     }

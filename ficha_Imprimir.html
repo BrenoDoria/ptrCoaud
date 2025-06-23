@@ -2,483 +2,630 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ficha de Retirada/Empréstimo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Fichas Pendentes - Controle de Almoxarifado COAUD</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-      body {
-            font-family: Arial, sans-serif;
-            font-size: 9pt;
-            margin: 10px;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --font-size-base: 1rem;
+            --padding-base: 1.25rem;
+            --margin-base: 1.25rem;
         }
-
         .container {
-            max-width: 100%;
+            text-align: center;
+            padding: var(--padding-base);
+            max-width: 90%;
             margin: 0 auto;
         }
-
-        @page {
-            size: A4;
-            margin: 12mm 10mm 15mm 10mm;
+        h1 {
+            font-size: calc(var(--font-size-base) * 1.5);
+            margin-bottom: calc(var(--margin-base) * 0.8);
         }
-
-        .header {
-            text-align: left;
-            margin-bottom: 5px;
+        h2 {
+            font-size: calc(var(--font-size-base) * 1.25);
+            margin-top: calc(var(--margin-base) * 1.2);
         }
-
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: left;
-            margin-bottom: 5px;
+        .progress-container {
+            margin: calc(var(--margin-base) * 0.4) 0;
         }
-
-        .brasao {
-            width: 55px;
-            height: auto;
-            margin-right: 15px;
+        .spinner {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 1.25rem;
+            height: 1.25rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
         }
-
-        .header-text p {
-            margin: 1px 0;
-            font-size: 9pt;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-
-        .section-title {
-            font-weight: bold;
-            margin: 6px 0;
-            text-align: center;
-            text-decoration: underline;
-            font-size: 9pt;
+        button {
+            padding: 0.5rem 1rem;
+            margin: 0.3rem;
+            cursor: pointer;
+            min-height: 2.75rem;
+            font-size: var(--font-size-base);
+            touch-action: manipulation;
         }
-
-        #listaMaterial {
-            text-align: center;
+        .backButton {
+            background: #ccc;
         }
-
+        .table-wrapper {
+            margin-top: calc(var(--margin-base) * 0.8);
+            overflow-x: auto;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 10px;
-            font-size: 9pt;
-            page-break-inside: avoid;
+            font-family: Arial, sans-serif;
         }
-
         th, td {
-            padding: 4px 6px;
-            border: 1px solid black;
-            word-break: break-word;
+            padding: 0.625rem;
+            text-align: center;
+            border: 1px solid #ddd;
+            vertical-align: middle;
+            font-size: calc(var(--font-size-base) * 0.9);
         }
-
-        .field-label {
+        th {
+            background: #4CAF50;
+            color: white;
             font-weight: bold;
-            width: 50px;
-            display: inline-block;
         }
-
-        .field-label2 {
+        td {
+            background: white;
+        }
+        tr:nth-child(even) td {
+            background: #f2f2f2;
+        }
+        .equipamentos-cell {
+            text-align: left;
+            padding: 0.625rem;
+            text-overflow: ellipsis;
+        }
+        .equipamento-item {
+            white-space: nowrap;
+            line-height: 1.5;
+        }
+        footer {
+            text-align: center;
+            margin-top: calc(var(--margin-base) * 0.8);
+            font-size: calc(var(--font-size-base) * 0.75);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 1rem;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 31.25rem;
+            border-radius: 0.3rem;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 1.75rem;
             font-weight: bold;
-            width: 84px;
-            display: inline-block;
+            cursor: pointer;
         }
-
-        .field-value {
-            display: inline-block;
-            width: 230px;
-            min-height: 16px;
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
         }
-
-        p {
-            margin: 2px 0 6px 0;
+        .form-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.9rem;
+            flex-wrap: wrap;
         }
-
-        #devolucao-section {
-            margin-top: 6px;
+        .form-group label {
+            width: 7.5rem;
+            text-align: right;
+            margin-right: 0.6rem;
+            font-weight: bold;
+            font-size: calc(var(--font-size-base) * 0.9);
         }
-
-        .signature {
-            margin-top: 12px;
-            font-size: 9pt;
+        .form-group select {
+            flex: 1;
+            max-width: 18.75rem;
+            padding: 0.5rem;
+            margin: 0.3rem;
+            box-sizing: border-box;
+            font-size: calc(var(--font-size-base) * 0.9);
+            min-height: 2.75rem;
         }
-
-        .signature-line {
-            border-bottom: 1px solid black;
-            width: 150px;
-            display: inline-block;
-            margin-left: 6px;
-        }
-
-        .empty-space {
-            height: 20px;
-        }
-
-        .espaco-entre-termo {
-            margin-bottom: 200px; /* ajuste o valor como desejar */
-        }
-
-        @media print {
-            .no-print {
-                display: none;
+        @media (max-width: 768px) {
+            :root {
+                --font-size-base: 0.9rem;
+                --padding-base: 0.8rem;
+                --margin-base: 0.8rem;
             }
-
-            .page-break {
-                page-break-before: always;
+            th, td {
+                padding: 0.4rem;
             }
-
-            .container {
+            .modal-content {
+                margin: 5% auto;
+                width: 95%;
+                padding: 0.8rem;
+            }
+            .form-group label {
+                width: 100%;
+                text-align: left;
+                margin-bottom: 0.3rem;
+            }
+            .form-group select {
                 max-width: 100%;
             }
         }
-
-        /* Responsividade para telas menores */
-        @media screen and (max-width: 768px) {
-            body {
-                font-size: 8pt;
-                margin: 5px;
+        @media (max-width: 480px) {
+            :root {
+                --font-size-base: 0.8rem;
+                --padding-base: 0.5rem;
+                --margin-base: 0.5rem;
             }
-
-            .container {
-                padding: 5px;
-            }
-
-            .header-content {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .brasao {
-                width: 40px;
-                margin-right: 0;
-                margin-bottom: 10px;
-            }
-
-            .header-text p {
-                font-size: 8pt;
-            }
-
-            .section-title {
-                font-size: 8pt;
-            }
-
-            table {
-                font-size: 8pt;
-            }
-
             th, td {
-                padding: 3px 4px;
+                padding: 0.3rem;
+                font-size: calc(var(--font-size-base) * 0.8);
             }
-
-            .field-label {
-                width: 40px;
-            }
-
-            .field-label2 {
-                width: 70px;
-            }
-
-            .field-value {
-                width: 180px;
-            }
-
-            #devolucao-section .field-value {
-                width: 150px;
-            }
-
-            .signature-line {
-                width: 120px;
-            }
-
-            .espaco-entre-termo {
-                margin-bottom: 100px;
-            }
-
             button {
-                padding: 5px 10px;
-                font-size: 8pt;
+                padding: 0.4rem 0.8rem;
             }
-        }
-
-        @media screen and (max-width: 480px) {
-            body {
-                font-size: 7pt;
-            }
-
-            .brasao {
-                width: 35px;
-            }
-
-            .header-text p {
-                font-size: 7pt;
-            }
-
-            .section-title {
-                font-size: 7pt;
-            }
-
-            table {
-                font-size: 7pt;
-            }
-
-            th, td {
-                padding: 2px 3px;
-            }
-
-            .field-label {
-                width: 35px;
-            }
-
-            .field-label2 {
-                width: 60px;
-            }
-
-            .field-value {
-                width: 120px;
-            }
-
-            #devolucao-section .field-value {
-                width: 100px;
-            }
-
-            .signature-line {
-                width: 100px;
-            }
-
-            .espaco-entre-termo {
-                margin-bottom: 50px;
-            }
-
-            button {
-                padding: 4px 8px;
-                font-size: 7pt;
+            .modal-content {
+                margin: 2% auto;
+                padding: 0.5rem;
             }
         }
     </style>
 </head>
-<body onload="carregarFicha()">
- <div class="header">
-    <div class="header-content">
-        <img src="brasao_republica_brasil.jpg" class="brasao" alt="Brasão da República do Brasil">
-        <div class="header-text">
-            <p><strong>CÂMARA DOS DEPUTADOS</strong></p>
-            <p>Coordenação de Engenharia de Telecomunicações e Audiovisual - COAUD</p>
-            <p>Seção de Apoio aos Auditórios e Comissões - SAUDI/SAPCO</p>
-            <p><strong>FICHA DE RETIRADA / EMPRÉSTIMO DE MATERIAL PARA EVENTO</strong></p>
-        
+<body>
+    <div class="container">
+        <h1>FICHAS PENDENTES - ALMOXARIFADO COAUD</h1>
+        <div id="login-section">
+            <button onclick="solicitarToken()">Fazer Login com Google</button>
         </div>
-    </div>
-</div>
+        <div class="progress-container" id="progress-container" style="display: none;">
+            <div id="spinner" class="spinner"></div>
+            <p id="progressText">Aguardando dados do Google Sheets...</p>
+        </div>
 
-    
+        <div id="pendentes-section" style="display: none;">
+            <h2>Fichas Pendentes</h2>
+            <div class="table-wrapper">
+                <table id="pendentesTable">
+                    <thead>
+                        <tr>
+                            <th>ID Ficha</th>
+                            <th>Operador</th>
+                            <th>Almoxarifado</th>
+                            <th>Equipamentos</th>
+                            <th>Local</th>
+                            <th>Evento</th>
+                            <th>Data Retirada</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendentesList"></tbody>
+                </table>
+            </div>
+        </div>
 
-    <div style="font-size: medium; margin-top: 20px;"  class="section-title"><center>LISTA DE MATERIAL COM PATRIMÔNIO</center></div>
-    <table id="listaMaterial">
-        <tr>
-            <th style="width: 100px;">Patrimônio</th>
-            <th>Descrição</th>
-        </tr>
-    </table>
+        <div id="devolucaoModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="fecharModal()">×</span>
+                <h2>Marcar Devolução</h2>
+                <div class="form-group">
+                    <label for="operadorDevolucaoSelect">Operador Devolução:</label>
+                    <select id="operadorDevolucaoSelect" required>
+                        <option value="">Selecione o operador</option>
+                        <option value="Adson Miranda dos Anjos">Adson Miranda dos Anjos</option>
+                        <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
+                        <option value="Alberto Cesar Souza Almeida">Alberto Cesar Souza Almeida</option>
+                        <option value="Alexander Rafael Carvalho Paim">Alexander Rafael Carvalho Paim</option>
+                        <option value="Alexandre Alves de Siqueira">Alexandre Alves de Siqueira</option>
+                        <option value="Alison Silva de Oliveira">Alison Silva de Oliveira</option>
+                        <option value="Allan Cosseti Ardisson">Allan Cosseti Ardisson</option>
+                        <option value="Altamir Araújo da Silva">Altamir Araújo da Silva</option>
+                        <option value="Antonio Batista Ângelo">Antonio Batista Ângelo</option>
+                        <option value="Antonio Rodrigues Siqueira Filho">Antonio Rodrigues Siqueira Filho</option>
+                        <option value="Arley Carvalho Alves">Arley Carvalho Alves</option>
+                        <option value="Breno Doria Felicio">Breno Doria Felicio</option>
+                        <option value="Bruno Fernandes Braga">Bruno Fernandes Braga</option>
+                        <option value="Bruno Rodrigues do Prado">Bruno Rodrigues do Prado</option>
+                        <option value="Bruno Vieira Rodrigues">Bruno Vieira Rodrigues</option>
+                        <option value="Carlos César Ferreira de Sousa">Carlos César Ferreira de Sousa</option>
+                        <option value="Carlos Cesar José da Silva">Carlos Cesar José da Silva</option>
+                        <option value="Carlos Eduardo Guedes da Silva">Carlos Eduardo Guedes da Silva</option>
+                        <option value="Carlos Roberto de Paiva Miranda dos Santos">Carlos Roberto de Paiva Miranda dos Santos</option>
+                        <option value="Cinthia Neves Carvalho Barbosa">Cinthia Neves Carvalho Barbosa</option>
+                        <option value="Cláudio Marcelo do Nascimento">Cláudio Marcelo do Nascimento</option>
+                        <option value="Davi Aragão de Paula Gonçalves">Davi Aragão de Paula Gonçalves</option>
+                        <option value="Douglas Batista da Silva">Douglas Batista da Silva</option>
+                        <option value="Emmanuel do Amaral Idelfonso">Emmanuel do Amaral Idelfonso</option>
+                        <option value="Enzo Risso Conturbia">Enzo Risso Conturbia</option>
+                        <option value="Eric Samuel do Ouro">Eric Samuel do Ouro</option>
+                        <option value="Erika Fedosseeff Auler">Erika Fedosseeff Auler</option>
+                        <option value="Eromilson Monteiro dutra Chaves">Eromilson Monteiro dutra Chaves</option>
+                        <option value="Evellyn Mendes de Souza Nunes">Evellyn Mendes de Souza Nunes</option>
+                        <option value="Fausto Barbosa de Oliveira">Fausto Barbosa de Oliveira</option>
+                        <option value="Felipe Omena Vasconcellos de Assis">Felipe Omena Vasconcellos de Assis</option>
+                        <option value="Fernando de Sousa Vasconcelos">Fernando de Sousa Vasconcelos</option>
+                        <option value="Flávio Lima Câmara">Flávio Lima Câmara</option>
+                        <option value="Francisco de Assis da Silva Sales">Francisco de Assis da Silva Sales</option>
+                        <option value="Francisco de Sousa Filho">Francisco de Sousa Filho</option>
+                        <option value="Francisco Juniel Sousa e Silva">Francisco Juniel Sousa e Silva</option>
+                        <option value="Geraldo Ribeiro de Souza Filho">Geraldo Ribeiro de Souza Filho</option>
+                        <option value="Gildo Marques da Silva">Gildo Marques da Silva</option>
+                        <option value="Gilson Gomes da Silva">Gilson Gomes da Silva</option>
+                        <option value="Gilson Gustavo de Paiva Oliveira">Gilson Gustavo de Paiva Oliveira</option>
+                        <option value="Gleisson Carlos Pereira da Silva">Gleisson Carlos Pereira da Silva</option>
+                        <option value="Guilherme Malheiro da Rocha Pinto">Guilherme Malheiro da Rocha Pinto</option>
+                        <option value="Helisson Rafael de O. Leite">Helisson Rafael de O. Leite</option>
+                        <option value="Helyeber Feitosa Ferreira">Helyeber Feitosa Ferreira</option>
+                        <option value="Hilton Severiano Ferreira">Hilton Severiano Ferreira</option>
+                        <option value="Huelisson Amancio de Moraes Silva">Huelisson Amancio de Moraes Silva</option>
+                        <option value="Igor Mendes dos Santos">Igor Mendes dos Santos</option>
+                        <option value="Isaias Pereira Soares">Isaias Pereira Soares</option>
+                        <option value="Joel Luiz de Sá Silva">Joel Luiz de Sá Silva</option>
+                        <option value="Joel Pereira Santos">Joel Pereira Santos</option>
+                        <option value="Joilson Santos de Jesus">Joilson Santos de Jesus</option>
+                        <option value="Jônatas Soares de Andrade">Jônatas Soares de Andrade</option>
+                        <option value="Jose Henrique Ferreira da Silva">Jose Henrique Ferreira da Silva</option>
+                        <option value="José Nilton Abraão de Sousa">José Nilton Abraão de Sousa</option>
+                        <option value="Joval Bastos Freitas Júnior">Joval Bastos Freitas Júnior</option>
+                        <option value="Juliano Gustavo Pedro de Oliveira">Juliano Gustavo Pedro de Oliveira</option>
+                        <option value="Kely Berlinck Freire">Kely Berlinck Freire</option>
+                        <option value="Kleber de Araújo Moura">Kleber de Araújo Moura</option>
+                        <option value="Leandro Calixto da Silva">Leandro Calixto da Silva</option>
+                        <option value="Leandro Silva Lima Alves">Leandro Silva Lima Alves</option>
+                        <option value="Leonardo Augusto de Freitas">Leonardo Augusto de Freitas</option>
+                        <option value="Letícia Santana Araújo">Letícia Santana Araújo</option>
+                        <option value="Lívia Maria de Souza">Lívia Maria de Souza</option>
+                        <option value="Lucas Lima Lira">Lucas Lima Lira</option>
+                        <option value="Lucas Ribeiro dos Santos">Lucas Ribeiro dos Santos</option>
+                        <option value="Luciano de Freitas Silva">Luciano de Freitas Silva</option>
+                        <option value="Luis Eduardo Campos Moreira">Luis Eduardo Campos Moreira</option>
+                        <option value="Luiz Henrique Reis de Lima">Luiz Henrique Reis de Lima</option>
+                        <option value="Marcelo Bruno Rezende Costa">Marcelo Bruno Rezende Costa</option>
+                        <option value="Marcelo Gomes da Silva">Marcelo Gomes da Silva</option>
+                        <option value="Marco Antonio Baldresca Lambert de Brito">Marco Antonio Baldresca Lambert de Brito</option>
+                        <option value="Marco Antônio Felício Júnior">Marco Antônio Felício Júnior</option>
+                        <option value="Marcos Borges de Souza">Marcos Borges de Souza</option>
+                        <option value="Marcus Aurélius Fernandes de Moura">Marcus Aurélius Fernandes de Moura</option>
+                        <option value="Massilon Alves de Sousa Filho">Massilon Alves de Sousa Filho</option>
+                        <option value="Mateus da Silva Lima">Mateus da Silva Lima</option>
+                        <option value="Matheus Gabriel Damasceno Dias">Matheus Gabriel Damasceno Dias</option>
+                        <option value="Matheus Henrique Felix Barbosa">Matheus Henrique Felix Barbosa</option>
+                        <option value="Múcio Homero Rocha Pires de Oliveira">Múcio Homero Rocha Pires de Oliveira</option>
+                        <option value="Orlando Villavicencio Venegas">Orlando Villavicencio Venegas</option>
+                        <option value="Paulo Fernando Volpe">Paulo Fernando Volpe</option>
+                        <option value="Paulo Roberto Pereira">Paulo Roberto Pereira</option>
+                        <option value="Paulo Soares da Costa">Paulo Soares da Costa</option>
+                        <option value="Pedro Henrique Candido Boaventura">Pedro Henrique Candido Boaventura</option>
+                        <option value="Péricles Cruz da Silva">Péricles Cruz da Silva</option>
+                        <option value="Priscilla Amorim dos Santos Rodrigues">Priscilla Amorim dos Santos Rodrigues</option>
+                        <option value="Rafael Queiroz Lemos de Oliveira">Rafael Queiroz Lemos de Oliveira</option>
+                        <option value="Reynaldo Jessé Rodrigues da Silva">Reynaldo Jessé Rodrigues da Silva</option>
+                        <option value="Richard Rodrigues dos Santos">Richard Rodrigues dos Santos</option>
+                        <option value="Roberio Antunes Simionato">Roberio Antunes Simionato</option>
+                        <option value="Rodrigo Fonseca Shiratori">Rodrigo Fonseca Shiratori</option>
+                        <option value="Rondney Rodrigues Alves Sousa">Rondney Rodrigues Alves Sousa</option>
+                        <option value="Rosivan Augustinho Pereira">Rosivan Augustinho Pereira</option>
+                        <option value="Thiago Veríssimo Cabral Freitas">Thiago Veríssimo Cabral Freitas</option>
+                        <option value="Vinícius Veríssimo Cabral Freitas">Vinícius Veríssimo Cabral Freitas</option>
+                        <option value="Vivikananda Abdallah Antun Filho">Vivikananda Abdallah Antun Filho</option>
+                        <option value="Waleria Bastos Cardoso">Waleria Bastos Cardoso</option>
+                        <option value="Wanderson Balzan de Sousa">Wanderson Balzan de Sousa</option>
+                        <option value="Wellington Jorge Souza Mendes">Wellington Jorge Souza Mendes</option>
+                        <option value="Wellington Rodrigo Ribeiro Santana">Wellington Rodrigo Ribeiro Santana</option>
+                        <option value="Wendel Vieira da Costa">Wendel Vieira da Costa</option>
+                        <option value="Wesley Laécio da Silva Costa">Wesley Laécio da Silva Costa</option>
+                        <option value="Wesley Maurício Ribeiro França">Wesley Maurício Ribeiro França</option>
+                        <option value="Willian Neves da Silva">Willian Neves da Silva</option>
+                        <option value="Wirlem Silva Alves">Wirlem Silva Alves</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="almoxarifadoDevolucaoSelect">Almoxarifado Devolução:</label>
+                    <select id="almoxarifadoDevolucaoSelect" required>
+                        <option value="">Selecione o almoxarifado</option>
+                        <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
+                        <option value="Altamir Araújo da Silva">Altamir Araújo da Silva</option>
+                        <option value="Antonio Batista Ângelo">Antonio Batista Ângelo</option>
+                        <option value="Waleria Bastos Cardoso">Waleria Bastos Cardoso</option>
+                    </select>
+                </div>
+                <button onclick="confirmarDevolucao()">Confirmar Devolução</button>
+            </div>
+        </div>
 
-    <!--<div class="section-title">LISTA DE MATERIAL SEM PATRIMÔNIO</div>
-    <table>
-        <tr><td style="border: 1px solid black; padding: 5px;" class="empty-space"></td></tr>
-    </table>-->
-
-    <div class="section-title">RETIRADA</div>
-    <div id="dadosFicha">
-        <p><span class="field-label">Ficha:</span> <span class="field-value" id="ficha"></span></p>
-        <p><span class="field-label">Data:</span> <span class="field-value" id="data">  </span> <span class="field-label"> Evento: </span> <span class="field-value" id="evento"></span></p>
-        <p><span class="field-label">Local:</span> <span class="field-value" id="local"></span></p>
+        <button class="backButton" onclick="window.location.href='index-almoxarifado.html'">Voltar</button>
     </div>
-    <p><span class="field-label">Hora:</span> <span class="field-value" id="hora"></span></p>
-    <p><span class="field-label">Nome:</span> <span class="field-value" id="nome"></span>
-    <span class="field-label">Ponto:</span> <span class="field-value" id="pontoOperador1"></span></p>
-    <p><span class="field-label2">Almoxarifado:</span> <span class="field-value" id="nomeOperador2"></span>
-    <span class="field-label">Ponto:</span> <span class="field-value" id="pontoOperador2"></span></p>
-    <!--<p><span class="field-label">Observações:</span> <span class="field-value"></span></p>-->
-
-    <div class="section-title">DEVOLUÇÃO</div>
-    <div id="devolucao-section">
-        <p><span class="field-label">Data:_____________________________________</span> <span class="field-value"></span> <span class="field-label">Hora:_____:_____</span> <span class="field-value"></span></p>
-        <p><span class="field-label">Nome:_____________________________________</span> <span class="field-value"></span> <span class="field-label">Ponto:_____________________________________</span> <span class="field-value"></span></p>
-        <p><span class="field-label">Almoxarifado:__________________________________________________________________________</span> <span class="field-value"></span></p>
-        <p><span class="field-label">Observações:__________________________________________________________________________</span> <span class="field-value" style="width: 400px;"></span></p>
-    </div>
-
-    <div style="margin-top: 15px;" class="section-title">TERMO DE EMPRÉSTIMO</div>
-    <div>
-    <p>Conforme legislação vigente, o servidor abaixo-assinado e qualificado se responsabiliza pela guarda, zelo e devolução do material acima relacionado, classificado como permanente e de carga patrimonial desta seção de apoio SAUDI/SAPCO, da Coordenação de Engenharia de Telecomunicações e Audiovisual - COAUD.</p>
-    </div>
-    
-    <div class="signature">
-        
-        <p>A SAUDI/SAPCO, representada pelo Operador: <span id="operadorAssinatura" style="font-size: 15px; display: inline; font-weight: bold; margin-right: 10px;"></span>
-            <span class="field-label">Ponto:</span> <span id="pontoOperadorAssinatura" style="font-size: 15px; display: inline; font-weight: bold; margin-right: 10px;"></span></p>
-       
-    </div>
-    <div class="espaco-entre-termo">
-         <p style="margin-top: 50px;">Rubrica: <span class="signature-line"></span> recolheu, em <span id="dataAssinatura"></span>, às <span id="horaAssinatura"></span></p>
-       <div style="margin-top: 30px;">
-        <button style="margin-top: 50px;"onclick="window.print()">Imprimir</button>
-        <button onclick="window.location.href='fichas.html'">Voltar</button>
-    </div>
-    </div>
-    
-    
-
+    <footer class="author-signature">© 2024 BrenoDoria</footer>
     <script>
-        const operadoresPontos = {
-            "Adson Miranda dos Anjos": "914.262",
-            "Afonso Viana de Mesquita Filho": "5.947",
-            "Alberto Cesar Souza Almeida": "5.302",
-            "Alexander Rafael Carvalho Paim": "882.420",
-            "Alexandre Alves de Siqueira": "919.956",
-            "Alison Silva de Oliveira": "914.799",
-            "Allan Cosseti Ardisson": "919.895",
-            "Altamir Araújo da Silva": "881.758",
-            "Antonio Batista Ângelo": "999.134",
-            "Antonio Rodrigues Siqueira Filho": "917.486",
-            "Arley Carvalho Alves": "915.546",
-            "Breno Doria Felicio": "922.083",
-            "Bruno Fernandes Braga": "881.842",
-            "Bruno Rodrigues do Prado": "919.894",
-            "Bruno Vieira Rodrigues": "922.084",
-            "Carlos César Ferreira de Sousa": "5.250",
-            "Carlos Cesar José da Silva": "920.074",
-            "Carlos Eduardo Guedes da Silva": "882.174",
-            "Carlos Roberto de Paiva Miranda dos Santos": "922.498",
-            "Cinthia Neves Carvalho Barbosa": "5.476",
-            "Cláudio Marcelo do Nascimento": "882.421",
-            "Davi Aragão de Paula Gonçalves": "921.627",
-            "Douglas Batista da Silva": "920.077",
-            "Emmanuel do Amaral Idelfonso": "920.076",
-            "Enzo Risso Conturbia": "920.438",
-            "Eric Samuel do Ouro": "920.359",
-            "Erika Fedosseeff Auler": "921.672",
-            "Eromilson Monteiro dutra Chaves": "882.134",
-            "Evellyn Mendes de Souza Nunes": "915.974",
-            "Fausto Barbosa de Oliveira": "888.223",
-            "Felipe Omena Vasconcellos de Assis": "919.593",
-            "Fernando de Sousa Vasconcelos": "914.382",
-            "Flávio Lima Câmara": "882.218",
-            "Francisco de Assis da Silva Sales": "888.744",
-            "Francisco de Sousa Filho": "5.953",
-            "Francisco Juniel Sousa e Silva": "915.547",
-            "Geraldo Ribeiro de Souza Filho": "888.010",
-            "Gildo Marques da Silva": "920.092",
-            "Gilson Gomes da Silva": "882.541",
-            "Gilson Gustavo de Paiva Oliveira": "5.254",
-            "Gleisson Carlos Pereira da Silva": "914.815",
-            "Guilherme Malheiro da Rocha Pinto": "4.224",
-            "Helisson Rafael de O. Leite": "881.759",
-            "Helyeber Feitosa Ferreira": "919.899",
-            "Hilton Severiano Ferreira": "922.678",
-            "Huelisson Amancio de Moraes Silva": "881.596",
-            "Igor Mendes dos Santos": "921.292",
-            "Isaias Pereira Soares": "919.903",
-            "Joel Luiz de Sá Silva": "920.353",
-            "Joel Pereira Santos": "882.652",
-            "Joilson Santos de Jesus": "920.123",
-            "Jônatas Soares de Andrade": "881.598",
-            "Jose Henrique Ferreira da Silva": "7.913",
-            "José Nilton Abraão de Sousa": "920.352",
-            "Joval Bastos Freitas Júnior": "882.702",
-            "Juliano Gustavo Pedro de Oliveira": "882.053",
-            "Kely Berlinck Freire": "919.896",
-            "Kleber de Araújo Moura": "888.397",
-            "Leandro Calixto da Silva": "917.992",
-            "Leandro Silva Lima Alves": "921.291",
-            "Leonardo Augusto de Freitas": "882.688",
-            "Letícia Santana Araújo": "920.816",
-            "Lívia Maria de Souza": "916.391",
-            "Lucas Lima Lira": "919.897",
-            "Lucas Ribeiro dos Santos": "919.904",
-            "Luciano de Freitas Silva": "881.452",
-            "Luis Eduardo Campos Moreira": "919.898",
-            "Luiz Henrique Reis de Lima": "888.226",
-            "Marcelo Bruno Rezende Costa": "882.728",
-            "Marcelo Gomes da Silva": "918.923",
-            "Marco Antonio Baldresca Lambert de Brito": "5.261",
-            "Marco Antônio Felício Júnior": "915.553",
-            "Marcos Borges de Souza": "920.075",
-            "Marcus Aurélius Fernandes de Moura": "888.219",
-            "Massilon Alves de Sousa Filho": "919.905",
-            "Mateus da Silva Lima": "922.278",
-            "Matheus Gabriel Damasceno Dias": "920.354",
-            "Matheus Henrique Felix Barbosa": "922.082",
-            "Múcio Homero Rocha Pires de Oliveira": "5.297",
-            "Orlando Villavicencio Venegas": "882.673",
-            "Paulo Fernando Volpe": "5.933",
-            "Paulo Roberto Pereira": "888.227",
-            "Paulo Soares da Costa": "888.228",
-            "Pedro Henrique Candido Boaventura": "920.124",
-            "Péricles Cruz da Silva": "881.892",
-            "Priscilla Amorim dos Santos Rodrigues": "7.914",
-            "Rafael Queiroz Lemos de Oliveira": "881.782",
-            "Reynaldo Jessé Rodrigues da Silva": "888.131",
-            "Richard Rodrigues dos Santos": "921.026",
-            "Roberio Antunes Simionato": "5.266",
-            "Rodrigo Fonseca Shiratori": "5.272",
-            "Rondney Rodrigues Alves Sousa": "881.174",
-            "Rosivan Augustinho Pereira": "882.518",
-            "Thiago Veríssimo Cabral Freitas": "922.497",
-            "Vinícius Veríssimo Cabral Freitas": "919.796",
-            "Vivikananda Abdallah Antun Filho": "5.301",
-            "Waleria Bastos Cardoso": "915.570",
-            "Wanderson Balzan de Sousa": "918.679",
-            "Wellington Jorge Souza Mendes": "881.179",
-            "Wellington Rodrigo Ribeiro Santana": "882.052",
-            "Wendel Vieira da Costa": "919.907",
-            "Wesley Laécio da Silva Costa": "882.054",
-            "Wesley Maurício Ribeiro França": "888.217",
-            "Willian Neves da Silva": "888.230",
-            "Wirlem Silva Alves": "919.906"
+        const usuarios = {
+            "supervisor": { senha: "12345", permissao: "Supervisor" },
+            "operador": { senha: "12345", permissao: "Operador" }
         };
 
-        function carregarFicha() {
-            const dadosFicha = JSON.parse(localStorage.getItem('fichaParaImprimir'));
-            if (!dadosFicha) {
-                alert('Nenhum dado de ficha encontrado. Redirecionando para a página principal.');
-                window.location.href = 'fichas.html';
+        const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';
+        const FILE_ID = '1q9RCwJ4P--QIH4kkMszffrN8ZwzkSsNoZtPH-Usk4Zw';
+        let tokenClient;
+        let accessToken = null;
+        let pendentesData = [];
+        let sheetIds = {};
+        let idFichaSelecionada = null;
+
+        window.onload = () => {
+            const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+            if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
+                alert("Usuário não está logado. Faça login novamente.");
+                window.location.href = "index.html";
                 return;
             }
 
-            // Formatar a data e hora
-            const [dataParte, horaParte] = dadosFicha.dataRetirada.split(', ');
-            const [dia, mes, ano] = dataParte.split('/');
-            const dataFormatada = `${dia}/${mes}/${ano}`;
-            const horaFormatada = horaParte;
+            if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
+                alert("Acesso negado: Você não tem permissão para acessar o Controle de Almoxarifado.");
+                window.location.href = "index.html";
+                return;
+            }
 
-            // Preencher os campos
-            document.getElementById('data').textContent = dataFormatada;
-            document.getElementById('evento').textContent = dadosFicha.evento;
-            document.getElementById('ficha').textContent = dadosFicha.idFicha;
-            document.getElementById('local').textContent = dadosFicha.local;
-            document.getElementById('hora').textContent = horaFormatada;
-            document.getElementById('nome').textContent = dadosFicha.operador1;
-            document.getElementById('pontoOperador1').textContent = operadoresPontos[dadosFicha.operador1] || "N/A";
-            document.getElementById('operadorAssinatura').textContent = dadosFicha.operador1;
-            document.getElementById('pontoOperadorAssinatura').textContent = operadoresPontos[dadosFicha.operador1] || "N/A";
-            document.getElementById('nomeOperador2').textContent = dadosFicha.operador2;
-            document.getElementById('pontoOperador2').textContent = operadoresPontos[dadosFicha.operador2] || "N/A";
-            document.getElementById('dataAssinatura').textContent = dataFormatada;
-            document.getElementById('horaAssinatura').textContent = horaFormatada;
-
-            // Preencher a tabela de equipamentos
-            const tabela = document.getElementById('listaMaterial');
-            dadosFicha.equipamentos.forEach(equip => {
-                const [patrimonio, ...descricaoParts] = equip.split(' - ');
-                const descricao = descricaoParts.join(' - ');
-                const row = tabela.insertRow();
-                row.innerHTML = `
-                    <td style="border: 1px solid black; padding: 5px;">${patrimonio}</td>
-                    <td style="border: 1px solid black; padding: 5px;">${descricao}</td>
-                `;
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/spreadsheets',
+                callback: (tokenResponse) => {
+                    if (tokenResponse.error) {
+                        document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
+                        document.getElementById("progress-container").style.display = "block";
+                        return;
+                    }
+                    accessToken = tokenResponse.access_token;
+                    localStorage.setItem("access_token", accessToken);
+                    document.getElementById("progressText").textContent = "Autenticado com sucesso! Carregando dados...";
+                    document.getElementById("progress-container").style.display = "block";
+                    document.getElementById("login-section").style.display = "none";
+                    document.getElementById("pendentes-section").style.display = "block";
+                    carregarDadosDoSheets();
+                }
             });
 
-            // Limpar localStorage após carregar (opcional, para evitar uso residual)
-            // localStorage.removeItem('fichaParaImprimir');
+            const savedToken = localStorage.getItem("access_token");
+            if (savedToken) {
+                accessToken = savedToken;
+                document.getElementById("login-section").style.display = "none";
+                document.getElementById("pendentes-section").style.display = "block";
+                document.getElementById("progress-container").style.display = "block";
+                document.getElementById("progressText").textContent = "Usando token salvo. Carregando dados...";
+                carregarDadosDoSheets();
+            }
+        };
+
+        function solicitarToken() {
+            tokenClient.requestAccessToken();
+        }
+
+        async function getSheetIds() {
+            try {
+                const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Erro ao buscar metadados da planilha: ${errorData.error?.message || response.statusText}`);
+                }
+                const spreadsheet = await response.json();
+                spreadsheet.sheets.forEach(sheet => {
+                    sheetIds[sheet.properties.title] = sheet.properties.sheetId;
+                });
+            } catch (error) {
+                document.getElementById("progressText").textContent = "Erro ao buscar IDs das abas: " + error.message;
+                throw error;
+            }
+        }
+
+        async function carregarDadosDoSheets(retryCount = 0) {
+            const maxRetries = 3;
+            document.getElementById("spinner").style.display = "inline-block";
+            document.getElementById("progressText").textContent = "Consultando Google Sheets...";
+
+            try {
+                await getSheetIds();
+
+                const pendentesResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+
+                if (!pendentesResponse.ok) {
+                    const errorData = await pendentesResponse.json();
+                    throw new Error(`Erro ao carregar RETIRADAS_PENDENTES: ${errorData.error?.message || pendentesResponse.statusText}`);
+                }
+
+                const pendentes = await pendentesResponse.json();
+                pendentesData = pendentes.values || [];
+                document.getElementById("progressText").textContent = "Dados carregados com sucesso!";
+                document.getElementById("spinner").style.display = "none";
+                atualizarTabelas();
+            } catch (error) {
+                if (error.message.includes("401") && retryCount < maxRetries) {
+                    document.getElementById("progressText").textContent = "Token expirado, reautenticando...";
+                    localStorage.removeItem("access_token");
+                    accessToken = null;
+                    document.getElementById("login-section").style.display = "block";
+                    document.getElementById("pendentes-section").style.display = "none";
+                    solicitarToken();
+                    return;
+                }
+                console.error("Erro ao carregar dados:", error);
+                document.getElementById("progressText").textContent = "Erro ao carregar os dados: " + error.message;
+                document.getElementById("spinner").style.display = "none";
+            }
+        }
+
+        function atualizarTabelas() {
+            const pendentesList = document.getElementById("pendentesList");
+            pendentesList.innerHTML = "";
+            if (pendentesData.length > 1) {
+                pendentesData.slice(1).forEach((row, index) => {
+                    const equipamentos = row[3] ? row[3].split('; ') : [];
+                    const equipamentosFormatados = equipamentos.length > 0
+                        ? equipamentos.map(equip => `<div class="equipamento-item">${equip}</div>`).join('')
+                        : '-';
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${row[0]}</td>
+                        <td>${row[1]}</td>
+                        <td>${row[2] || '-'}</td>
+                        <td class="equipamentos-cell">${equipamentosFormatados}</td>
+                        <td>${row[4]}</td>
+                        <td>${row[5]}</td>
+                        <td>${row[6]}</td>
+                        <td>
+                            <button onclick="editarFicha(${index + 1})">Editar</button>
+                            <button onclick="abrirModalDevolucao('${row[0]}')">Marcar Devolução</button>
+                            <button onclick="imprimirFicha(${index + 1})">Imprimir</button>
+                        </td>
+                    `;
+                    pendentesList.appendChild(tr);
+                });
+            }
+        }
+
+        function editarFicha(rowIndex) {
+            const ficha = pendentesData[rowIndex];
+            const fichaParaEditar = {
+                idFicha: ficha[0],
+                operador1: ficha[1],
+                operador2: ficha[2] || '',
+                equipamentos: ficha[3] ? ficha[3].split('; ') : [],
+                local: ficha[4],
+                evento: ficha[5],
+                dataRetirada: ficha[6],
+                rowIndex: rowIndex
+            };
+            localStorage.setItem('fichaParaEditar', JSON.stringify(fichaParaEditar));
+            window.location.href = 'index-almoxarifado.html';
+        }
+
+        function abrirModalDevolucao(idFicha) {
+            idFichaSelecionada = idFicha;
+            document.getElementById("operadorDevolucaoSelect").value = "";
+            document.getElementById("almoxarifadoDevolucaoSelect").value = "";
+            document.getElementById("devolucaoModal").style.display = "block";
+        }
+
+        function fecharModal() {
+            document.getElementById("devolucaoModal").style.display = "none";
+            idFichaSelecionada = null;
+        }
+
+        async function confirmarDevolucao() {
+            const operadorDevolucao = document.getElementById("operadorDevolucaoSelect").value;
+            const almoxarifadoDevolucao = document.getElementById("almoxarifadoDevolucaoSelect").value;
+
+            if (!operadorDevolucao || !almoxarifadoDevolucao) {
+                document.getElementById("progressText").textContent = "Preencha todos os campos obrigatórios (Operador Devolução e Almoxarifado Devolução).";
+                return;
+            }
+
+            await marcarDevolucao(idFichaSelecionada, operadorDevolucao, almoxarifadoDevolucao);
+            fecharModal();
+        }
+
+        async function marcarDevolucao(idFicha, operadorDevolucao, almoxarifadoDevolucao) {
+            const retiradaIndex = pendentesData.slice(1).findIndex(row => row[0] === idFicha);
+            if (retiradaIndex === -1) {
+                document.getElementById("progressText").textContent = "Ficha não encontrada.";
+                return;
+            }
+
+            const retirada = pendentesData[retiradaIndex + 1];
+            const dataDevolucao = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            const fichaArquivada = [...retirada, dataDevolucao, operadorDevolucao, almoxarifadoDevolucao];
+
+            try {
+                const appendResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_ARQUIVADAS!A:J:append?valueInputOption=RAW`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        values: [fichaArquivada]
+                    })
+                });
+                if (!appendResponse.ok) {
+                    const errorData = await appendResponse.json();
+                    throw new Error(`Erro ao arquivar retirada: ${errorData.error?.message || appendResponse.statusText}`);
+                }
+
+                const rowIndex = retiradaIndex + 1;
+                const deleteResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}:batchUpdate`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        requests: [{
+                            deleteDimension: {
+                                range: {
+                                    sheetId: sheetIds['RETIRADAS_PENDENTES'],
+                                    dimension: 'ROWS',
+                                    startIndex: rowIndex,
+                                    endIndex: rowIndex + 1
+                                }
+                            }
+                        }]
+                    })
+                });
+                if (!deleteResponse.ok) {
+                    const errorData = await deleteResponse.json();
+                    throw new Error(`Erro ao remover retirada pendente: ${errorData.error?.message || deleteResponse.statusText}`);
+                }
+
+                pendentesData.splice(rowIndex, 1);
+                atualizarTabelas();
+                document.getElementById("progressText").textContent = "Devolução registrada e arquivada com sucesso!";
+            } catch (error) {
+                document.getElementById("progressText").textContent = "Erro ao marcar devolução: " + error.message;
+                console.error(error);
+            }
+        }
+
+        function imprimirFicha(rowIndex) {
+            const ficha = pendentesData[rowIndex];
+            const dadosFicha = {
+                idFicha: ficha[0],
+                operador1: ficha[1],
+                operador2: ficha[2] || '-',
+                equipamentos: ficha[3] ? ficha[3].split('; ') : [],
+                local: ficha[4],
+                evento: ficha[5],
+                dataRetirada: ficha[6]
+            };
+            localStorage.setItem('fichaParaImprimir', JSON.stringify(dadosFicha));
+            window.location.href = 'ficha_imprimir.html';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById("devolucaoModal");
+            if (event.target == modal) {
+                fecharModal();
+            }
         }
     </script>
 </body>

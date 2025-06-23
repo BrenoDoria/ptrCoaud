@@ -28,7 +28,51 @@
                     <th>Material</th>
                     <th>Localização</th>
                     <th>Responsável</th>
+                </tr><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador de Patrimônios COAUD</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>PATRIMÔNIOS COAUD - COMPARADOR</h1>
+        <div>
+            <label for="fileInputExportada">Carregar Planilha Escaneada:</label>
+            <input type="file" id="fileInputExportada" accept=".xlsx">
+        </div>
+        <div class="progress-container">
+            <div id="spinner" class="spinner"></div>
+            <p id="progressText">Aguardando dados do Google Drive...</p>
+        </div>
+        <div>
+            <button onclick="exportarNaoEncontrados()">Exportar Patrimônios Não Encontrados</button>
+        </div>
+        <button class="backButton" onclick="window.location.href='index.html'">Voltar</button>
+        <table id="patrimonioTable">
+            <thead>
+                <tr>
+                    <th>NRP</th>
+                    <th>Material</th>
+                    <th>Localização</th>
+                    <th>Responsável</th>
                 </tr>
+            </thead>
+            <tbody id="patrimonioList"></tbody>
+        </table>
+        
+    </div>
+
+    <footer class="author-signature">
+        © 2025 BrenoDoria
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="script-comparador.js"></script>
+</body>
+</html>
             </thead>
             <tbody id="patrimonioList"></tbody>
         </table>

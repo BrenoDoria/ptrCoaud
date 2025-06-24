@@ -448,11 +448,13 @@
             }
             nrp = nrp.replace(/\./g, "");
             const nrpSemZeros = nrp.replace(/^0+/, "");
-            const jaAdicionado = patrimoniosSelecionados.some(item => item.NRP === nrp);
-            if (jaAdicionado) {
-                document.getElementById("progressText").textContent = `NRP "${nrp}" já foi adicionado.`;
-                document.getElementById("nrpInput").value = "";
-                return;
+            if (!patrimoniosPermitidosParaRepeticao.includes(nrpSemZeros)){
+                const jaAdicionado = patrimoniosSelecionados.some(item => item.NRP === nrp);
+                if (jaAdicionado) {
+                    document.getElementById("progressText").textContent = `NRP "${nrp}" já foi adicionado.`;
+                    document.getElementById("nrpInput").value = "";
+                    return;
+                }
             }
             const encontrado = patrimonioData.find(
                 (row) => row[0] && row[0].toString().replace(/^0+/, "") === nrpSemZeros

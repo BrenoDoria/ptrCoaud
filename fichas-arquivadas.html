@@ -3,376 +3,403 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Fichas Arquivadas - Impressão</title>
+    <title>Fichas Arquivadas - Controle de Almoxarifado COAUD</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
-            --font-size-base: 0.5625rem;
-            --padding-base: 0.625rem;
-            --margin-base: 0.625rem;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            font-size: var(--font-size-base);
-            margin: 0.625rem;
-            padding: 0;
-            box-sizing: border-box;
+            --font-size-base: 1rem;
+            --padding-base: 1.25rem;
+            --margin-base: 1.25rem;
         }
         .container {
-            max-width: 100%;
+            text-align: center;
+            padding: var(--padding-base);
+            max-width: 90%;
             margin: 0 auto;
-            padding: calc(var(--padding-base) * 0.5);
         }
-        @page {
-            size: A4;
-            margin: 12mm 10mm 15mm 10mm;
-        }
-        .header {
-            text-align: left;
+        h1 {
+            font-size: calc(var(--font-size-base) * 1.5);
             margin-bottom: calc(var(--margin-base) * 0.8);
         }
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: left;
-            margin-bottom: calc(var(--margin-base) * 0.8);
+        h2 {
+            font-size: calc(var(--font-size-base) * 1.25);
+            margin-top: calc(var(--margin-base) * 1.2);
         }
-        .brasao {
-            width: 3.4375rem;
-            height: auto;
-            margin-right: 0.9375rem;
+        .progress-container {
+            margin: calc(var(--margin-base) * 0.4) 0;
         }
-        .header-text p {
-            margin: 0.0625rem 0;
+        .spinner {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 1.25rem;
+            height: 1.25rem;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        button {
+            padding: 0.5rem 1rem;
+            margin: 0.3rem;
+            cursor: pointer;
+            min-height: 2.75rem;
             font-size: var(--font-size-base);
+            touch-action: manipulation;
         }
-        .section-title {
-            font-weight: bold;
-            margin: calc(var(--margin-base) * 0.96) 0;
-            text-align: center;
-            text-decoration: underline;
-            font-size: var(--font-size-base);
+        .backButton {
+            background: #ccc;
         }
-        .listaMaterial {
-            text-align: center;
+        input[type="text"] {
+            padding: 0.5rem;
+            margin: 0.3rem;
+            width: 80%;
+            max-width: 12.5rem;
+            font-size: calc(var(--font-size-base) * 0.9);
+            min-height: 2.75rem;
+        }
+        .table-wrapper {
+            margin-top: calc(var(--margin-base) * 0.8);
+            overflow-x: auto;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: calc(var(--margin-base) * 1.6);
-            font-size: var(--font-size-base);
-            page-break-inside: avoid;
+            font-family: Arial, sans-serif;
         }
         th, td {
-            padding: calc(var(--padding-base) * 0.64) calc(var(--padding-base) * 0.96);
-            border: 1px solid black;
-            word-break: break-word;
+            padding: 0.625rem;
+            text-align: center;
+            border: 1px solid #ddd;
+            vertical-align: middle;
+            font-size: calc(var(--font-size-base) * 0.9);
         }
-        .field-label {
+        th {
+            background: #4CAF50;
+            color: white;
             font-weight: bold;
-            width: 3.125rem;
-            display: inline-block;
         }
-        .field-label2 {
-            font-weight: bold;
-            width: 5.25rem;
-            display: inline-block;
+        td {
+            background: white;
         }
-        .field-value {
-            display: inline-block;
-            width: 14.375rem;
-            min-height: 1rem;
+        tr:nth-child(even) td {
+            background: #f2f2f2;
         }
-        p {
-            margin: calc(var(--margin-base) * 0.32) 0 calc(var(--margin-base) * 0.96);
+        .equipamentos-cell {
+            text-align: left;
+            padding: 0.625rem;
+            text-overflow: ellipsis;
         }
-        .devolucao-section {
-            margin-top: calc(var(--margin-base) * 0.96);
+        .equipamento-item {
+            white-space: nowrap;
+            line-height: 1.5;
         }
-        .signature {
-            margin-top: calc(var(--margin-base) * 1.92);
-            font-size: var(--font-size-base);
+        footer {
+            text-align: center;
+            margin-top: calc(var(--margin-base) * 0.8);
+            font-size: calc(var(--font-size-base) * 0.75);
         }
-        .signature-line {
-            border-bottom: 1px solid black;
-            width: 9.375rem;
-            display: inline-block;
-            margin-left: calc(var(--margin-base) * 0.96);
-        }
-        .empty-space {
-            height: 1.25rem;
-        }
-        .espaco-entre-termo {
-            margin-bottom: 12.5rem;
-        }
-        .ficha-container {
-            margin-bottom: calc(var(--margin-base) * 4.8);
-            page-break-after: always;
-        }
-        .ficha-container:last-child {
-            page-break-after: auto;
-        }
-        @media print {
-            .no-print {
-                display: none;
-            }
-            .container {
-                max-width: 100%;
-            }
-        }
-        @media screen and (max-width: 768px) {
+        @media (max-width: 768px) {
             :root {
-                --font-size-base: 0.475rem;
+                --font-size-base: 0.9rem;
+                --padding-base: 0.8rem;
+                --margin-base: 0.8rem;
+            }
+            th, td {
+                padding: 0.4rem;
+            }
+            input[type="text"] {
+                width: 90%;
+            }
+        }
+        @media (max-width: 480px) {
+            :root {
+                --font-size-base: 0.8rem;
                 --padding-base: 0.5rem;
                 --margin-base: 0.5rem;
             }
-            .header-content {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .brasao {
-                width: 2.5rem;
-                margin-right: 0;
-                margin-bottom: calc(var(--margin-base) * 0.8);
-            }
-            .field-value {
-                width: 11.25rem;
-            }
-            .devolucao-section .field-value {
-                width: 9.375rem;
-            }
-            .signature-line {
-                width: 7.5rem;
-            }
-            .espaco-entre-termo {
-                margin-bottom: 6.25rem;
+            th, td {
+                padding: 0.3rem;
+                font-size: calc(var(--font-size-base) * 0.8);
             }
             button {
-                min-height: 2.75rem;
-                padding: calc(var(--padding-base) * 0.8) calc(var(--padding-base) * 1.6);
-            }
-        }
-        @media screen and (max-width: 480px) {
-            :root {
-                --font-size-base: 0.4375rem;
-                --padding-base: 0.3rem;
-                --margin-base: 0.3rem;
-            }
-            .brasao {
-                width: 2.1875rem;
-            }
-            .field-label {
-                width: 2.1875rem;
-            }
-            .field-label2 {
-                width: 3.75rem;
-            }
-            .field-value {
-                width: 7.5rem;
-            }
-            .devolucao-section .field-value {
-                width: 6.25rem;
-            }
-            .signature-line {
-                width: 6.25rem;
-            }
-            .espaco-entre-termo {
-                margin-bottom: 3.125rem;
-            }
-            button {
-                padding: calc(var(--padding-base) * 0.64) calc(var(--padding-base) * 1.28);
+                padding: 0.4rem 0.8rem;
             }
         }
     </style>
 </head>
-<body onload="carregarFichas()">
-    <div class="container" id="fichasContainer">
+<body>
+    <div class="container">
+        <h1>FICHAS ARQUIVADAS - ALMOXARIFADO COAUD</h1>
+        <div id="login-section">
+            <button onclick="solicitarToken()">Fazer Login com Google</button>
+        </div>
+        <div class="progress-container" id="progress-container" style="display: none;">
+            <div id="spinner" class="spinner"></div>
+            <p id="progressText">Aguardando dados do Google Sheets...</p>
+        </div>
+
+        <div id="busca-section" style="display: none;">
+            <h2>Consultar Histórico por Patrimônio (NRP)</h2>
+            <div>
+                <label>Patrimônio (NRP):</label>
+                <input type="text" id="nrpBuscaInput" placeholder="Digite o NRP (ex.: 414591)" onkeypress="if(event.key === 'Enter') buscarPorNRP()">
+                <button onclick="buscarPorNRP()">Buscar</button>
+                <button onclick="limparBusca()">Limpar Busca</button>
+            </div>
+        </div>
+        <div>
+            <button class="backButton" onclick="window.location.href='index-almoxarifado.html'">Voltar</button>
+            <button id="imprimirSelecionadas" onclick="imprimirFichasSelecionadas()" style="display: none;">Imprimir Selecionadas</button>
+        </div>
+
+        <div id="arquivadas-section" style="display: none;">
+            <h2>Fichas Arquivadas</h2>
+            <div class="table-wrapper">
+                <table id="arquivadasTable">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
+                            <th>ID Ficha</th>
+                            <th>Retirado por</th>
+                            <th>Entregue por</th>
+                            <th>Equipamentos</th>
+                            <th>Local</th>
+                            <th>Evento</th>
+                            <th>Data Retirada</th>
+                            <th>Data Devolução</th>
+                            <th>Devolvido por</th>
+                            <th>Recebido por</th>
+                        </tr>
+                    </thead>
+                    <tbody id="arquivadasList"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <div class="no-print">
-        <button onclick="window.print()">Imprimir</button>
-        <button onclick="window.location.href='fichas-arquivadas.html'">Voltar</button>
-    </div>
+    <footer class="author-signature">© 2024 BrenoDoria</footer>
     <script>
-        const operadoresPontos = {
-            "Adson Miranda dos Anjos": "914.262",
-            "Afonso Viana de Mesquita Filho": "5.947",
-            "Alberto Cesar Souza Almeida": "5.302",
-            "Alexander Rafael Carvalho Paim": "882.420",
-            "Alexandre Alves de Siqueira": "919.956",
-            "Alison Silva de Oliveira": "914.799",
-            "Allan Cosseti Ardisson": "919.895",
-            "Altamir Araújo da Silva": "881.758",
-            "Antonio Batista Ângelo": "999.134",
-            "Antonio Rodrigues Siqueira Filho": "917.486",
-            "Arley Carvalho Alves": "915.546",
-            "Breno Doria Felicio": "922.083",
-            "Bruno Fernandes Braga": "881.842",
-            "Bruno Rodrigues do Prado": "919.894",
-            "Bruno Vieira Rodrigues": "922.084",
-            "Carlos César Ferreira de Sousa": "5.250",
-            "Carlos Cesar José da Silva": "920.074",
-            "Carlos Eduardo Guedes da Silva": "882.174",
-            "Carlos Roberto de Paiva Miranda dos Santos": "922.498",
-            "Cinthia Neves Carvalho Barbosa": "5.476",
-            "Cláudio Marcelo do Nascimento": "882.421",
-            "Davi Aragão de Paula Gonçalves": "921.627",
-            "Douglas Batista da Silva": "920.077",
-            "Emmanuel do Amaral Idelfonso": "920.076",
-            "Enzo Risso Conturbia": "920.438",
-            "Eric Samuel do Ouro": "920.359",
-            "Erika Fedosseeff Auler": "921.672",
-            "Eromilson Monteiro dutra Chaves": "882.134",
-            "Evellyn Mendes de Souza Nunes": "915.974",
-            "Fausto Barbosa de Oliveira": "888.223",
-            "Felipe Omena Vasconcellos de Assis": "919.593",
-            "Fernando de Sousa Vasconcelos": "914.382",
-            "Flávio Lima Câmara": "882.218",
-            "Francisco de Assis da Silva Sales": "888.744",
-            "Francisco de Sousa Filho": "5.953",
-            "Francisco Juniel Sousa e Silva": "915.547",
-            "Geraldo Ribeiro de Souza Filho": "888.010",
-            "Gildo Marques da Silva": "920.092",
-            "Gilson Gomes da Silva": "882.541",
-            "Gilson Gustavo de Paiva Oliveira": "5.254",
-            "Gleisson Carlos Pereira da Silva": "914.815",
-            "Guilherme Malheiro da Rocha Pinto": "4.224",
-            "Helisson Rafael de O. Leite": "881.759",
-            "Helyeber Feitosa Ferreira": "919.899",
-            "Hilton Severiano Ferreira": "922.678",
-            "Huelisson Amancio de Moraes Silva": "881.596",
-            "Igor Mendes dos Santos": "921.292",
-            "Isaias Pereira Soares": "919.903",
-            "Joel Luiz de Sá Silva": "920.353",
-            "Joel Pereira Santos": "882.652",
-            "Joilson Santos de Jesus": "920.123",
-            "Jônatas Soares de Andrade": "881.598",
-            "Jose Henrique Ferreira da Silva": "7.913",
-            "José Nilton Abraão de Sousa": "920.352",
-            "Joval Bastos Freitas Júnior": "882.702",
-            "Juliano Gustavo Pedro de Oliveira": "882.053",
-            "Kely Berlinck Freire": "919.896",
-            "Kleber de Araújo Moura": "888.397",
-            "Leandro Calixto da Silva": "917.992",
-            "Leandro Silva Lima Alves": "921.291",
-            "Leonardo Augusto de Freitas": "882.688",
-            "Letícia Santana Araújo": "920.816",
-            "Lívia Maria de Souza": "916.391",
-            "Lucas Lima Lira": "919.897",
-            "Lucas Ribeiro dos Santos": "919.904",
-            "Luciano de Freitas Silva": "881.452",
-            "Luis Eduardo Campos Moreira": "919.898",
-            "Luiz Henrique Reis de Lima": "888.226",
-            "Marcelo Bruno Rezende Costa": "882.728",
-            "Marcelo Gomes da Silva": "918.923",
-            "Marco Antonio Baldresca Lambert de Brito": "5.261",
-            "Marco Antônio Felício Júnior": "915.553",
-            "Marcos Borges de Souza": "920.075",
-            "Marcus Aurélius Fernandes de Moura": "888.219",
-            "Massilon Alves de Sousa Filho": "919.905",
-            "Mateus da Silva Lima": "922.278",
-            "Matheus Gabriel Damasceno Dias": "920.354",
-            "Matheus Henrique Felix Barbosa": "922.082",
-            "Múcio Homero Rocha Pires de Oliveira": "5.297",
-            "Orlando Villavicencio Venegas": "882.673",
-            "Paulo Fernando Volpe": "5.933",
-            "Paulo Roberto Pereira": "888.227",
-            "Paulo Soares da Costa": "888.228",
-            "Pedro Henrique Candido Boaventura": "920.124",
-            "Péricles Cruz da Silva": "881.892",
-            "Priscilla Amorim dos Santos Rodrigues": "7.914",
-            "Rafael Queiroz Lemos de Oliveira": "881.782",
-            "Reynaldo Jessé Rodrigues da Silva": "888.131",
-            "Richard Rodrigues dos Santos": "921.026",
-            "Roberio Antunes Simionato": "5.266",
-            "Rodrigo Fonseca Shiratori": "5.272",
-            "Rondney Rodrigues Alves Sousa": "881.174",
-            "Rosivan Augustinho Pereira": "882.518",
-            "Thiago Veríssimo Cabral Freitas": "922.497",
-            "Vinícius Veríssimo Cabral Freitas": "919.796",
-            "Vivikananda Abdallah Antun Filho": "5.301",
-            "Waleria Bastos Cardoso": "915.570",
-            "Wanderson Balzan de Sousa": "918.679",
-            "Wellington Jorge Souza Mendes": "881.179",
-            "Wellington Rodrigo Ribeiro Santana": "882.052",
-            "Wendel Vieira da Costa": "919.907",
-            "Wesley Laécio da Silva Costa": "882.054",
-            "Wesley Maurício Ribeiro França": "888.217",
-            "Willian Neves da Silva": "888.230",
-            "Wirlem Silva Alves": "919.906"
+        const usuarios = {
+            "supervisor": { senha: "12345", permissao: "Supervisor" },
+            "operador": { senha: "12345", permissao: "Operador" }
         };
 
-        function carregarFichas() {
-            const fichas = JSON.parse(localStorage.getItem('fichasParaImprimir'));
-            if (!fichas || fichas.length === 0) {
-                alert('Nenhuma ficha selecionada para impressão. Redirecionando para a página de fichas arquivadas.');
-                window.location.href = 'fichas-arquivadas.html';
+        const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';
+        const FILE_ID = '1q9RCwJ4P--QIH4kkMszffrN8ZwzkSsNoZtPH-Usk4Zw';
+        let tokenClient;
+        let accessToken = null;
+        let arquivadasData = [];
+        let arquivadasFiltradas = [];
+
+        window.onload = () => {
+            const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+            if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
+                alert("Usuário não está logado. Faça login novamente.");
+                window.location.href = "index.html";
                 return;
             }
 
-            const container = document.getElementById('fichasContainer');
-            fichas.forEach((dadosFicha, index) => {
-                const fichaDiv = document.createElement('div');
-                fichaDiv.className = 'ficha-container';
-                const [dataRetiradaParte, horaRetiradaParte] = dadosFicha.dataRetirada.split(', ');
-                const [diaRetirada, mesRetirada, anoRetirada] = dataRetiradaParte.split('/');
-                const dataRetiradaFormatada = `${diaRetirada}/${mesRetirada}/${anoRetirada}`;
-                const horaRetiradaFormatada = horaRetiradaParte;
-                const [dataDevolucaoParte, horaDevolucaoParte] = dadosFicha.dataDevolucao.split(', ');
-                const [diaDevolucao, mesDevolucao, anoDevolucao] = dataDevolucaoParte.split('/');
-                const dataDevolucaoFormatada = `${diaDevolucao}/${mesDevolucao}/${anoDevolucao}`;
-                const horaDevolucaoFormatada = horaDevolucaoParte;
+            if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
+                alert("Acesso negado: Você não tem permissão para acessar o Controle de Almoxarifado.");
+                window.location.href = "index.html";
+                return;
+            }
 
-                fichaDiv.innerHTML = `
-                    <div class="header">
-                        <div class="header-content">
-                            <img src="brasao_republica_brasil.jpg" class="brasao" alt="Brasão da República do Brasil">
-                            <div class="header-text">
-                                <p><strong>CÂMARA DOS DEPUTADOS</strong></p>
-                                <p>Coordenação de Engenharia de Telecomunicações e Audiovisual - COAUD</p>
-                                <p>Seção de Apoio aos Auditórios e Comissões - SAUDI/SAPCO</p>
-                                <p><strong>FICHA DE RETIRADA / EMPRÉSTIMO DE MATERIAL PARA EVENTO</strong></p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="section-title">LISTA DE MATERIAL COM PATRIMÔNIO</div>
-                    <table class="listaMaterial">
-                        <tr>
-                            <th style="width: 6.25rem;">Patrimônio</th>
-                            <th>Descrição</th>
-                        </tr>
-                        ${dadosFicha.equipamentos.map(equip => {
-                            const [patrimonio, ...descricaoParts] = equip.split(' - ');
-                            const descricao = descricaoParts.join(' - ');
-                            return `<tr><td style="border: 1px solid black; padding: calc(var(--padding-base) * 0.8);">${patrimonio}</td><td style="border: 1px solid black; padding: calc(var(--padding-base) * 0.8);">${descricao}</td></tr>`;
-                        }).join('')}
-                    </table>
-                    <div class="section-title">RETIRADA</div>
-                    <div>
-                        <p><span class="field-label">Ficha:</span> <span class="field-value">${dadosFicha.idFicha}</span></p>
-                        <p><span class="field-label">Data:</span> <span class="field-value">${dataRetiradaFormatada}</span> <span class="field-label">Evento:</span> <span class="field-value">${dadosFicha.evento}</span></p>
-                        <p><span class="field-label">Local:</span> <span class="field-value">${dadosFicha.local}</span></p>
-                        <p><span class="field-label">Hora:</span> <span class="field-value">${horaRetiradaFormatada}</span></p>
-                        <p><span class="field-label">Nome:</span> <span class="field-value">${dadosFicha.operador1}</span> <span class="field-label">Ponto:</span> <span class="field-value">${operadoresPontos[dadosFicha.operador1] || 'N/A'}</span></p>
-                        <p><span class="field-label2">Almoxarifado:</span> <span class="field-value">${dadosFicha.operador2}</span> <span class="field-label">Ponto:</span> <span class="field-value">${operadoresPontos[dadosFicha.operador2] || 'N/A'}</span></p>
-                    </div>
-                    <div class="section-title">DEVOLUÇÃO</div>
-                    <div class="devolucao-section">
-                        <p><span class="field-label">Data:</span> <span class="field-value">${dataDevolucaoFormatada}</span> <span class="field-label">Hora:</span> <span class="field-value">${horaDevolucaoFormatada}</span></p>
-                        <p><span class="field-label">Nome:</span> <span class="field-value">${dadosFicha.operadorDevolucao}</span> <span class="field-label">Ponto:</span> <span class="field-value">${operadoresPontos[dadosFicha.operadorDevolucao] || 'N/A'}</span></p>
-                        <p><span class="field-label2">Almoxarifado:</span> <span class="field-value">${dadosFicha.almoxarifadoDevolucao}</span> <span class="field-label">Ponto:</span> <span class="field-value">${operadoresPontos[dadosFicha.almoxarifadoDevolucao] || 'N/A'}</span></p>
-                    </div>
-                    <div class="section-title">TERMO DE EMPRÉSTIMO</div>
-                    <div>
-                        <p>Conforme legislação vigente, o servidor abaixo-assinado e qualificado se responsabiliza pela guarda, zelo e devolução do material acima relacionado, classificado como permanente e de carga patrimonial desta seção de apoio SAUDI/SAPCO, da Coordenação de Engenharia de Telecomunicações e Audiovisual - COAUD.</p>
-                    </div>
-                    <div class="signature">
-                        <p>A SAUDI/SAPCO, representada pelo Operador: <span style="font-size: calc(var(--font-size-base) * 1.5); display: inline; font-weight: bold; margin-right: 0.625rem;">${dadosFicha.operador1}</span>
-                            <span class="field-label">Ponto:</span> <span style="font-size: calc(var(--font-size-base) * 1.5); display: inline; font-weight: bold; margin-right: 0.625rem;">${operadoresPontos[dadosFicha.operador1] || 'N/A'}</span></p>
-                        <p style="margin-top: calc(var(--margin-base) * 8);">Rubrica: <span class="signature-line"></span> recolheu, em <span>${dataRetiradaFormatada}</span>, às <span>${horaRetiradaFormatada}</span></p>
-                    </div>
-                    <div class="espaco-entre-termo"></div>
-                `;
-                container.appendChild(fichaDiv);
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/spreadsheets',
+                callback: (tokenResponse) => {
+                    if (tokenResponse.error) {
+                        document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
+                        document.getElementById("progress-container").style.display = "block";
+                        return;
+                    }
+                    accessToken = tokenResponse.access_token;
+                    localStorage.setItem("access_token", accessToken);
+                    document.getElementById("progressText").textContent = "Autenticado com sucesso! Carregando dados...";
+                    document.getElementById("progress-container").style.display = "block";
+                    document.getElementById("login-section").style.display = "none";
+                    document.getElementById("busca-section").style.display = "block";
+                    document.getElementById("arquivadas-section").style.display = "block";
+                    carregarDadosDoSheets();
+                }
             });
+
+            const savedToken = localStorage.getItem("access_token");
+            if (savedToken) {
+                accessToken = savedToken;
+                document.getElementById("login-section").style.display = "none";
+                document.getElementById("busca-section").style.display = "block";
+                document.getElementById("arquivadas-section").style.display = "block";
+                document.getElementById("progress-container").style.display = "block";
+                document.getElementById("progressText").textContent = "Usando token salvo. Carregando dados...";
+                carregarDadosDoSheets();
+            }
+        };
+
+        function solicitarToken() {
+            tokenClient.requestAccessToken();
+        }
+
+        async function carregarDadosDoSheets(retryCount = 0) {
+            const maxRetries = 3;
+            document.getElementById("spinner").style.display = "inline-block";
+            document.getElementById("progressText").textContent = "Consultando Google Sheets...";
+
+            try {
+                const arquivadasResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_ARQUIVADAS!A:J`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+
+                if (!arquivadasResponse.ok) {
+                    const errorData = await arquivadasResponse.json();
+                    throw new Error(`Erro ao carregar RETIRADAS_ARQUIVADAS: ${errorData.error?.message || arquivadasResponse.statusText}`);
+                }
+
+                const arquivadas = await arquivadasResponse.json();
+                arquivadasData = arquivadas.values || [];
+                arquivadasFiltradas = arquivadasData.slice();
+                document.getElementById("progressText").textContent = "Dados carregados com sucesso!";
+                document.getElementById("spinner").style.display = "none";
+                atualizarTabelaArquivadas();
+            } catch (error) {
+                if (error.message.includes("401") && retryCount < maxRetries) {
+                    document.getElementById("progressText").textContent = "Token expirado, reautenticando...";
+                    localStorage.removeItem("access_token");
+                    accessToken = null;
+                    document.getElementById("login-section").style.display = "block";
+                    document.getElementById("busca-section").style.display = "none";
+                    document.getElementById("arquivadas-section").style.display = "none";
+                    solicitarToken();
+                    return;
+                }
+                console.error("Erro ao carregar dados:", error);
+                document.getElementById("progressText").textContent = "Erro ao carregar os dados: " + error.message;
+                document.getElementById("spinner").style.display = "none";
+            }
+        }
+
+        function atualizarTabelaArquivadas() {
+    const arquivadasList = document.getElementById("arquivadasList");
+    arquivadasList.innerHTML = "";
+    document.getElementById("selectAll").checked = false;
+    if (arquivadasFiltradas.length > 1) {
+        // Cria uma cópia dos dados (excluindo o cabeçalho) e ordena por Data Devolução em ordem decrescente
+        const sortedData = [...arquivadasFiltradas.slice(1)].sort((a, b) => {
+            const parseDate = (dateStr) => {
+                if (!dateStr) return new Date(0); // Valor padrão para datas inválidas
+                const [datePart, timePart] = dateStr.split(', ');
+                const [day, month, year] = datePart.split('/').map(Number);
+                const [hours, minutes, seconds] = timePart.split(':').map(Number);
+                return new Date(year, month - 1, day, hours, minutes, seconds); // month - 1 pois Janeiro é 0
+            };
+            const dateA = parseDate(a[7]);
+            const dateB = parseDate(b[7]);
+            return dateB - dateA; // Ordem decrescente
+        });
+
+        // Popula a tabela com os dados ordenados
+        sortedData.forEach((row, sortedIndex) => {
+            const equipamentos = row[3] ? row[3].split('; ') : [];
+            const equipamentosFormatados = equipamentos.length > 0
+                ? equipamentos.map(equip => `<div class="equipamento-item">${equip}</div>`).join('')
+                : '-';
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><input type="checkbox" class="ficha-checkbox" data-index="${sortedIndex + 1}"></td>
+                <td>${row[0]}</td>
+                <td>${row[1]}</td>
+                <td>${row[2] || '-'}</td>
+                <td class="equipamentos-cell">${equipamentosFormatados}</td>
+                <td>${row[4]}</td>
+                <td>${row[5]}</td>
+                <td>${row[6]}</td>
+                <td>${row[7]}</td>
+                <td>${row[8] || '-'}</td>
+                <td>${row[9] || '-'}</td>
+            `;
+            arquivadasList.appendChild(tr);
+        });
+        document.getElementById("imprimirSelecionadas").style.display = "inline-block";
+    } else {
+        document.getElementById("imprimirSelecionadas").style.display = "none";
+    }
+
+    // Depuração: log para verificar a ordenação
+    console.log("Dados ordenados por Data Devolução:", sortedData.map(row => row[7]));
+}
+        function toggleSelectAll() {
+            const selectAll = document.getElementById("selectAll");
+            const checkboxes = document.querySelectorAll(".ficha-checkbox");
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+        }
+
+        function imprimirFichasSelecionadas() {
+            const checkboxes = document.querySelectorAll(".ficha-checkbox:checked");
+            if (checkboxes.length === 0) {
+                document.getElementById("progressText").textContent = "Selecione pelo menos uma ficha para imprimir.";
+                return;
+            }
+
+            const fichasSelecionadas = Array.from(checkboxes).map(checkbox => {
+                const index = parseInt(checkbox.getAttribute("data-index"));
+                const row = arquivadasFiltradas[index];
+                return {
+                    idFicha: row[0],
+                    operador1: row[1],
+                    operador2: row[2] || '-',
+                    equipamentos: row[3] ? row[3].split('; ') : [],
+                    local: row[4],
+                    evento: row[5],
+                    dataRetirada: row[6],
+                    dataDevolucao: row[7],
+                    operadorDevolucao: row[8] || '-',
+                    almoxarifadoDevolucao: row[9] || '-'
+                };
+            });
+
+            localStorage.setItem('fichasParaImprimir', JSON.stringify(fichasSelecionadas));
+            window.location.href = 'imprimir-arquivadas.html';
+        }
+
+        function buscarPorNRP() {
+            const nrp = document.getElementById("nrpBuscaInput").value.trim();
+            if (!nrp) {
+                document.getElementById("progressText").textContent = "Digite um NRP para buscar.";
+                return;
+            }
+
+            const nrpNormalizado = nrp.replace(/\./g, "").replace(/^0+/, "");
+            arquivadasFiltradas = [arquivadasData[0]];
+            const fichasFiltradas = arquivadasData.slice(1).filter(row => {
+                const equipamentos = row[3] || "";
+                return equipamentos.split("; ").some(equip => {
+                    const nrpEquip = equip.split(" - ")[0].replace(/^0+/, "");
+                    return nrpEquip === nrpNormalizado;
+                });
+            });
+
+            if (fichasFiltradas.length === 0) {
+                document.getElementById("progressText").textContent = `Nenhuma ficha arquivada encontrada para o NRP ${nrp}.`;
+            } else {
+                document.getElementById("progressText").textContent = `Encontradas ${fichasFiltradas.length} fichas para o NRP ${nrp}.`;
+                arquivadasFiltradas.push(...fichasFiltradas);
+            }
+
+            atualizarTabelaArquivadas();
+        }
+
+        function limparBusca() {
+            document.getElementById("nrpBuscaInput").value = "";
+            arquivadasFiltradas = arquivadasData.slice();
+            document.getElementById("progressText").textContent = "Busca limpa. Exibindo todas as fichas arquivadas.";
+            atualizarTabelaArquivadas();
         }
     </script>
 </body>

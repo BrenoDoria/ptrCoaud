@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Almoxarifado COAUD</title>
+    <title>Controle de BLP COAUD</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
@@ -102,7 +102,7 @@
 </head>
 <body>
     <div class="container">
-        <h1> COAUD - CONTROLE DE EQUIPAMENTOS</h1>
+        <h1>BLP COAUD - CONTROLE DE EQUIPAMENTOS</h1>
         <div id="login-section">
             <button onclick="solicitarToken()">Fazer Login com Google</button>
         </div>
@@ -265,7 +265,7 @@
         </div>
         <button id="backButton" class="backButton" onclick="navigateTo('index.html')">Voltar</button>
     </div>
-    <footer class="author-signature">© 2025 BrenoDoria</footer>
+    <footer class="author-signature">© 2024 BrenoDoria</footer>
     <script>
         const usuarios = {
             "supervisor": { senha: "12345", permissao: "Supervisor" },
@@ -448,7 +448,7 @@
             }
             nrp = nrp.replace(/\./g, "");
             const nrpSemZeros = nrp.replace(/^0+/, "");
-            if (!patrimoniosPermitidosParaRepeticao.includes(nrpSemZeros)){
+            if (!patrimoniosPermitidosParaRepeticao.includes(nrpSemZeros)) {
                 const jaAdicionado = patrimoniosSelecionados.some(item => item.NRP === nrp);
                 if (jaAdicionado) {
                     document.getElementById("progressText").textContent = `NRP "${nrp}" já foi adicionado.`;
@@ -518,7 +518,7 @@
             "99010021", "99010022", "99010023", "99010024", "99010025",
             "99030001", "99030002", "99040001", "99020001", "99020002",
             "99020003", "99020004", "99040002", "99040003", "99030003",
-            "99030004", "99030005", "99030006", "99040004"
+            "99030004", "99030005", "99030006", "99040004",
         ];
 
         async function registrarRetirada() {

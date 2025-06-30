@@ -6,9 +6,9 @@ const usuarios = {
 
 // Verificação de permissão ao carregar a página
 window.onload = () => {
-    const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
-    if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
-        alert("Usuário não está logado. Faça login novamente.");
+   const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+    if (!usuarioLogado || !usuariosPonto[usuarioLogado.ponto] || usuariosPonto[usuarioLogado.ponto].permissao !== "Supervisor") {
+        alert("Acesso negado: Você não tem permissão para acessar o Comparador de Patrimônios.");
         window.location.href = "index.html";
         return;
     }

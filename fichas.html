@@ -90,6 +90,9 @@
             white-space: nowrap;
             line-height: 1.5;
         }
+        .ficha-atrasada td {
+            background-color: yellow !important;
+        }
         footer {
             text-align: center;
             margin-top: calc(var(--margin-base) * 0.8);
@@ -205,6 +208,7 @@
 
         <div id="pendentes-section" style="display: none;">
             <h2>Fichas Pendentes</h2>
+                <button class="backButton" onclick="window.location.href='index-almoxarifado.html'">Voltar</button>
             <div class="table-wrapper">
                 <table id="pendentesTable">
                     <thead>
@@ -353,10 +357,8 @@
                 <button onclick="confirmarDevolucao()">Confirmar Devolução</button>
             </div>
         </div>
-
-        <button class="backButton" onclick="window.location.href='index-almoxarifado.html'">Voltar</button>
     </div>
-    <footer class="author-signature">© 2024 BrenoDoria</footer>
+    <footer class="author-signature">© 2025 BrenoDoria</footer>
     <script>
         const usuarios = {
             "supervisor": { senha: "12345", permissao: "Supervisor" },
@@ -476,54 +478,73 @@
             }
         }
 
-        function atualizarTabelas() {
-    const pendentesList = document.getElementById("pendentesList");
-    pendentesList.innerHTML = "";
-    if (pendentesData.length > 1) {
-        // Cria uma cópia dos dados (excluindo o cabeçalho) e ordena por Data Retirada em ordem decrescente
-        const sortedData = [...pendentesData.slice(1)].sort((a, b) => {
-            // Parse da data no formato DD/MM/YYYY, HH:MM:SS
-            const parseDate = (dateStr) => {
-                if (!dateStr) return new Date(0); // Valor padrão para datas inválidas
-                const [datePart, timePart] = dateStr.split(', ');
-                const [day, month, year] = datePart.split('/').map(Number);
-                const [hours, minutes, seconds] = timePart.split(':').map(Number);
-                return new Date(year, month - 1, day, hours, minutes, seconds); // month - 1 pois Janeiro é 0
-            };
-            const dateA = parseDate(a[6]);
-            const dateB = parseDate(b[6]);
-            return dateB - dateA; // Ordem decrescente
-        });
+               function atualizarTabelas() {
+            const pendentesList = document.getElementById("pendentesList");
+            pendentesList.innerHTML = "";
+            if (pendentesData.length > 1) {
+                // Cria uma cópia dos dados (excluindo o cabeçalho) e ordena por Data Retirada em ordem decrescente
+                const sortedData = [...pendentesData.slice(1)].sort((a, b) => {
+                    // Parse da data no formato DD/MM/YYYY, HH:MM:SS
+                    const parseDate = (dateStr) => {
+                        if (!dateStr) return new Date(0); // Valor padrão para datas inválidas
+                        const [datePart, timePart] = dateStr.split(', ');
+                        const [day, month, year] = datePart.split('/').map(Number);
+                        const [hours, minutes, seconds] = timePart.split(':').map(Number);
+                        return new Date(year, month - 1, day, hours, minutes, seconds); // month - 1 pois Janeiro é 0
+                    };
+                    const dateA = parseDate(a[6]);
+                    const dateB = parseDate(b[6]);
+                    return dateB - dateA; // Ordem decrescente
+                });
 
-        // Popula a tabela com os dados ordenados
-        sortedData.forEach((row, sortedIndex) => {
-            const equipamentos = row[3] ? row[3].split('; ') : [];
-            const equipamentosFormatados = equipamentos.length > 0
-                ? equipamentos.map(equip => `<div class="equipamento-item">${equip}</div>`).join('')
-                : '-';
-            const originalIndex = pendentesData.slice(1).findIndex(r => r[0] === row[0]) + 1; // Índice original no pendentesData
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td>${row[0]}</td>
-                <td>${row[1]}</td>
-                <td>${row[2] || '-'}</td>
-                <td class="equipamentos-cell">${equipamentosFormatados}</td>
-                <td>${row[4]}</td>
-                <td>${row[5]}</td>
-                <td>${row[6]}</td>
-                <td>
-                    <button onclick="editarFicha(${originalIndex})">Editar</button>
-                    <button onclick="abrirModalDevolucao('${row[0]}')">Marcar Devolução</button>
-                    <button onclick="imprimirFicha(${originalIndex})">Imprimir</button>
-                </td>
-            `;
-            pendentesList.appendChild(tr);
-        });
+                // Popula a tabela com os dados ordenados
+                sortedData.forEach((row, sortedIndex) => {
+                    const equipamentos = row[3] ? row[3].split('; ') : [];
+                    const equipamentosFormatados = equipamentos.length > 0
+                        ? equipamentos.map(equip => `<div class="equipamento-item">${equip}</div>`).join('')
+                        : '-';
+                    const originalIndex = pendentesData.slice(1).findIndex(r => r[0] === row[0]) + 1; // Índice original no pendentesData
 
-        // Depuração: log para verificar a ordenação
-        console.log("Dados ordenados:", sortedData.map(row => row[6]));
-    }
-}
+                    // Verifica se a ficha tem mais de 30 dias
+                    const parseDate = (dateStr) => {
+                        if (!dateStr) return new Date(0);
+                        const [datePart, timePart] = dateStr.split(', ');
+                        const [day, month, year] = datePart.split('/').map(Number);
+                        const [hours, minutes, seconds] = timePart.split(':').map(Number);
+                        return new Date(year, month - 1, day, hours, minutes, seconds);
+                    };
+                    const dataRetirada = parseDate(row[6]);
+                    const dataAtual = new Date();
+                    const diffTime = dataAtual - dataRetirada;
+                    const diffDays = diffTime / (1000 * 60 * 60 * 24); // Converte milissegundos para dias
+                    const isAtrasada = diffDays > 30;
+
+                    const tr = document.createElement("tr");
+                    if (isAtrasada) {
+                        tr.classList.add("ficha-atrasada");
+                    }
+                    tr.innerHTML = `
+                        <td>${row[0]}</td>
+                        <td>${row[1]}</td>
+                        <td>${row[2] || '-'}</td>
+                        <td class="equipamentos-cell">${equipamentosFormatados}</td>
+                        <td>${row[4]}</td>
+                        <td>${row[5]}</td>
+                        <td>${row[6]}</td>
+                        <td>
+                            <button onclick="editarFicha(${originalIndex})">Editar</button>
+                            <button onclick="abrirModalDevolucao('${row[0]}')">Marcar Devolução</button>
+                            <button onclick="imprimirFicha(${originalIndex})">Imprimir</button>
+                        </td>
+                    `;
+                    pendentesList.appendChild(tr);
+                });
+
+                // Depuração: log para verificar a ordenação
+                console.log("Dados ordenados:", sortedData.map(row => row[6]));
+            }
+        }
+
 
         function editarFicha(rowIndex) {
             const ficha = pendentesData[rowIndex];

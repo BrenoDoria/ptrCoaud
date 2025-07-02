@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de BLP COAUD</title>
+    <title>COAUD - CONTROLE DE EQUIPAMENTOS</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
@@ -102,7 +102,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>BLP COAUD - CONTROLE DE EQUIPAMENTOS</h1>
+        <h1>COAUD - CONTROLE DE EQUIPAMENTOS</h1>
         <div id="login-section">
             <button onclick="solicitarToken()">Fazer Login com Google</button>
         </div>
@@ -242,6 +242,17 @@
                 <label>Patrimônio (NRP):</label>
                 <input type="text" id="nrpInput" placeholder="Digite ou bipar o NRP e pressione Enter" onkeypress="if(event.key === 'Enter') adicionarNRP()">
             </div>
+            <div id="action-buttons">
+                <button onclick="limparNRPs()" style="display: none;" id="limparNRPsBtn">Limpar Lista</button>
+                <button id="submitButton" onclick="registrarRetirada()">Registrar Retirada</button>
+                <button id="cancelButton" class="cancelButton" onclick="cancelarEdicao()" style="display: none;">Cancelar Edição</button>
+            </div>
+        </div>
+        <div id="navegacao-fichas" style="display: none;">
+            <button id="fichasPendentesBtn" onclick="navigateTo('fichas.html')">Fichas Pendentes</button>
+            <button id="fichasArquivadasBtn" onclick="navigateTo('fichas-arquivadas.html')">Fichas Arquivadas</button>
+        </div>
+        <button id="backButton" class="backButton" onclick="navigateTo('index.html')">Voltar</button>
             <table id="patrimonioTable">
                 <thead>
                     <tr>
@@ -254,19 +265,8 @@
                 </thead>
                 <tbody id="patrimonioList"></tbody>
             </table>
-            <button onclick="limparNRPs()" style="display: none;" id="limparNRPsBtn">Limpar Lista</button>
-            <div id="action-buttons">
-                <button id="submitButton" onclick="registrarRetirada()">Registrar Retirada</button>
-                <button id="cancelButton" class="cancelButton" onclick="cancelarEdicao()" style="display: none;">Cancelar Edição</button>
-            </div>
-        </div>
-        <div id="navegacao-fichas" style="display: none;">
-            <button id="fichasPendentesBtn" onclick="navigateTo('fichas.html')">Ver Fichas Pendentes</button>
-            <button id="fichasArquivadasBtn" onclick="navigateTo('fichas-arquivadas.html')">Ver Fichas Arquivadas</button>
-        </div>
-        <button id="backButton" class="backButton" onclick="navigateTo('index.html')">Voltar</button>
     </div>
-    <footer class="author-signature">© 2024 BrenoDoria</footer>
+    <footer class="author-signature">© 2025 BrenoDoria</footer>
     <script>
         const usuarios = {
             "supervisor": { senha: "12345", permissao: "Supervisor" },

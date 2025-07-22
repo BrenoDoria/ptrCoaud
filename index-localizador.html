@@ -159,6 +159,7 @@
             // Limpa o campo ANTES de processar a busca
             const patrimonioInput = document.getElementById("patrimonioInput");
             const nrp = patrimonioInput.value.trim();
+            let cleanedNrp = nrp.replace(/\./g, "").replace(/^0+/, "");
             const listElement = document.getElementById("patrimonioList");
             const progressText = document.getElementById("progressText");
 
@@ -174,7 +175,7 @@
                 return;
             }
 
-            const patrimonio = dadosPlanilha.slice(1).find(row => row[0]?.toString().trim() === nrp);
+            const patrimonio = dadosPlanilha.slice(1).find(row => row[0] && row[0].toString().trim().replace(/\./g, "").replace(/^0+/, "") === cleanedNrp);
 
             listElement.innerHTML = "";
             if (patrimonio) {

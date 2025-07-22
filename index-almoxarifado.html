@@ -489,7 +489,7 @@
                     <td>${item.Responsável || "Não informado"}</td>
                     <td><button onclick="removerPatrimonio(${index})">Remover</button></td>
                 `;
-                listElement.appendChild(row);
+               listElement.prepend(row);
             });
         }
 

@@ -124,7 +124,7 @@ function updateList() {
         const responsavelCell = document.createElement("td");
         responsavelCell.textContent = item.Responsável;
         row.appendChild(responsavelCell);
-        listElement.appendChild(row);
+        listElement.prepend(row);
     });
 }
 

@@ -517,7 +517,7 @@
                     const dataAtual = new Date();
                     const diffTime = dataAtual - dataRetirada;
                     const diffDays = diffTime / (1000 * 60 * 60 * 24); // Converte milissegundos para dias
-                    const isAtrasada = diffDays > 12;
+                    const isAtrasada = diffDays > 10;
 
                     const tr = document.createElement("tr");
                     if (isAtrasada) {

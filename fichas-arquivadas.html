@@ -325,6 +325,9 @@
             arquivadasList.appendChild(tr);
         });
         document.getElementById("imprimirSelecionadas").style.display = "inline-block";
+        // ✅ Move o log para dentro do if
+        console.log("Dados ordenados por Data Devolução:", sortedData.map(row => row[7]));
+
     } else {
         document.getElementById("imprimirSelecionadas").style.display = "none";
     }

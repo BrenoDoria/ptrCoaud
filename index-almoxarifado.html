@@ -4,187 +4,198 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>COAUD - CONTROLE DE EQUIPAMENTOS</title>
-    <link rel="stylesheet" href="style.css">
     <style>
         .container {
             text-align: center;
             padding: 20px;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
+            font-family: Arial, sans-serif;
         }
-        h1 { font-size: 24px; margin-bottom: 20px; }
-        h2 { font-size: 20px; margin-top: 30px; }
+        h1 { 
+            font-size: 28px; 
+            margin-bottom: 20px; 
+            color: #1a3c6e;
+        }
+        h2 { 
+            font-size: 22px; 
+            margin-top: 30px; 
+            color: #333;
+        }
         .form-group {
             display: flex;
             align-items: center;
-            margin-bottom: 40px;
+            margin-bottom: 25px;
             flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
         }
         .form-group label {
-            width: 120px;
+            width: 140px;
             text-align: right;
-            margin-right: 10px;
             font-weight: bold;
+            color: #333;
         }
         .form-group select,
-        .form-group input[type="text"],
-        .form-group input[list] {
+        .form-group input[type="text"] {
             flex: 1;
-            width: 250px;
-            max-width: 250px;
-            padding: 8px;
-            margin: 5px;
-            box-sizing: border-box;
-            border: 1px solid #ddd;
-            background: white;
-            font-family: Arial, sans-serif;
+            min-width: 250px;
+            max-width: 300px;
+            padding: 10px;
             font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: white;
         }
-        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
-        .backButton, .cancelButton { background: #ccc; }
-        button:disabled { background: #e0e0e0; cursor: not-allowed; }
+
+        /* Estilo bonito para select com busca */
+        .select-search {
+            position: relative;
+            display: inline-block;
+            width: 300px;
+        }
+        .select-search select {
+            width: 100%;
+            padding: 10px 35px 10px 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            appearance: none;
+        }
+        .select-search::after {
+            content: "▼";
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #555;
+            font-size: 14px;
+        }
+
+        button { 
+            padding: 10px 20px; 
+            margin: 8px; 
+            font-size: 16px; 
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+        }
+        button:hover { background: #45a049; }
+        .backButton, .cancelButton { background: #ccc; color: #333; }
+        .backButton:hover, .cancelButton:hover { background: #999; }
+        button:disabled { 
+            background: #e0e0e0; 
+            cursor: not-allowed; 
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            font-family: Arial, sans-serif;
+            margin-top: 30px;
+            font-size: 15px;
         }
-        th, td { padding: 8px; text-align: center; border: 1px solid #ddd; }
-        th { background: #4CAF50; color: white; }
-        tr:nth-child(even) { background: #f2f2f2; }
-        tr:nth-child(odd) { background: white; }
-        footer { text-align: center; margin-top: 20px; font-size: 12px; }
+        th, td { 
+            padding: 12px; 
+            text-align: center; 
+            border: 1px solid #ddd; 
+        }
+        th { 
+            background: #1a3c6e; 
+            color: white; 
+        }
+        tr:nth-child(even) { background: #f8f9fa; }
+        tr:hover { background: #f1f1f1; }
+
+        #progress-container {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f8ff;
+            border-radius: 8px;
+            border: 1px solid #b0d4ff;
+            display: none;
+        }
+        #progressText {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        #spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 12px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>COAUD - CONTROLE DE EQUIPAMENTOS</h1>
-        <div id="retirada-section">
+
+        <div id="progress-container">
+            <div id="spinner"></div>
+            <div id="progressText">Carregando...</div>
+        </div>
+
+        <div id="retirada-section" style="display: none;">
             <h2 id="form-title">Registrar Retirada de Equipamento</h2>
+
             <div class="form-group">
                 <label>Operador:</label>
-                <input list="operador1List" id="operador1Input" placeholder="Digite ao menos 3 letras">
-                <datalist id="operador1List">
-                    <option value="Adson Miranda dos Anjos"></option>
-                    <option value="Afonso Viana de Mesquita Filho"></option>
-                    <option value="Alberto Cesar Souza Almeida"></option>
-                    <option value="Alexander Rafael Carvalho Paim"></option>
-                    <option value="Alison Silva de Oliveira"></option>
-                    <option value="Allan Cosseti Ardisson"></option>
-                    <option value="Altamir Araujo da Silva"></option>
-                    <option value="Antonio Batista Ângelo"></option>
-                    <option value="Antonio Rodrigues Siqueira Filho"></option>
-                    <option value="Arley Carvalho Alves"></option>
-                    <option value="Breno Doria Felicio"></option>
-                    <option value="Bruno Fernandes Braga"></option>
-                    <option value="Bruno Rodrigues do Prado"></option>
-                    <option value="Bruno Vieira Rodrigues"></option>
-                    <option value="Carlos Cesar José da Silva"></option>
-                    <option value="Carlos Eduardo Guedes da Silva"></option>
-                    <option value="Carlos Roberto de Paiva Miranda dos Santos"></option>
-                    <option value="Cinthia Neves Carvalho Barbosa"></option>
-                    <option value="Cláudio Marcelo do Nascimento"></option>
-                    <option value="Davi Aragão de Paula Gonçalves"></option>
-                    <option value="Douglas Batista da Silva"></option>
-                    <option value="Emmanuel do Amaral Idelfonso"></option>
-                    <option value="Emanuel Silveira Costa"></option>
-                    <option value="Eric Samuel do Ouro"></option>
-                    <option value="Erika Fedosseeff Auler"></option>
-                    <option value="Eromilson Monteiro dutra Chaves"></option>
-                    <option value="Evellyn Mendes de Souza Nunes"></option>
-                    <option value="Felipe Omena Vasconcellos de Assis"></option>
-                    <option value="Fernando de Sousa Vasconcelos"></option>
-                    <option value="Flávio Lima Câmara"></option>
-                    <option value="Francisco de Assis da Silva Sales"></option>
-                    <option value="Francisco de Sousa Filho"></option>
-                    <option value="Francisco Juniel Sousa e Silva"></option>
-                    <option value="Geraldo Ribeiro de Souza Filho"></option>
-                    <option value="Gildo Marques da Silva"></option>
-                    <option value="Gilson Gomes da Silva"></option>
-                    <option value="Gleisson Carlos Pereira da Silva"></option>
-                    <option value="Guilherme Malheiro da Rocha Pinto"></option>
-                    <option value="Helisson Rafael de O. Leite"></option>
-                    <option value="Helyeber Feitosa Ferreira"></option>
-                    <option value="Huelisson Amancio de Moraes Silva"></option>
-                    <option value="Igor Mendes dos Santos"></option>
-                    <option value="Isaias Pereira Soares"></option>
-                    <option value="Joel Luiz de Sá Silva"></option>
-                    <option value="Joel Pereira Santos"></option>
-                    <option value="Jônatas Soares de Andrade"></option>
-                    <option value="Jose Henrique Ferreira da Silva"></option>
-                    <option value="Jose Leandro Marques"></option>
-                    <option value="José Nilton Abraão de Sousa"></option>
-                    <option value="Josue Cardoso Abreu"></option>
-                    <option value="Joval Bastos Freitas Júnior"></option>
-                    <option value="Juliano Gustavo Pedro de Oliveira"></option>
-                    <option value="Kely Berlinck Freire"></option>
-                    <option value="Kleber de Araújo Moura"></option>
-                    <option value="Leandro Calixto da Silva"></option>
-                    <option value="Leandro Silva Lima Alves"></option>
-                    <option value="Leonardo Augusto de Freitas"></option>
-                    <option value="Letícia Santana Araújo"></option>
-                    <option value="Lívia Maria de Souza"></option>
-                    <option value="Lucas Lima Lira"></option>
-                    <option value="Lucas Ribeiro dos Santos"></option>
-                    <option value="Luciano de Freitas Silva"></option>
-                    <option value="Luiz Henrique Reis de Lima"></option>
-                    <option value="Marcelo Gomes da Silva"></option>
-                    <option value="Marco Antonio Baldresca Lambert de Brito"></option>
-                    <option value="Marco Antônio Felício Júnior"></option>
-                    <option value="Marcos Borges de Souza"></option>
-                    <option value="Marcus Aurélius Fernandes de Moura"></option>
-                    <option value="Massilon Alves de Sousa Filho"></option>
-                    <option value="Mateus da Silva Lima"></option>
-                    <option value="Matheus Gabriel Damasceno Dias"></option>
-                    <option value="Matheus Henrique Felix Barbosa"></option>
-                    <option value="Múcio Homero Rocha Pires de Oliveira"></option>
-                    <option value="Orlando Villavicencio Venegas"></option>
-                    <option value="Otoniel Alves de Souza"></option>
-                    <option value="Paulo Fernando Volpe"></option>
-                    <option value="Paulo Roberto Pereira"></option>
-                    <option value="Paulo Soares da Costa"></option>
-                    <option value="Pedro Henrique Candido Boaventura"></option>
-                    <option value="Péricles Cruz da Silva"></option>
-                    <option value="Rafael Queiroz Lemos de Oliveira"></option>
-                    <option value="Reynaldo Jessé Rodrigues da Silva"></option>
-                    <option value="Richard Rodrigues dos Santos"></option>
-                    <option value="Roberio Antunes Simionato"></option>
-                    <option value="Rondney Rodrigues Alves Sousa"></option>
-                    <option value="Rosivan Augustinho Pereira"></option>
-                    <option value="Thiago Veríssimo Cabral Freitas"></option>
-                    <option value="Waleria Bastos Cardoso"></option>
-                    <option value="Wellington Jorge Souza Mendes"></option>
-                    <option value="Wendel Vieira da Costa"></option>
-                    <option value="Wesley Maurício Ribeiro França"></option>
-                    <option value="Willian Neves da Silva"></option>
-                    <option value="Wirlem Silva Alves"></option>
+                <div class="select-search">
+                    <select id="operador1Select">
+                        <option value="">Selecione ou digite para buscar...</option>
+                    </select>
+                </div>
 
-                </datalist>
                 <label>Almoxarifado:</label>
                 <select id="operador2Select">
-                    <option value=""></option>
+                    <option value="">Selecione...</option>
                     <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
                     <option value="Altamir Araújo da Silva">Altamir Araújo da Silva</option>
                     <option value="Antonio Batista Ângelo">Antonio Batista Ângelo</option>
                     <option value="Waleria Bastos Cardoso">Waleria Bastos Cardoso</option>
                 </select>
             </div>
+
             <div class="form-group">
                 <label>Local:</label>
-                <input type="text" id="localMontagemInput" placeholder="Ex.: Sala 101">
+                <input type="text" id="localMontagemInput" placeholder="Ex.: Plenário 12">
+
                 <label>Evento/Reunião:</label>
-                <input type="text" id="eventoInput" placeholder="Ex.: Reunião Mensal">
+                <input type="text" id="eventoInput" placeholder="Ex.: Comissão Especial - PL 0733/25">
             </div>
+
             <div class="form-group">
                 <label>Patrimônio (NRP):</label>
                 <input type="text" id="nrpInput" placeholder="Digite ou bipar o NRP e pressione Enter">
             </div>
+
             <div id="action-buttons">
                 <button id="submitButton">Registrar Retirada</button>
-                <button id="limparNRPsBtn">Limpar Lista</button>
-                <button id="cancelButton" class="cancelButton">Cancelar Edição</button>
+                <button id="limparNRPsBtn" style="display: none;">Limpar Lista</button>
+                <button id="cancelButton" class="cancelButton" style="display: none;">Cancelar Edição</button>
             </div>
         </div>
+
         <table id="patrimonioTable">
             <thead>
                 <tr>
@@ -198,21 +209,62 @@
             <tbody id="patrimonioList"></tbody>
         </table>
     </div>
-    <footer class="author-signature">© 2025 BrenoDoria</footer>
+
+    <footer class="author-signature">© 2025 BrenoDoria - Sistema COAUD</footer>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         const usuarios = {
             "supervisor": { senha: "12345", permissao: "Supervisor" },
             "operador": { senha: "12345", permissao: "Operador" }
         };
+
         const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';
         const FILE_ID = '1q9RCwJ4P--QIH4kkMszffrN8ZwzkSsNoZtPH-Usk4Zw';
+        const ESCALA_SHEET_ID = '1smzyrRUnPZkfZGY-8EPDGg7Js8_6-nQ2xlpXgl8Orjw';
+        const ESCALA_API_KEY = 'AIzaSyA8yWyDVkekhaVdxCO7BuP3pjjjKTD-cDE';
+
         let tokenClient;
         let accessToken = null;
         let patrimonioData = [];
         let patrimoniosSelecionados = [];
         let fichaEditando = null;
 
-        window.onload = () => {
+        // Lista completa de operadores (ordem alfabética)
+        const operadoresLista = [
+            "Adson Miranda dos Anjos","Afonso Viana de Mesquita Filho","Alberto Cesar Souza Almeida","Alexander Rafael Carvalho Paim","Alison Silva de Oliveira","Allan Cosseti Ardisson",
+            "Altamir Araujo da Silva","Antonio Batista Ângelo","Antonio Rodrigues Siqueira Filho","Arley Carvalho Alves","Breno Doria Felicio",
+            "Bruno Fernandes Braga","Bruno Rodrigues do Prado","Bruno Vieira Rodrigues","Carlos Cesar José da Silva","Carlos Eduardo Guedes da Silva",
+            "Carlos Roberto de Paiva Miranda dos Santos","Cinthia Neves Carvalho Barbosa","Cláudio Marcelo do Nascimento","Davi Aragão de Paula Gonçalves",
+            "Douglas Batista da Silva","Emmanuel do Amaral Idelfonso","Emanuel Silveira Costa","Eric Samuel do Ouro","Erika Fedosseeff Auler",
+            "Eromilson Monteiro dutra Chaves","Evellyn Mendes de Souza Nunes","Felipe Omena Vasconcellos de Assis","Fernando de Sousa Vasconcelos",
+            "Flávio Lima Câmara",
+            "Francisco de Assis da Silva Sales","Francisco de Sousa Filho","Francisco Juniel Sousa e Silva","Geraldo Ribeiro de Souza Filho",
+            "Gildo Marques da Silva","Gilson Gomes da Silva","Gleisson Carlos Pereira da Silva","Guilherme Malheiro da Rocha Pinto",
+            "Helisson Rafael de O. Leite","Helyeber Feitosa Ferreira","Huelisson Amancio de Moraes Silva","Igor Mendes dos Santos",
+            "Isaias Pereira Soares","Joel Luiz de Sá Silva","Joel Pereira Santos","Jônatas Soares de Andrade","Jose Henrique Ferreira da Silva",
+            "Jose Leandro Marques","José Nilton Abraão de Sousa","Josue Cardoso Abreu","Joval Bastos Freitas Júnior",
+            "Juliano Gustavo Pedro de Oliveira","Kely Berlinck Freire","Kleber de Araújo Moura","Leandro Calixto da Silva",
+            "Leandro Silva Lima Alves","Leonardo Augusto de Freitas","Letícia Santana Araújo","Lívia Maria de Souza","Lucas Lima Lira",
+            "Lucas Ribeiro dos Santos","Luciano de Freitas Silva","Luiz Henrique Reis de Lima","Marcelo Gomes da Silva",
+            "Marco Antonio Baldresca Lambert de Brito","Marco Antônio Felício Júnior","Marcos Borges de Souza","Marcus Aurélius Fernandes de Moura",
+            "Massilon Alves de Sousa Filho","Mateus da Silva Lima","Matheus Gabriel Damasceno Dias","Matheus Henrique Felix Barbosa",
+            "Múcio Homero Rocha Pires de Oliveira","Orlando Villavicencio Venegas","Otoniel Alves de Souza","Paulo Fernando Volpe",
+            "Paulo Roberto Pereira","Paulo Soares da Costa","Pedro Henrique Candido Boaventura","Péricles Cruz da Silva",
+            "Rafael Queiroz Lemos de Oliveira","Reynaldo Jessé Rodrigues da Silva","Richard Rodrigues dos Santos","Roberio Antunes Simionato",
+            "Rondney Rodrigues Alves Sousa","Rosivan Augustinho Pereira","Thiago Veríssimo Cabral Freitas","Waleria Bastos Cardoso",
+            "Wellington Jorge Souza Mendes","Wendel Vieira da Costa","Wesley Maurício Ribeiro França","Willian Neves da Silva",
+            "Wirlem Silva Alves"
+        ].sort();
+
+        const patrimoniosPermitidosParaRepeticao = [
+            "99010001","99010002","99010003","99010004","99010005","99010006","99010007","99010008","99010009","99010010",
+            "99010011","99010012","99010013","99010014","99010015","99010016","99010017","99010018","99010019","99010020",
+            "99010021","99010022","99010023","99010024","99010025","99030001","99030002","99040001","99020001","99020002",
+            "99020003","99020004","99040002","99040003","99030003","99030004","99030005","99030006","99040004","99030011"
+        ];
+
+        window.onload = function() {
             const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
             if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
                 alert("Usuário não está logado. Faça login novamente.");
@@ -220,389 +272,318 @@
                 return;
             }
             if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
-                alert("Acesso negado: Você não tem permissão para acessar o Controle de Almoxarifado.");
+                alert("Acesso negado: apenas Supervisores podem acessar esta página.");
                 window.location.href = "index.html";
                 return;
             }
+
+            // Preenche o select de Operador 1
+            const selectOperador1 = document.getElementById("operador1Select");
+            operadoresLista.forEach(nome => {
+                const opt = document.createElement("option");
+                opt.value = nome;
+                opt.textContent = nome;
+                selectOperador1.appendChild(opt);
+            });
+
+            // Busca no select do Operador 1
+            selectOperador1.addEventListener("input", function() {
+                const filtro = this.value.toLowerCase();
+                Array.from(this.options).forEach(opt => {
+                    opt.style.display = opt.textContent.toLowerCase().includes(filtro) ? "" : "none";
+                });
+                this.size = Math.min(12, Array.from(this.options).filter(o => o.style.display !== "none").length + 1);
+            });
+            selectOperador1.addEventListener("blur", () => { this.size = 1; });
+            selectOperador1.addEventListener("change", () => { this.size = 1; });
+
+            // Autenticação Google
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: 'https://www.googleapis.com/auth/spreadsheets',
                 callback: (tokenResponse) => {
                     if (tokenResponse.error) {
-                        document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
-                        document.getElementById("progress-container").style.display = "block";
+                        document.getElementById("progressText").textContent = "Erro de autenticação: " + tokenResponse.error;
                         return;
                     }
                     accessToken = tokenResponse.access_token;
                     localStorage.setItem("access_token", accessToken);
-                    document.getElementById("progressText").textContent = "Autenticado com sucesso! Carregando dados...";
-                    document.getElementById("progress-container").style.display = "block";
-                    document.getElementById("login-section").style.display = "none";
-                    document.getElementById("retirada-section").style.display = "block";
-                    document.getElementById("navegacao-fichas").style.display = "block";
-                    carregarPatrimoniosDoSheets();
+                    iniciarSistema();
                 }
             });
-            const savedToken = localStorage.getItem("access_token");
-            if (savedToken) {
-                accessToken = savedToken;
-                document.getElementById("login-section").style.display = "none";
-                document.getElementById("retirada-section").style.display = "block";
-                document.getElementById("navegacao-fichas").style.display = "block";
-                document.getElementById("progress-container").style.display = "block";
-                document.getElementById("progressText").textContent = "Usando token salvo. Carregando dados...";
-                carregarPatrimoniosDoSheets();
+
+            const tokenSalvo = localStorage.getItem("access_token");
+            if (tokenSalvo) {
+                accessToken = tokenSalvo;
+                iniciarSistema();
             } else {
-                document.getElementById("login-section").style.display = "block";
-                document.getElementById("retirada-section").style.display = "none";
-                document.getElementById("navegacao-fichas").style.display = "none";
                 document.getElementById("progress-container").style.display = "block";
+                document.getElementById("progressText").textContent = "Autenticação necessária. Clique em continuar quando solicitado.";
+                tokenClient.requestAccessToken();
             }
 
+            // Verifica se está editando uma ficha
             const fichaParaEditar = JSON.parse(localStorage.getItem('fichaParaEditar'));
             if (fichaParaEditar) {
-                fichaEditando = fichaParaEditar;
-                document.getElementById("form-title").textContent = "Editar Ficha Pendente";
-                document.getElementById("submitButton").textContent = "Salvar Alterações";
-                document.getElementById("cancelButton").style.display = "inline-block";
-
-                // AJUSTE: usar operador1Input em vez de operador1Select
-                document.getElementById("operador1Input").value = fichaEditando.operador1;
-
-                document.getElementById("operador2Select").value = fichaEditando.operador2;
-                atualizarOperador2();
-                document.getElementById("localMontagemInput").value = fichaEditando.local;
-                document.getElementById("eventoInput").value = fichaEditando.evento;
-                patrimoniosSelecionados = fichaEditando.equipamentos.map(equip => {
-                    const [nrp, ...materialParts] = equip.split(' - ');
-                    return { NRP: nrp, Material: materialParts.join(' - ') };
-                });
-                atualizarListaPatrimonios();
-                document.getElementById("limparNRPsBtn").style.display = patrimoniosSelecionados.length > 0 ? "inline-block" : "none";
-                toggleNavigationButtons(true);
+                carregarFichaParaEdicao(fichaParaEditar);
             }
         };
 
-        function toggleNavigationButtons(disable) {
-            document.getElementById("backButton").disabled = disable;
-            document.getElementById("fichasPendentesBtn").disabled = disable;
-            document.getElementById("fichasArquivadasBtn").disabled = disable;
+        function iniciarSistema() {
+            document.getElementById("retirada-section").style.display = "block";
+            document.getElementById("progress-container").style.display = "block";
+            document.getElementById("progressText").textContent = "Carregando dados do almoxarifado...";
+            carregarPatrimoniosDoSheets();
         }
 
-        function navigateTo(page) {
-            if (fichaEditando) {
-                document.getElementById("progressText").textContent = "Salve as alterações antes de navegar para outra página.";
-                return;
-            }
-            window.location.href = page;
-        }
+        function carregarFichaParaEdicao(ficha) {
+            fichaEditando = ficha;
+            document.getElementById("form-title").textContent = "Editar Ficha Pendente";
+            document.getElementById("submitButton").textContent = "Salvar Alterações";
+            document.getElementById("cancelButton").style.display = "inline-block";
 
-        function cancelarEdicao() {
-            fichaEditando = null;
-            localStorage.removeItem('fichaParaEditar');
-            toggleNavigationButtons(false);
-            document.getElementById("form-title").textContent = "Registrar Retirada de Equipamento";
-            document.getElementById("submitButton").textContent = "Registrar Retirada";
-            document.getElementById("cancelButton").style.display = "none";
+            document.getElementById("operador1Select").value = ficha.operador1;
+            document.getElementById("operador2Select").value = ficha.operador2;
+            document.getElementById("localMontagemInput").value = ficha.local;
+            document.getElementById("eventoInput").value = ficha.evento;
 
-            // Limpar operador1Input
-            document.getElementById("operador1Input").value = "";
-
-            document.getElementById("operador2Select").value = "";
-            document.getElementById("localMontagemInput").value = "";
-            document.getElementById("eventoInput").value = "";
-            patrimoniosSelecionados = [];
-            atualizarListaPatrimonios();
-            document.getElementById("limparNRPsBtn").style.display = "none";
-            atualizarOperador2();
-            document.getElementById("progressText").textContent = "Edição cancelada.";
-        }
-
-        function carregarPatrimoniosDoSheets(retryCount = 0) {
-            const maxRetries = 3;
-            document.getElementById("spinner").style.display = "inline-block";
-            document.getElementById("progressText").textContent = "Consultando Servidor";
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A:D`, {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-            .then(async response => {
-                if (!response.ok) {
-                    if (response.status === 401 && retryCount < maxRetries) {
-                        document.getElementById("progressText").textContent = "Token expirado, reautenticando...";
-                        localStorage.removeItem("access_token");
-                        document.getElementById("login-section").style.display = "block";
-                        document.getElementById("retirada-section").style.display = "none";
-                        document.getElementById("navegacao-fichas").style.display = "none";
-                        document.getElementById("progress-container").style.display = "none";
-                        solicitarToken();
-                        return;
-                    } else if (response.status === 429 && retryCount < maxRetries) {
-                        document.getElementById("progressText").textContent = `Limite de taxa atingido, tentando novamente (${retryCount + 1}/${maxRetries})...`;
-                        setTimeout(() => carregarPatrimoniosDoSheets(retryCount + 1), 2000 * (retryCount + 1));
-                        return;
-                    } else if (response.status === 400) {
-                        const errorData = await response.json();
-                        throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || "Intervalo inválido. Verifique se a aba SIGMAS contém dados em A:D."}`);
-                    }
-                    const errorData = await response.json();
-                    throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                document.getElementById("progressText").textContent = "AUTORIZADA CONSULTA";
-                patrimonioData = data.values || [];
-                document.getElementById("spinner").style.display = "none";
-            })
-            .catch(error => {
-                console.error("Erro ao carregar dados do Sheets:", error);
-                document.getElementById("progressText").textContent = "Erro ao carregar os dados: " + error.message;
-                document.getElementById("spinner").style.display = "none";
+            patrimoniosSelecionados = ficha.equipamentos.map(equip => {
+                const [nrp, ...resto] = equip.split(' - ');
+                return { NRP: nrp, Material: resto.join(' - ') };
             });
+            atualizarListaPatrimonios();
+            document.getElementById("limparNRPsBtn").style.display = "inline-block";
+            preencherLocalEEvento(); // tenta autopreencher mesmo em edição
         }
 
-        // AJUSTE: atualizarOperador2 agora lê do operador1Input
         function atualizarOperador2() {
-            const operador1 = document.getElementById("operador1Input").value;
-            const operador2Select = document.getElementById("operador2Select");
-            const currentOperador2 = operador2Select.value;
-            operador2Select.innerHTML = `
-                <option value=""></option>
+            const operador1 = document.getElementById("operador1Select").value;
+            const select2 = document.getElementById("operador2Select");
+            const valorAtual = select2.value;
+
+            select2.innerHTML = `
+                <option value="">Selecione...</option>
                 <option value="Afonso Viana de Mesquita Filho" ${operador1 === "Afonso Viana de Mesquita Filho" ? "disabled" : ""}>Afonso Viana de Mesquita Filho</option>
                 <option value="Altamir Araújo da Silva" ${operador1 === "Altamir Araújo da Silva" ? "disabled" : ""}>Altamir Araújo da Silva</option>
                 <option value="Antonio Batista Ângelo" ${operador1 === "Antonio Batista Ângelo" ? "disabled" : ""}>Antonio Batista Ângelo</option>
                 <option value="Waleria Bastos Cardoso" ${operador1 === "Waleria Bastos Cardoso" ? "disabled" : ""}>Waleria Bastos Cardoso</option>
             `;
-            operador2Select.value = currentOperador2;
-            if (operador1 === currentOperador2 && operador1 !== "") {
-                operador2Select.value = "";
+            select2.value = valorAtual;
+            if (operador1 && operador1 === valorAtual) {
+                select2.value = "";
             }
         }
 
-        function adicionarNRP() {
-            let nrp = document.getElementById("nrpInput").value.trim();
-            if (!nrp) {
-                document.getElementById("progressText").textContent = "Digite um NRP para adicionar.";
-                return;
-            }
-            nrp = nrp.replace(/\./g, "");
-            const nrpSemZeros = nrp.replace(/^0+/, "");
-            if (!patrimoniosPermitidosParaRepeticao.includes(nrpSemZeros)) {
-                const jaAdicionado = patrimoniosSelecionados.some(item => item.NRP === nrp);
-                if (jaAdicionado) {
-                    document.getElementById("progressText").textContent = `NRP "${nrp}" já foi adicionado.`;
-                    document.getElementById("nrpInput").value = "";
-                    return;
-                }
-            }
-            const encontrado = patrimonioData.find(
-                (row) => row[0] && row[0].toString().replace(/^0+/, "") === nrpSemZeros
-            );
-            if (encontrado) {
-                patrimoniosSelecionados.push({
-                    NRP: encontrado[0],
-                    Material: encontrado[1],
-                    Localização: encontrado[2],
-                    Responsável: encontrado[3],
-                });
-                atualizarListaPatrimonios();
-                document.getElementById("progressText").textContent = `NRP "${nrp}" adicionado.`;
-                document.getElementById("nrpInput").value = "";
-            } else {
-                document.getElementById("progressText").textContent = `NRP "${nrp}" não encontrado na planilha.`;
-                document.getElementById("nrpInput").value = "";
-            }
-            document.getElementById("limparNRPsBtn").style.display = patrimoniosSelecionados.length > 0 ? "inline-block" : "none";
-        }
-
-        function atualizarListaPatrimonios() {
-            const listElement = document.getElementById("patrimonioList");
-            listElement.innerHTML = "";
-            patrimoniosSelecionados.forEach((item, index) => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${item.NRP || "N/A"}</td>
-                    <td>${item.Material || "N/A"}</td>
-                    <td>${item.Localização || "Não especificada"}</td>
-                    <td>${item.Responsável || "Não informado"}</td>
-                    <td><button onclick="removerPatrimonio(${index})">Remover</button></td>
-                `;
-                listElement.prepend(row);
-            });
-        }
-
-        function removerPatrimonio(index) {
-            patrimoniosSelecionados.splice(index, 1);
-            atualizarListaPatrimonios();
-            document.getElementById("limparNRPsBtn").style.display = patrimoniosSelecionados.length > 0 ? "inline-block" : "none";
-            document.getElementById("progressText").textContent = "Patrimônio removido.";
-        }
-
-        function limparNRPs() {
-            patrimoniosSelecionados = [];
-            atualizarListaPatrimonios();
-            document.getElementById("limparNRPsBtn").style.display = "none";
-            document.getElementById("progressText").textContent = "Lista de patrimônios limpa.";
-        }
-
-        function solicitarToken() {
-            tokenClient.requestAccessToken();
-        }
-
-        const patrimoniosPermitidosParaRepeticao = [
-            "99010001", "99010002", "99010003", "99010004", "99010005",
-            "99010006", "99010007", "99010008", "99010009", "99010010",
-            "99010011", "99010012", "99010013", "99010014", "99010015",
-            "99010016", "99010017", "99010018", "99010019", "99010020",
-            "99010021", "99010022", "99010023", "99010024", "99010025",
-            "99030001", "99030002", "99040001", "99020001", "99020002",
-            "99020003", "99020004", "99040002", "99040003", "99030003",
-            "99030004", "99030005", "99030006", "99040004", "99030011",
-        ];
-
-        async function registrarRetirada() {
-            // AJUSTE: ler operador1 do input
-            const operador1 = document.getElementById("operador1Input").value;
-            const operador2 = document.getElementById("operador2Select").value;
-            const localMontagem = document.getElementById("localMontagemInput").value.trim();
-            const evento = document.getElementById("eventoInput").value.trim();
-            const dataRetirada = fichaEditando ? fichaEditando.dataRetirada : new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-
-            if (!operador1 || patrimoniosSelecionados.length === 0 || !localMontagem || !evento) {
-                document.getElementById("progressText").textContent = "Preencha todos os campos obrigatórios (Operador 1, pelo menos um NRP, Local e Evento).";
-                return;
-            }
-
-            const equipamentos = patrimoniosSelecionados.map(item => `${item.NRP} - ${item.Material}`).join("; ");
-            const novaRetirada = [fichaEditando ? fichaEditando.idFicha : Date.now().toString(), operador1, operador2, equipamentos, localMontagem, evento, dataRetirada];
-
-            document.getElementById("spinner").style.display = "inline-block";
-            document.getElementById("progressText").textContent = fichaEditando ? "Salvando alterações..." : "Registrando retirada...";
-
-            try {
-                const pendentesResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                if (!pendentesResponse.ok) {
-                    const errorData = await pendentesResponse.json();
-                    throw new Error(`Erro ao consultar fichas pendentes: ${errorData.error?.message || pendentesResponse.statusText}`);
-                }
-                const pendentesData = await pendentesResponse.json();
-                const nrpsSelecionados = patrimoniosSelecionados.map(item => item.NRP.replace(/^0+/, ''));
-                let nrpEmUso = null;
-                if (pendentesData.values && pendentesData.values.length > 1) {
-                    pendentesData.values.slice(1).forEach((row, index) => {
-                        if (fichaEditando && (index + 1) === fichaEditando.rowIndex) return;
-                        const equipamentos = row[3] ? row[3].split('; ') : [];
-                        for (const equip of equipamentos) {
-                            const [nrpPendente] = equip.split(' - ');
-                            const nrpPendenteNormalizado = nrpPendente ? nrpPendente.replace(/^0+/, '') : '';
-                            if (nrpsSelecionados.includes(nrpPendenteNormalizado)) {
-                                nrpEmUso = nrpPendente;
-                                return;
-                            }
-                        }
-                    });
-                }
-                if (nrpEmUso) {
-                    const nrpEmUsoNormalizado = nrpEmUso.replace(/^0+/, '');
-                    if (!patrimoniosPermitidosParaRepeticao.includes(nrpEmUsoNormalizado)) {
-                        alert(`O patrimônio ${nrpEmUso} já está em uso em uma ficha pendente.`);
-                        document.getElementById("progressText").textContent = `O patrimônio ${nrpEmUso} já está em uso em uma ficha pendente.`;
-                        document.getElementById("spinner").style.display = "none";
-                        return;
-                    }
-                }
-                if (fichaEditando) {
-                    const rowIndex = fichaEditando.rowIndex;
-                    const updateResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A${rowIndex + 1}:G${rowIndex + 1}?valueInputOption=RAW`, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            values: [novaRetirada]
-                        })
-                    });
-                    if (!updateResponse.ok) {
-                        const errorData = await updateResponse.json();
-                        throw new Error(`Erro ao atualizar ficha: ${errorData.error?.message || updateResponse.statusText}`);
-                    }
-                    document.getElementById("progressText").textContent = "Ficha atualizada com sucesso!";
-                    localStorage.removeItem('fichaParaEditar');
-                    toggleNavigationButtons(false);
-                    document.getElementById("cancelButton").style.display = "none";
-                } else {
-                    const registerResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G:append?valueInputOption=RAW`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            values: [novaRetirada]
-                        })
-                    });
-                    if (!registerResponse.ok) {
-                        const errorData = await registerResponse.json();
-                        throw new Error(`Erro ao registrar retirada: ${errorData.error?.message || registerResponse.statusText}`);
-                    }
-                    document.getElementById("progressText").textContent = "Retirada registrada com sucesso!";
-                }
-                document.getElementById("spinner").style.display = "none";
-
-                // Limpar operador1Input após salvar
-                document.getElementById("operador1Input").value = "";
-
-                document.getElementById("operador2Select").value = "";
-                patrimoniosSelecionados = [];
-                atualizarListaPatrimonios();
-                document.getElementById("limparNRPsBtn").style.display = "none";
-                document.getElementById("localMontagemInput").value = "";
-                document.getElementById("eventoInput").value = "";
-                atualizarOperador2();
-                document.getElementById("form-title").textContent = "Registrar Retirada de Equipamento";
-                document.getElementById("submitButton").textContent = "Registrar Retirada";
-                fichaEditando = null;
-            } catch (error) {
-                document.getElementById("progressText").textContent = "Erro: " + error.message;
-                document.getElementById("spinner").style.display = "none";
-            }
-        }
+        document.getElementById("operador1Select").addEventListener("change", function() {
+            atualizarOperador2();
+            preencherLocalEEvento();
+        });
 
         async function preencherLocalEEvento() {
-            const operador = document.getElementById("operador1Input").value.trim();
+            const operador = document.getElementById("operador1Select").value;
             const localInput = document.getElementById("localMontagemInput");
             const eventoInput = document.getElementById("eventoInput");
+
+            if (!operador) {
+                localInput.value = "";
+                eventoInput.value = "";
+                localInput.readOnly = false;
+                eventoInput.readOnly = false;
+                return;
+            }
+
             try {
-                const req = await fetch('https://sheets.googleapis.com/v4/spreadsheets/1smzyrRUnPZkfZGY-8EPDGg7Js8_6-nQ2xlpXgl8Orjw/values/escalaAudio!A:C?key=AIzaSyA8yWyDVkekhaVdxCO7BuP3pjjjKTD-cDE');
-                const data = await req.json();
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${ESCALA_SHEET_ID}/values/escalaAudio!A:Z?key=${ESCALA_API_KEY}`;
+                const resp = await fetch(url);
+                const data = await resp.json();
+
                 if (data.values && data.values.length > 1) {
-                    // pula header, procura operador
-                    const found = data.values.find(row => row[0] === operador);
-                    if (found) {
-                        localInput.value = found[1] || "";
-                        eventoInput.value = found[2] || "";
+                    const linha = data.values.find(row => 
+                        row[0] === operador || 
+                        row[9] === operador || 
+                        row[10] === operador
+                    );
+
+                    if (linha) {
+                        const local = (linha[2] || linha[28] || "").trim();
+                        const evento = (linha[6] || linha[7] || "").trim();
+
+                        localInput.value = local;
+                        eventoInput.value = evento;
+
                         localInput.readOnly = true;
                         eventoInput.readOnly = true;
+
+                        document.getElementById("progressText").textContent = `Local e evento carregados automaticamente para ${operador}`;
                     } else {
                         localInput.value = "";
                         eventoInput.value = "";
                         localInput.readOnly = false;
                         eventoInput.readOnly = false;
+                        document.getElementById("progressText").textContent = `${operador} não está na escala hoje. Preencha manualmente.`;
                     }
                 }
-            } catch {
-                localInput.value = "";
-                eventoInput.value = "";
+            } catch (err) {
+                console.error("Erro ao buscar escala:", err);
                 localInput.readOnly = false;
                 eventoInput.readOnly = false;
+                document.getElementById("progressText").textContent = "Erro ao carregar escala. Digite manualmente.";
             }
         }
-        document.getElementById("operador1Input").addEventListener("change", preencherLocalEEvento);
+
+        function carregarPatrimoniosDoSheets(tentativa = 0) {
+            const maxTentativas = 3;
+            document.getElementById("spinner").style.display = "inline-block";
+            document.getElementById("progressText").textContent = "Carregando base de equipamentos...";
+
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A:D`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            })
+            .then(async res => {
+                if (!res.ok) {
+                    if (res.status === 401 && tentativa < maxTentativas) {
+                        localStorage.removeItem("access_token");
+                        tokenClient.requestAccessToken();
+                        return;
+                    }
+                    throw new Error("Erro na autenticação ou acesso à planilha.");
+                }
+                return res.json();
+            })
+            .then(data => {
+                patrimonioData = data.values || [];
+                document.getElementById("progressText").textContent = "Base de equipamentos carregada com sucesso!";
+                document.getElementById("spinner").style.display = "none";
+            })
+            .catch(err => {
+                document.getElementById("progressText").textContent = "Erro: " + err.message;
+                document.getElementById("spinner").style.display = "none";
+            });
+        }
+
+        document.getElementById("nrpInput").addEventListener("keypress", e => {
+            if (e.key === "Enter") adicionarNRP();
+        });
+
+        function adicionarNRP() {
+            let nrp = document.getElementById("nrpInput").value.trim().replace(/\./g, "");
+            if (!nrp) return;
+
+            const nrpLimpo = nrp.replace(/^0+/, "");
+            const jaTem = patrimoniosSelecionados.some(i => i.NRP.replace(/^0+/, "") === nrpLimpo);
+            if (jaTem && !patrimoniosPermitidosParaRepeticao.includes(nrpLimpo)) {
+                alert("Este NRP já foi adicionado.");
+                document.getElementById("nrpInput").value = "";
+                return;
+            }
+
+            const item = patrimonioData.find(row => row[0]?.toString().replace(/^0+/, "") === nrpLimpo);
+            if (item) {
+                patrimoniosSelecionados.push({
+                    NRP: item[0],
+                    Material: item[1] || "Não informado",
+                    Localização: item[2] || "Não especificada",
+                    Responsável: item[3] || "Não informado"
+                });
+                atualizarListaPatrimonios();
+                document.getElementById("nrpInput").value = "";
+                document.getElementById("progressText").textContent = `NRP ${nrp} adicionado.`;
+                document.getElementById("limparNRPsBtn").style.display = "inline-block";
+            } else {
+                alert(`NRP ${nrp} não encontrado na base.`);
+                document.getElementById("nrpInput").value = "";
+            }
+        }
+
+        function atualizarListaPatrimonios() {
+            const tbody = document.getElementById("patrimonioList");
+            tbody.innerHTML = "";
+            patrimoniosSelecionados.forEach((item, idx) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${item.NRP</td>
+                    <td>${item.Material}</td>
+                    <td>${item.Localização}</td>
+                    <td>${item.Responsável}</td>
+                    <td><button onclick="removerPatrimonio(${idx})">Remover</button></td>
+                `;
+                tbody.prepend(tr);
+            });
+        }
+
+        function removerPatrimonio(idx) {
+            patrimoniosSelecionados.splice(idx, 1);
+            atualizarListaPatrimonios();
+            if (patrimoniosSelecionados.length === 0) {
+                document.getElementById("limparNRPsBtn").style.display = "none";
+            }
+        }
+
+        document.getElementById("limparNRPsBtn").onclick = function() {
+            patrimoniosSelecionados = [];
+            atualizarListaPatrimonios();
+            this.style.display = "none";
+        };
+
+        document.getElementById("cancelButton").onclick = function() {
+            if (confirm("Deseja cancelar a edição?")) {
+                localStorage.removeItem("fichaParaEditar");
+                location.reload();
+            }
+        };
+
+        document.getElementById("submitButton").onclick = async function() {
+            const operador1 = document.getElementById("operador1Select").value;
+            const operador2 = document.getElementById("operador2Select").value;
+            const local = document.getElementById("localMontagemInput").value.trim();
+            const evento = document.getElementById("eventoInput").value.trim();
+
+            if (!operador1 || patrimoniosSelecionados.length === 0 || !local || !evento) {
+                alert("Preencha todos os campos obrigatórios!");
+                return;
+            }
+
+            const equipamentosStr = patrimoniosSelecionados.map(i => `${i.NRP} - ${i.Material}`).join("; ");
+            const dataHora = fichaEditando ? fichaEditando.dataRetirada : new Date().toLocaleString('pt-BR');
+
+            const linha = [
+                fichaEditando ? fichaEditando.idFicha : Date.now().toString(),
+                operador1,
+                operador2 || "",
+                equipamentosStr,
+                local,
+                evento,
+                dataHora
+            ];
+
+            document.getElementById("spinner").style.display = "inline-block";
+            document.getElementById("progressText").textContent = fichaEditando ? "Salvando alterações..." : "Registrando retirada...";
+
+            const url = fichaEditando
+                ? `https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A${fichaEditando.rowIndex + 1}:G${fichaEditando.rowIndex + 1}?valueInputOption=RAW`
+                : `https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G:append?valueInputOption=RAW`;
+
+            const metodo = fichaEditando ? "PUT" : "POST";
+
+            fetch(url, {
+                method: metodo,
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ values: [linha] })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Erro ao salvar no Google Sheets");
+                alert(fichaEditando ? "Ficha atualizada com sucesso!" : "Retirada registrada com sucesso!");
+                localStorage.removeItem("fichaParaEditar");
+                location.reload();
+            })
+            .catch(err => {
+                alert("Erro: " + err.message);
+                document.getElementById("spinner").style.display = "none";
+            });
+        };
     </script>
 </body>
 </html>

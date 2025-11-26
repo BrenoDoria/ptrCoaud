@@ -50,20 +50,11 @@
             background: #e0e0e0;
             cursor: not-allowed;
         }
-        /* Padronização universal dos campos de formulário */
-        .form-group select,
-        .form-group input[type="text"],
-        .form-group input[list] {
-            width: 250px;
-            max-width: 250px;
+        select, input[type="text"] {
             padding: 8px;
             margin: 5px;
+            width: 250px;
             box-sizing: border-box;
-            border: 1px solid #ddd;
-            background: white;
-            font-family: Arial, sans-serif;
-            font-size: 16px;
-            text-align: left;
         }
         table {
             width: 100%;
@@ -103,11 +94,23 @@
             margin-right: 10px;
             font-weight: bold;
         }
-        .form-group select,
-        .form-group input[type="text"],
-        .form-group input[list] {
+        .form-group select, .form-group input[type="text"] {
             flex: 1;
+            max-width: 300px;
         }
+        #operador1Input {
+            width: 100%;
+            max-width: 250px;
+            padding: 8px;
+            margin: 5px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            background: white;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            text-align: left;
+        }
+        input[list]::-webkit-input-placeholder { color: #888; }
         input[list]:focus { outline: 1px solid #4CAF50; }
     </style>
 </head>
@@ -125,6 +128,8 @@
             <h2 id="form-title">Registrar Retirada de Equipamento</h2>
             <div class="form-group">
                 <label>Operador:</label>
+
+                <!-- NOVO: input + datalist para Operador 1 -->
                 <input list="operador1List" id="operador1Input" placeholder="Digite ao menos 3 letras">
                 <datalist id="operador1List">
                     <option value="Adson Miranda dos Anjos"></option>
@@ -133,7 +138,7 @@
                     <option value="Alexander Rafael Carvalho Paim"></option>
                     <option value="Alison Silva de Oliveira"></option>
                     <option value="Allan Cosseti Ardisson"></option>
-                    <option value="Altamir Araújo da Silva"></option>
+                    <option value="Altamir Araujo da Silva"></option>
                     <option value="Antonio Batista Ângelo"></option>
                     <option value="Antonio Rodrigues Siqueira Filho"></option>
                     <option value="Arley Carvalho Alves"></option>
@@ -167,7 +172,6 @@
                     <option value="Guilherme Malheiro da Rocha Pinto"></option>
                     <option value="Helisson Rafael de O. Leite"></option>
                     <option value="Helyeber Feitosa Ferreira"></option>
-                    <option value="Hilton Severiano Ferreira"></option>
                     <option value="Huelisson Amancio de Moraes Silva"></option>
                     <option value="Igor Mendes dos Santos"></option>
                     <option value="Isaias Pereira Soares"></option>
@@ -222,6 +226,8 @@
                     <option value="Willian Neves da Silva"></option>
                     <option value="Wirlem Silva Alves"></option>
                 </datalist>
+
+                <!-- Operador 2 permanece COMO ESTAVA -->
                 <label>Almoxarifado:</label>
                 <select id="operador2Select">
                     <option value=""></option>
@@ -267,40 +273,378 @@
     </div>
     <footer class="author-signature">© 2025 BrenoDoria</footer>
     <script>
-        // --- Padronizado, autocomplete dinâmico de Local/Evento ---
-        async function preencherLocalEEvento() {
-            const operador = document.getElementById("operador1Input").value;
-            const localInput = document.getElementById("localMontagemInput");
-            const eventoInput = document.getElementById("eventoInput");
-            try {
-                const response = await fetch('https://sheets.googleapis.com/v4/spreadsheets/1smzyrRUnPZkfZGY-8EPDGg7Js8_6-nQ2xlpXgl8Orjw/values/escalaAudio!A:Z?key=AIzaSyA8yWyDVkekhaVdxCO7BuP3pjjjKTD-cDE');
-                const data = await response.json();
-                if(data.values && data.values.length) {
-                    const match = data.values.find(row => row[0] === operador);
-                    if(match) {
-                        localInput.value = match[1] || '';
-                        eventoInput.value = match[2] || '';
-                        localInput.readOnly = true;
-                        eventoInput.readOnly = true;
-                    } else {
-                        localInput.value = '';
-                        eventoInput.value = '';
-                        localInput.readOnly = false;
-                        eventoInput.readOnly = false;
+        const usuarios = {
+            "supervisor": { senha: "12345", permissao: "Supervisor" },
+            "operador": { senha: "12345", permissao: "Operador" }
+        };
+        const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';
+        const FILE_ID = '1q9RCwJ4P--QIH4kkMszffrN8ZwzkSsNoZtPH-Usk4Zw';
+        let tokenClient;
+        let accessToken = null;
+        let patrimonioData = [];
+        let patrimoniosSelecionados = [];
+        let fichaEditando = null;
+
+        window.onload = () => {
+            const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+            if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
+                alert("Usuário não está logado. Faça login novamente.");
+                window.location.href = "index.html";
+                return;
+            }
+            if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
+                alert("Acesso negado: Você não tem permissão para acessar o Controle de Almoxarifado.");
+                window.location.href = "index.html";
+                return;
+            }
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/spreadsheets',
+                callback: (tokenResponse) => {
+                    if (tokenResponse.error) {
+                        document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
+                        document.getElementById("progress-container").style.display = "block";
+                        return;
                     }
+                    accessToken = tokenResponse.access_token;
+                    localStorage.setItem("access_token", accessToken);
+                    document.getElementById("progressText").textContent = "Autenticado com sucesso! Carregando dados...";
+                    document.getElementById("progress-container").style.display = "block";
+                    document.getElementById("login-section").style.display = "none";
+                    document.getElementById("retirada-section").style.display = "block";
+                    document.getElementById("navegacao-fichas").style.display = "block";
+                    carregarPatrimoniosDoSheets();
                 }
-            } catch(e) {
-                localInput.value = '';
-                eventoInput.value = '';
-                localInput.readOnly = false;
-                eventoInput.readOnly = false;
+            });
+            const savedToken = localStorage.getItem("access_token");
+            if (savedToken) {
+                accessToken = savedToken;
+                document.getElementById("login-section").style.display = "none";
+                document.getElementById("retirada-section").style.display = "block";
+                document.getElementById("navegacao-fichas").style.display = "block";
+                document.getElementById("progress-container").style.display = "block";
+                document.getElementById("progressText").textContent = "Usando token salvo. Carregando dados...";
+                carregarPatrimoniosDoSheets();
+            } else {
+                document.getElementById("login-section").style.display = "block";
+                document.getElementById("retirada-section").style.display = "none";
+                document.getElementById("navegacao-fichas").style.display = "none";
+                document.getElementById("progress-container").style.display = "block";
+            }
+
+            const fichaParaEditar = JSON.parse(localStorage.getItem('fichaParaEditar'));
+            if (fichaParaEditar) {
+                fichaEditando = fichaParaEditar;
+                document.getElementById("form-title").textContent = "Editar Ficha Pendente";
+                document.getElementById("submitButton").textContent = "Salvar Alterações";
+                document.getElementById("cancelButton").style.display = "inline-block";
+
+                // AJUSTE: usar operador1Input em vez de operador1Select
+                document.getElementById("operador1Input").value = fichaEditando.operador1;
+
+                document.getElementById("operador2Select").value = fichaEditando.operador2;
+                atualizarOperador2();
+                document.getElementById("localMontagemInput").value = fichaEditando.local;
+                document.getElementById("eventoInput").value = fichaEditando.evento;
+                patrimoniosSelecionados = fichaEditando.equipamentos.map(equip => {
+                    const [nrp, ...materialParts] = equip.split(' - ');
+                    return { NRP: nrp, Material: materialParts.join(' - ') };
+                });
+                atualizarListaPatrimonios();
+                document.getElementById("limparNRPsBtn").style.display = patrimoniosSelecionados.length > 0 ? "inline-block" : "none";
+                toggleNavigationButtons(true);
+            }
+        };
+
+        function toggleNavigationButtons(disable) {
+            document.getElementById("backButton").disabled = disable;
+            document.getElementById("fichasPendentesBtn").disabled = disable;
+            document.getElementById("fichasArquivadasBtn").disabled = disable;
+        }
+
+        function navigateTo(page) {
+            if (fichaEditando) {
+                document.getElementById("progressText").textContent = "Salve as alterações antes de navegar para outra página.";
+                return;
+            }
+            window.location.href = page;
+        }
+
+        function cancelarEdicao() {
+            fichaEditando = null;
+            localStorage.removeItem('fichaParaEditar');
+            toggleNavigationButtons(false);
+            document.getElementById("form-title").textContent = "Registrar Retirada de Equipamento";
+            document.getElementById("submitButton").textContent = "Registrar Retirada";
+            document.getElementById("cancelButton").style.display = "none";
+
+            // Limpar operador1Input
+            document.getElementById("operador1Input").value = "";
+
+            document.getElementById("operador2Select").value = "";
+            document.getElementById("localMontagemInput").value = "";
+            document.getElementById("eventoInput").value = "";
+            patrimoniosSelecionados = [];
+            atualizarListaPatrimonios();
+            document.getElementById("limparNRPsBtn").style.display = "none";
+            atualizarOperador2();
+            document.getElementById("progressText").textContent = "Edição cancelada.";
+        }
+
+        function carregarPatrimoniosDoSheets(retryCount = 0) {
+            const maxRetries = 3;
+            document.getElementById("spinner").style.display = "inline-block";
+            document.getElementById("progressText").textContent = "Consultando Servidor";
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A:D`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    if (response.status === 401 && retryCount < maxRetries) {
+                        document.getElementById("progressText").textContent = "Token expirado, reautenticando...";
+                        localStorage.removeItem("access_token");
+                        document.getElementById("login-section").style.display = "block";
+                        document.getElementById("retirada-section").style.display = "none";
+                        document.getElementById("navegacao-fichas").style.display = "none";
+                        document.getElementById("progress-container").style.display = "none";
+                        solicitarToken();
+                        return;
+                    } else if (response.status === 429 && retryCount < maxRetries) {
+                        document.getElementById("progressText").textContent = `Limite de taxa atingido, tentando novamente (${retryCount + 1}/${maxRetries})...`;
+                        setTimeout(() => carregarPatrimoniosDoSheets(retryCount + 1), 2000 * (retryCount + 1));
+                        return;
+                    } else if (response.status === 400) {
+                        const errorData = await response.json();
+                        throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || "Intervalo inválido. Verifique se a aba SIGMAS contém dados em A:D."}`);
+                    }
+                    const errorData = await response.json();
+                    throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById("progressText").textContent = "AUTORIZADA CONSULTA";
+                patrimonioData = data.values || [];
+                document.getElementById("spinner").style.display = "none";
+            })
+            .catch(error => {
+                console.error("Erro ao carregar dados do Sheets:", error);
+                document.getElementById("progressText").textContent = "Erro ao carregar os dados: " + error.message;
+                document.getElementById("spinner").style.display = "none";
+            });
+        }
+
+        // AJUSTE: atualizarOperador2 agora lê do operador1Input
+        function atualizarOperador2() {
+            const operador1 = document.getElementById("operador1Input").value;
+            const operador2Select = document.getElementById("operador2Select");
+            const currentOperador2 = operador2Select.value;
+            operador2Select.innerHTML = `
+                <option value=""></option>
+                <option value="Afonso Viana de Mesquita Filho" ${operador1 === "Afonso Viana de Mesquita Filho" ? "disabled" : ""}>Afonso Viana de Mesquita Filho</option>
+                <option value="Altamir Araújo da Silva" ${operador1 === "Altamir Araújo da Silva" ? "disabled" : ""}>Altamir Araújo da Silva</option>
+                <option value="Antonio Batista Ângelo" ${operador1 === "Antonio Batista Ângelo" ? "disabled" : ""}>Antonio Batista Ângelo</option>
+                <option value="Waleria Bastos Cardoso" ${operador1 === "Waleria Bastos Cardoso" ? "disabled" : ""}>Waleria Bastos Cardoso</option>
+            `;
+            operador2Select.value = currentOperador2;
+            if (operador1 === currentOperador2 && operador1 !== "") {
+                operador2Select.value = "";
             }
         }
-        document.addEventListener("DOMContentLoaded", function() {
-            const operador1Input = document.getElementById("operador1Input");
-            operador1Input.addEventListener("change", preencherLocalEEvento);
-        });
-        // ... (restante do JS permanece, adapte para os acessos do input como já está acima)
+
+        function adicionarNRP() {
+            let nrp = document.getElementById("nrpInput").value.trim();
+            if (!nrp) {
+                document.getElementById("progressText").textContent = "Digite um NRP para adicionar.";
+                return;
+            }
+            nrp = nrp.replace(/\./g, "");
+            const nrpSemZeros = nrp.replace(/^0+/, "");
+            if (!patrimoniosPermitidosParaRepeticao.includes(nrpSemZeros)) {
+                const jaAdicionado = patrimoniosSelecionados.some(item => item.NRP === nrp);
+                if (jaAdicionado) {
+                    document.getElementById("progressText").textContent = `NRP "${nrp}" já foi adicionado.`;
+                    document.getElementById("nrpInput").value = "";
+                    return;
+                }
+            }
+            const encontrado = patrimonioData.find(
+                (row) => row[0] && row[0].toString().replace(/^0+/, "") === nrpSemZeros
+            );
+            if (encontrado) {
+                patrimoniosSelecionados.push({
+                    NRP: encontrado[0],
+                    Material: encontrado[1],
+                    Localização: encontrado[2],
+                    Responsável: encontrado[3],
+                });
+                atualizarListaPatrimonios();
+                document.getElementById("progressText").textContent = `NRP "${nrp}" adicionado.`;
+                document.getElementById("nrpInput").value = "";
+            } else {
+                document.getElementById("progressText").textContent = `NRP "${nrp}" não encontrado na planilha.`;
+                document.getElementById("nrpInput").value = "";
+            }
+            document.getElementById("limparNRPsBtn").style.display = patrimoniosSelecionados.length > 0 ? "inline-block" : "none";
+        }
+
+        function atualizarListaPatrimonios() {
+            const listElement = document.getElementById("patrimonioList");
+            listElement.innerHTML = "";
+            patrimoniosSelecionados.forEach((item, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${item.NRP || "N/A"}</td>
+                    <td>${item.Material || "N/A"}</td>
+                    <td>${item.Localização || "Não especificada"}</td>
+                    <td>${item.Responsável || "Não informado"}</td>
+                    <td><button onclick="removerPatrimonio(${index})">Remover</button></td>
+                `;
+                listElement.prepend(row);
+            });
+        }
+
+        function removerPatrimonio(index) {
+            patrimoniosSelecionados.splice(index, 1);
+            atualizarListaPatrimonios();
+            document.getElementById("limparNRPsBtn").style.display = patrimoniosSelecionados.length > 0 ? "inline-block" : "none";
+            document.getElementById("progressText").textContent = "Patrimônio removido.";
+        }
+
+        function limparNRPs() {
+            patrimoniosSelecionados = [];
+            atualizarListaPatrimonios();
+            document.getElementById("limparNRPsBtn").style.display = "none";
+            document.getElementById("progressText").textContent = "Lista de patrimônios limpa.";
+        }
+
+        function solicitarToken() {
+            tokenClient.requestAccessToken();
+        }
+
+        const patrimoniosPermitidosParaRepeticao = [
+            "99010001", "99010002", "99010003", "99010004", "99010005",
+            "99010006", "99010007", "99010008", "99010009", "99010010",
+            "99010011", "99010012", "99010013", "99010014", "99010015",
+            "99010016", "99010017", "99010018", "99010019", "99010020",
+            "99010021", "99010022", "99010023", "99010024", "99010025",
+            "99030001", "99030002", "99040001", "99020001", "99020002",
+            "99020003", "99020004", "99040002", "99040003", "99030003",
+            "99030004", "99030005", "99030006", "99040004", "99030011",
+        ];
+
+        async function registrarRetirada() {
+            // AJUSTE: ler operador1 do input
+            const operador1 = document.getElementById("operador1Input").value;
+            const operador2 = document.getElementById("operador2Select").value;
+            const localMontagem = document.getElementById("localMontagemInput").value.trim();
+            const evento = document.getElementById("eventoInput").value.trim();
+            const dataRetirada = fichaEditando ? fichaEditando.dataRetirada : new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+            if (!operador1 || patrimoniosSelecionados.length === 0 || !localMontagem || !evento) {
+                document.getElementById("progressText").textContent = "Preencha todos os campos obrigatórios (Operador 1, pelo menos um NRP, Local e Evento).";
+                return;
+            }
+
+            const equipamentos = patrimoniosSelecionados.map(item => `${item.NRP} - ${item.Material}`).join("; ");
+            const novaRetirada = [fichaEditando ? fichaEditando.idFicha : Date.now().toString(), operador1, operador2, equipamentos, localMontagem, evento, dataRetirada];
+
+            document.getElementById("spinner").style.display = "inline-block";
+            document.getElementById("progressText").textContent = fichaEditando ? "Salvando alterações..." : "Registrando retirada...";
+
+            try {
+                const pendentesResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                if (!pendentesResponse.ok) {
+                    const errorData = await pendentesResponse.json();
+                    throw new Error(`Erro ao consultar fichas pendentes: ${errorData.error?.message || pendentesResponse.statusText}`);
+                }
+                const pendentesData = await pendentesResponse.json();
+                const nrpsSelecionados = patrimoniosSelecionados.map(item => item.NRP.replace(/^0+/, ''));
+                let nrpEmUso = null;
+                if (pendentesData.values && pendentesData.values.length > 1) {
+                    pendentesData.values.slice(1).forEach((row, index) => {
+                        if (fichaEditando && (index + 1) === fichaEditando.rowIndex) return;
+                        const equipamentos = row[3] ? row[3].split('; ') : [];
+                        for (const equip of equipamentos) {
+                            const [nrpPendente] = equip.split(' - ');
+                            const nrpPendenteNormalizado = nrpPendente ? nrpPendente.replace(/^0+/, '') : '';
+                            if (nrpsSelecionados.includes(nrpPendenteNormalizado)) {
+                                nrpEmUso = nrpPendente;
+                                return;
+                            }
+                        }
+                    });
+                }
+                if (nrpEmUso) {
+                    const nrpEmUsoNormalizado = nrpEmUso.replace(/^0+/, '');
+                    if (!patrimoniosPermitidosParaRepeticao.includes(nrpEmUsoNormalizado)) {
+                        alert(`O patrimônio ${nrpEmUso} já está em uso em uma ficha pendente.`);
+                        document.getElementById("progressText").textContent = `O patrimônio ${nrpEmUso} já está em uso em uma ficha pendente.`;
+                        document.getElementById("spinner").style.display = "none";
+                        return;
+                    }
+                }
+                if (fichaEditando) {
+                    const rowIndex = fichaEditando.rowIndex;
+                    const updateResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A${rowIndex + 1}:G${rowIndex + 1}?valueInputOption=RAW`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            values: [novaRetirada]
+                        })
+                    });
+                    if (!updateResponse.ok) {
+                        const errorData = await updateResponse.json();
+                        throw new Error(`Erro ao atualizar ficha: ${errorData.error?.message || updateResponse.statusText}`);
+                    }
+                    document.getElementById("progressText").textContent = "Ficha atualizada com sucesso!";
+                    localStorage.removeItem('fichaParaEditar');
+                    toggleNavigationButtons(false);
+                    document.getElementById("cancelButton").style.display = "none";
+                } else {
+                    const registerResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G:append?valueInputOption=RAW`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            values: [novaRetirada]
+                        })
+                    });
+                    if (!registerResponse.ok) {
+                        const errorData = await registerResponse.json();
+                        throw new Error(`Erro ao registrar retirada: ${errorData.error?.message || registerResponse.statusText}`);
+                    }
+                    document.getElementById("progressText").textContent = "Retirada registrada com sucesso!";
+                }
+                document.getElementById("spinner").style.display = "none";
+
+                // Limpar operador1Input após salvar
+                document.getElementById("operador1Input").value = "";
+
+                document.getElementById("operador2Select").value = "";
+                patrimoniosSelecionados = [];
+                atualizarListaPatrimonios();
+                document.getElementById("limparNRPsBtn").style.display = "none";
+                document.getElementById("localMontagemInput").value = "";
+                document.getElementById("eventoInput").value = "";
+                atualizarOperador2();
+                document.getElementById("form-title").textContent = "Registrar Retirada de Equipamento";
+                document.getElementById("submitButton").textContent = "Registrar Retirada";
+                fichaEditando = null;
+            } catch (error) {
+                document.getElementById("progressText").textContent = "Erro: " + error.message;
+                document.getElementById("spinner").style.display = "none";
+            }
+        }
     </script>
 </body>
 </html>

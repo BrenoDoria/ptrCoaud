@@ -126,7 +126,8 @@
             <h2 id="form-title">Registrar Retirada de Equipamento</h2>
             <div class="form-group">
                 <label>Operador:</label>
-                <select id="operador1Select" onchange="selecionarOperador1()">
+                <input type="text" id="operador1Input" placeholder="Digite as letras iniciais do nome" oninput="filtrarOperadores()">
+                <select id="operador1Select" onchange="selecionarOperador1()" style="display: none;">
                     <option value="">Selecione um operador</option>
                     <option value="Adson Miranda dos Anjos">Adson Miranda dos Anjos</option>
                     <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
@@ -147,10 +148,9 @@
                     <option value="Carlos Roberto de Paiva Miranda dos Santos">Carlos Roberto de Paiva Miranda dos Santos</option>
                     <option value="Cinthia Neves Carvalho Barbosa">Cinthia Neves Carvalho Barbosa</option>
                     <option value="Cláudio Marcelo do Nascimento">Cláudio Marcelo do Nascimento</option>
-                    <option value="Daniel Deluze Braga">Daniel Deluze Braga</option>
                     <option value="Davi Aragão de Paula Gonçalves">Davi Aragão de Paula Gonçalves</option>
                     <option value="Douglas Batista da Silva">Douglas Batista da Silva</option>
-                    <option value="Emmanuel do Amaral Ildefonso">Emmanuel do Amaral Ildefonso</option>
+                    <option value="Emmanuel do Amaral Idelfonso">Emmanuel do Amaral Idelfonso</option>
                     <option value="Emanuel Silveira Costa">Emanuel Silveira Costa</option>
                     <option value="Eric Samuel do Ouro">Eric Samuel do Ouro</option>
                     <option value="Erika Fedosseeff Auler">Erika Fedosseeff Auler</option>
@@ -214,15 +214,16 @@
                     <option value="Richard Rodrigues dos Santos">Richard Rodrigues dos Santos</option>
                     <option value="Roberio Antunes Simionato">Roberio Antunes Simionato</option>
                     <option value="Rondney Rodrigues Alves Sousa">Rondney Rodrigues Alves Sousa</option>
-                    <option value="Rosivan Agustinho Pereira">Rosivan Agustinho Pereira</option>
+                    <option value="Rosivan Augustinho Pereira">Rosivan Augustinho Pereira</option>
                     <option value="Thiago Veríssimo Cabral Freitas">Thiago Veríssimo Cabral Freitas</option>
                     <option value="Waleria Bastos Cardoso">Waleria Bastos Cardoso</option>
                     <option value="Wellington Jorge Souza Mendes">Wellington Jorge Souza Mendes</option>
                     <option value="Wendel Vieira da Costa">Wendel Vieira da Costa</option>
                     <option value="Wesley Maurício Ribeiro França">Wesley Maurício Ribeiro França</option>
-                    <option value="William Neves da Silva">William Neves da Silva</option>
+                    <option value="Willian Neves da Silva">Willian Neves da Silva</option>
                     <option value="Wirlem Silva Alves">Wirlem Silva Alves</option>
                 </select>
+                <div id="operador1Opcoes" style="display: none; border: 1px solid #ddd; max-height: 200px; overflow-y: auto; background: white; position: absolute; width: 300px; z-index: 1000; margin-top: -5px;"></div>
                 <label>Almoxarifado:</label>
                 <select id="operador2Select">
                     <option value=""></option>
@@ -339,6 +340,7 @@
                 document.getElementById("submitButton").textContent = "Salvar Alterações";
                 document.getElementById("cancelButton").style.display = "inline-block";
 
+                document.getElementById("operador1Input").value = fichaEditando.operador1;
                 document.getElementById("operador1Select").value = fichaEditando.operador1;
 
                 document.getElementById("operador2Select").value = fichaEditando.operador2;
@@ -377,6 +379,7 @@
             document.getElementById("submitButton").textContent = "Registrar Retirada";
             document.getElementById("cancelButton").style.display = "none";
 
+            document.getElementById("operador1Input").value = "";
             document.getElementById("operador1Select").value = "";
 
             document.getElementById("operador2Select").value = "";
@@ -385,6 +388,7 @@
             patrimoniosSelecionados = [];
             atualizarListaPatrimonios();
             document.getElementById("limparNRPsBtn").style.display = "none";
+            document.getElementById("operador1Opcoes").style.display = "none";
             atualizarOperador2();
             document.getElementById("progressText").textContent = "Edição cancelada.";
         }
@@ -406,6 +410,55 @@
                 console.error("Erro ao carregar escala:", error);
                 document.getElementById("progressText").textContent = "Erro ao carregar escala: " + error.message;
             });
+        }
+
+        function filtrarOperadores() {
+            const filtro = document.getElementById("operador1Input").value.toLowerCase().trim();
+            const opcoeDiv = document.getElementById("operador1Opcoes");
+            
+            if (filtro.length === 0) {
+                opcoeDiv.style.display = "none";
+                document.getElementById("operador1Input").value = "";
+                return;
+            }
+
+            const selectElement = document.getElementById("operador1Select");
+            const todasAsOpcoes = selectElement.querySelectorAll("option");
+            const opcoesFiltradasHTMLArray = [];
+
+            todasAsOpcoes.forEach(opcao => {
+                if (opcao.value === "") return;
+
+                const nomeOpcao = opcao.value.toLowerCase();
+                const palavras = nomeOpcao.split(" ");
+                let temMatch = false;
+
+                for (let i = 0; i < palavras.length; i++) {
+                    if (palavras[i].startsWith(filtro)) {
+                        temMatch = true;
+                        break;
+                    }
+                }
+
+                if (temMatch) {
+                    opcoesFiltradasHTMLArray.push(`<div style="padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; hover-background: #f0f0f0;" onclick="selecionarOperadorFiltro('${opcao.value}')">${opcao.value}</div>`);
+                }
+            });
+
+            if (opcoesFiltradasHTMLArray.length > 0) {
+                opcoeDiv.innerHTML = opcoesFiltradasHTMLArray.join("");
+                opcoeDiv.style.display = "block";
+            } else {
+                opcoeDiv.innerHTML = "<div style=\"padding: 8px; color: #999;\">Nenhum operador encontrado</div>";
+                opcoeDiv.style.display = "block";
+            }
+        }
+
+        function selecionarOperadorFiltro(nomeOperador) {
+            document.getElementById("operador1Input").value = nomeOperador;
+            document.getElementById("operador1Select").value = nomeOperador;
+            document.getElementById("operador1Opcoes").style.display = "none";
+            selecionarOperador1();
         }
 
         function selecionarOperador1() {
@@ -691,6 +744,7 @@
                 }
                 document.getElementById("spinner").style.display = "none";
 
+                document.getElementById("operador1Input").value = "";
                 document.getElementById("operador1Select").value = "";
 
                 document.getElementById("operador2Select").value = "";
@@ -699,6 +753,7 @@
                 document.getElementById("limparNRPsBtn").style.display = "none";
                 document.getElementById("localMontagemInput").value = "";
                 document.getElementById("eventoInput").value = "";
+                document.getElementById("operador1Opcoes").style.display = "none";
                 atualizarOperador2();
                 document.getElementById("form-title").textContent = "Registrar Retirada de Equipamento";
                 document.getElementById("submitButton").textContent = "Registrar Retirada";

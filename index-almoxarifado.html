@@ -416,10 +416,21 @@
                 return;
             }
 
-            const linhaOperador = escalaData.find((row, index) => {
-                if (index === 0) return false;
-                return row[9] && row[9].trim() === operador1;
-            });
+            let linhaOperador = null;
+            
+            for (let index = 1; index < escalaData.length; index++) {
+                const row = escalaData[index];
+                if (row[9]) {
+                    const nomeNaEscala = row[9].trim();
+                    const nomeNormalizado = normalizarNome(nomeNaEscala);
+                    const operador1Normalizado = normalizarNome(operador1);
+                    
+                    if (nomeNormalizado === operador1Normalizado) {
+                        linhaOperador = row;
+                        break;
+                    }
+                }
+            }
 
             if (linhaOperador) {
                 const localDaEscala = linhaOperador[2] ? linhaOperador[2].trim() : "";
@@ -435,6 +446,14 @@
             }
 
             atualizarOperador2();
+        }
+
+        function normalizarNome(nome) {
+            return nome
+                .toLowerCase()
+                .trim()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
         }
 
         function carregarPatrimoniosDoSheets(retryCount = 0) {

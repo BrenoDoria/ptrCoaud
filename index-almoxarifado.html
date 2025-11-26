@@ -445,7 +445,7 @@
                 e.preventDefault();
                 currentFocus = (currentFocus - 1 + items.length) % items.length;
                 atualizarSelecao(items);
-            } else if (e.key === "Enter" || e.key === "Tab") {
+            } else if (e.key === "Enter") {
                 e.preventDefault();
                 if (currentFocus > -1 && items[currentFocus]) {
                     items[currentFocus].click();

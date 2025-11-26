@@ -114,7 +114,7 @@
             <h2 id="form-title">Registrar Retirada de Equipamento</h2>
             <div class="form-group">
                 <label>Operador:</label>
-                <select id="operador1Select" onchange="atualizarOperador2()">
+                <input list="operador1List" id="operador1Input" placeholder="Digite ao menos 3 letras">
                     <option value="Obrigatório"></option>
                     <option value="Adson Miranda dos Anjos">Adson Miranda dos Anjos</option>
                         <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
@@ -320,7 +320,7 @@
                 document.getElementById("form-title").textContent = "Editar Ficha Pendente";
                 document.getElementById("submitButton").textContent = "Salvar Alterações";
                 document.getElementById("cancelButton").style.display = "inline-block";
-                document.getElementById("operador1Select").value = fichaEditando.operador1;
+                document.getElementById("operador1Input").value = fichaEditando.operador1;
                 document.getElementById("operador2Select").value = fichaEditando.operador2;
                 atualizarOperador2();
                 document.getElementById("localMontagemInput").value = fichaEditando.local;
@@ -413,7 +413,7 @@
         }
 
         function atualizarOperador2() {
-            const operador1 = document.getElementById("operador1Select").value;
+            const operador1 = document.getElementById("operador1Input").value;
             const operador2Select = document.getElementById("operador2Select");
             const currentOperador2 = operador2Select.value;
             operador2Select.innerHTML = `
@@ -511,7 +511,7 @@
         ];
 
         async function registrarRetirada() {
-            const operador1 = document.getElementById("operador1Select").value;
+            const operador1 = document.getElementById("operador1Input").value;
             const operador2 = document.getElementById("operador2Select").value;
             const localMontagem = document.getElementById("localMontagemInput").value.trim();
             const evento = document.getElementById("eventoInput").value.trim();

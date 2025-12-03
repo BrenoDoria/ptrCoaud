@@ -642,8 +642,8 @@ margin: 0;
                 row.innerHTML = `
                     <td>${item.NRP || "N/A"}</td>
                     <td>${item.Material || "N/A"}</td>
-                    <td>${item.Localização || "Não especificada"}</td>
-                    <td>${item.Responsável || "Não informado"}</td>
+                    <td>${item.Localização }</td>
+                    <td>${item.Responsável }</td>
                     <td><button onclick="removerPatrimonio(${index})">Remover</button></td>
                 `;
                 listElement.prepend(row);

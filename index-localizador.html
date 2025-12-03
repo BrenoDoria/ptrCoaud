@@ -304,6 +304,39 @@
             background-color: #45a049;
         }
 
+        .responsavel-lista {
+            position: absolute;
+            background: white;
+            border: 2px solid var(--color-primary);
+            border-radius: 4px;
+            max-height: 250px;
+            overflow-y: auto;
+            width: 100%;
+            z-index: 1001;
+            margin-top: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .responsavel-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+
+        .responsavel-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .responsavel-item.selected {
+            background-color: rgba(28, 79, 95, 0.1);
+        }
+
+        .form-group {
+            position: relative;
+        }
+
         footer {
             text-align: center;
             margin-top: 2rem;
@@ -393,12 +426,14 @@
 
                 <div class="form-group">
                     <label for="novoResponsavel">Novo Responsável:</label>
-                    <select id="novoResponsavel" required>
-                        <option value="">-- Selecione o responsável --</option>
-                        <option value="ALBERTO CESAR SOUZA ALMEIDA (5302)">ALBERTO CESAR SOUZA ALMEIDA (5302)</option>
-                        <option value="PAULO FERNANDO VOLPE (5933)">PAULO FERNANDO VOLPE (5933)</option>
-                        <option value="JOSE HENRIQUE FERREIRA DA SILVA (7913)">JOSE HENRIQUE FERREIRA DA SILVA (7913)</option>
-                    </select>
+                    <input 
+                        type="text" 
+                        id="novoResponsavel" 
+                        placeholder="Digite 3+ letras para buscar responsável" 
+                        required
+                        autocomplete="off"
+                    >
+                    <div id="responsavelLista" class="responsavel-lista" style="display: none;"></div>
                 </div>
 
                 <div class="form-group">
@@ -442,6 +477,7 @@
         let accessToken = null;
         let dadosPlanilha = null;
         let nrpSelecionado = null;
+        let responsaveisList = [];
 
         // ==================== INICIALIZAÇÃO ====================
         window.addEventListener('load', inicializarAplicacao);
@@ -575,8 +611,23 @@
         function processarDadosPlanilha(data) {
             exibirMensagemProgresso("AUTORIZADA CONSULTA");
             dadosPlanilha = data.values || [];
+            extrairResponsaveisList();
             exibirSpinner(false);
             document.getElementById("patrimonioTable").classList.add("visible");
+        }
+
+        function extrairResponsaveisList() {
+            const responsaveisUnicos = new Set();
+            
+            if (dadosPlanilha && dadosPlanilha.length > 1) {
+                dadosPlanilha.slice(1).forEach(row => {
+                    if (row[3]) { // Coluna 3 é a do responsável
+                        responsaveisUnicos.add(row[3].trim());
+                    }
+                });
+            }
+            
+            responsaveisList = Array.from(responsaveisUnicos).sort();
         }
 
         function tratarErroCarregamento(error) {
@@ -641,6 +692,8 @@
             document.getElementById("novoResponsavel").value = "";
             document.getElementById("novaLocalizacao").value = "";
             document.getElementById("osTransferencia").value = "";
+            document.getElementById("responsavelLista").innerHTML = "";
+            document.getElementById("responsavelLista").style.display = "none";
             document.getElementById("novoResponsavel").focus();
         }
 
@@ -651,19 +704,76 @@
         // Fechar modal ao clicar fora
         window.addEventListener("click", function (event) {
             const modal = document.getElementById("transferenciaModal");
+            const responsavelInput = document.getElementById("novoResponsavel");
+            const responsavelLista = document.getElementById("responsavelLista");
+            
             if (event.target === modal) {
                 fecharModal("transferenciaModal");
             }
+            
+            // Fechar lista ao clicar fora
+            if (!responsavelInput.contains(event.target) && !responsavelLista.contains(event.target)) {
+                responsavelLista.style.display = "none";
+            }
         });
+
+        // ==================== BUSCADOR DE RESPONSÁVEL ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            const novoResponsavelInput = document.getElementById("novoResponsavel");
+            const responsavelLista = document.getElementById("responsavelLista");
+
+            novoResponsavelInput.addEventListener("input", function() {
+                const termo = this.value.trim();
+
+                if (termo.length < 3) {
+                    responsavelLista.style.display = "none";
+                    responsavelLista.innerHTML = "";
+                    return;
+                }
+
+                const termoLower = termo.toLowerCase();
+                const responsaveisFiltrados = responsaveisList.filter(responsavel => 
+                    responsavel.toLowerCase().includes(termoLower)
+                );
+
+                if (responsaveisFiltrados.length === 0) {
+                    responsavelLista.innerHTML = '<div class="responsavel-item">Nenhum responsável encontrado</div>';
+                    responsavelLista.style.display = "block";
+                    return;
+                }
+
+                responsavelLista.innerHTML = responsaveisFiltrados.map(responsavel => 
+                    `<div class="responsavel-item" onclick="selecionarResponsavel('${responsavel.replace(/'/g, "\\'")}')">${responsavel}</div>`
+                ).join("");
+                
+                responsavelLista.style.display = "block";
+            });
+
+            novoResponsavelInput.addEventListener("keydown", function(e) {
+                if (e.key === "Escape") {
+                    responsavelLista.style.display = "none";
+                }
+            });
+        });
+
+        function selecionarResponsavel(responsavel) {
+            document.getElementById("novoResponsavel").value = responsavel;
+            document.getElementById("responsavelLista").style.display = "none";
+        }
 
         // ==================== CONFIRMAÇÃO DE TRANSFERÊNCIA ====================
         async function confirmarTransferencia() {
-            const novoResponsavel = document.getElementById("novoResponsavel").value;
+            const novoResponsavel = document.getElementById("novoResponsavel").value.trim();
             const novaLocalizacao = document.getElementById("novaLocalizacao").value;
             const osTransferencia = document.getElementById("osTransferencia").value;
 
             if (!novoResponsavel || !osTransferencia) {
                 alert("⚠️ Por favor, preencha os campos obrigatórios:\n- Novo Responsável\n- Nº OS de Transferência");
+                return;
+            }
+
+            if (!responsaveisList.includes(novoResponsavel)) {
+                alert("⚠️ Responsável inválido! Selecione um responsável da lista sugerida.");
                 return;
             }
 

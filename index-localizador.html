@@ -854,16 +854,21 @@
         }
 
         async function executarTransferencia(novoResponsavel, novaLocalizacao, osTransferencia) {
-            const rowIndex = dadosPlanilha.slice(1).findIndex(
-                row => row[0]?.toString().trim() === nrpSelecionado
-            ) + 1;
+            // Encontrar a linha EXATA do NRP na planilha
+            let lineNumber = null;
+            for (let i = 1; i < dadosPlanilha.length; i++) {
+                if (dadosPlanilha[i][0]?.toString().trim() === nrpSelecionado) {
+                    lineNumber = i + 1; // i+1 porque Google Sheets começa na linha 1
+                    break;
+                }
+            }
 
-            if (rowIndex <= 0) {
+            if (lineNumber === null) {
                 alert("❌ Erro: Patrimônio não encontrado para atualização.");
                 return;
             }
 
-            const range = `${SHEET_NAME}!A${rowIndex}:E${rowIndex}`;
+            const range = `${SHEET_NAME}!A${lineNumber}:E${lineNumber}`;
             const updateData = [[
                 nrpSelecionado,
                 dadosPlanilha[rowIndex][1],

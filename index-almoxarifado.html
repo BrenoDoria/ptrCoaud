@@ -637,11 +637,16 @@ margin: 0;
         function atualizarListaPatrimonios() {
             const tbody = document.getElementById("patrimonioList");
             tbody.innerHTML = "";
-            patrimoniosSelecionados.forEach((item, i) => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `<td>${item.NRP}</td><td>${item.Material}</td><td>${item.Localização || "N/I"}</td><td>${item.Responsável || "N/I"}</td>
-                    <td><button onclick="removerPatrimonio(${i})">Remover</button></td>`;
-                tbody.prepend(tr);
+            patrimoniosSelecionados.forEach((item, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${item.NRP || "N/A"}</td>
+                    <td>${item.Material || "N/A"}</td>
+                    <td>${item.Localização || "Não especificada"}</td>
+                    <td>${item.Responsável || "Não informado"}</td>
+                    <td><button onclick="removerPatrimonio(${index})">Remover</button></td>
+                `;
+                listElement.prepend(row);
             });
         }
 

@@ -588,11 +588,6 @@
                 <button id="submitButton" class="btn-primary" onclick="registrarRetirada()">Registrar Retirada</button>
                 <button id="cancelButton" class="btn-secondary" onclick="cancelarEdicao()" style="display: none;">Cancelar Edição</button>
             </div>
-            <div id="navegacao-fichas" class="nav-buttons">
-            <button id="fichasPendentesBtn" class="btn-primary" onclick="navigateTo('fichas.html')">Fichas Pendentes</button>
-            <button id="fichasArquivadasBtn" class="btn-primary" onclick="navigateTo('fichas-arquivadas.html')">Fichas Arquivadas</button>
-            <button id="backButton" class="btn-secondary" onclick="navigateTo('index.html')">Voltar</button>
-        </div>
 
             <div class="table-wrapper">
                 <table id="patrimonioTable">
@@ -610,7 +605,11 @@
             </div>
         </div>
 
-
+        <div id="navegacao-fichas" class="nav-buttons">
+            <button id="fichasPendentesBtn" class="btn-primary" onclick="navigateTo('fichas.html')">Fichas Pendentes</button>
+            <button id="fichasArquivadasBtn" class="btn-primary" onclick="navigateTo('fichas-arquivadas.html')">Fichas Arquivadas</button>
+            <button id="backButton" class="btn-secondary" onclick="navigateTo('index.html')">Voltar</button>
+        </div>
     </div>
 
     <footer class="author-signature">© 2025 BrenoDoria</footer>
@@ -970,7 +969,7 @@
             })
             .then(data => {
                 patrimonioData = data.values || [];
-               document.getElementById("progressText").textContent = "Dados carregados com sucesso!";
+                document.getElementById("progressText").textContent = "Dados carregados com sucesso!";
                 document.getElementById("spinner").style.display = "none";
             })
             .catch(err => {

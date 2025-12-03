@@ -3,263 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Fichas Pendentes - COAUD</title>
+    <title>Fichas Pendentes - Controle de Almoxarifado COAUD</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         :root {
-            --primary-color: #4CAF50;
-            --primary-dark: #45a049;
-            --danger-color: #f44336;
-            --warning-color: #ff9800;
-            --success-color: #4CAF50;
-            --gray-light: #f2f2f2;
-            --gray-border: #ddd;
-            --text-primary: #333;
-            --text-secondary: #666;
-            --padding-sm: 8px;
-            --padding-md: 12px;
-            --padding-lg: 16px;
-            --border-radius: 6px;
+            --font-size-base: 1rem;
+            --padding-base: 1.25rem;
+            --margin-base: 1.25rem;
         }
-
-        html {
-            font-size: 16px;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #f5f5f5;
-            color: var(--text-primary);
-            line-height: 1.6;
-        }
-
         .container {
-            width: 100%;
-            max-width: 1200px;
+            text-align: center;
+            padding: var(--padding-base);
+            max-width: 90%;
             margin: 0 auto;
-            padding: var(--padding-lg);
         }
-
         h1 {
-            font-size: 1.75rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            color: var(--primary-color);
-            word-wrap: break-word;
+            font-size: calc(var(--font-size-base) * 1.5);
+            margin-bottom: calc(var(--margin-base) * 0.8);
         }
-
         h2 {
-            font-size: 1.25rem;
-            margin-top: 1.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
+            font-size: calc(var(--font-size-base) * 1.25);
+            margin-top: calc(var(--margin-base) * 1.2);
         }
-
-        /* Login Section */
-        #login-section {
-            text-align: center;
-            padding: 2rem;
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        /* Progress Container */
         .progress-container {
-            display: none;
-            text-align: center;
-            padding: 1rem;
-            background: #e3f2fd;
-            border-radius: var(--border-radius);
-            margin-bottom: 1rem;
+            margin: calc(var(--margin-base) * 0.4) 0;
         }
-
         .spinner {
             display: none;
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3498db;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 1.25rem;
+            height: 1.25rem;
             animation: spin 1s linear infinite;
-            margin: 0 auto 0.5rem;
+            margin: 0 auto;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        #progressText {
-            font-size: 0.95rem;
-            color: #1976d2;
-            margin: 0;
-        }
-
-        /* Buttons */
         button {
-            padding: var(--padding-md) var(--padding-lg);
-            margin: var(--padding-sm);
+            padding: 0.5rem 1rem;
+            margin: 0.3rem;
             cursor: pointer;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
+            min-height: 2.75rem;
+            font-size: var(--font-size-base);
             touch-action: manipulation;
-            min-height: 44px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
         }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        .backButton {
+            background: #ccc;
         }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .btn-secondary {
-            background-color: #999;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #777;
-        }
-
-        /* Pendentes Section */
-        #pendentes-section {
-            background: white;
-            padding: 1.5rem;
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: none;
-        }
-
-        .nav-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--padding-md);
-            margin-bottom: 1.5rem;
-            justify-content: center;
-        }
-
-        /* Table */
         .table-wrapper {
-            margin-top: 1rem;
+            margin-top: calc(var(--margin-base) * 0.8);
             overflow-x: auto;
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
+            font-family: Arial, sans-serif;
+        }
+        th, td {
+            padding: 0.625rem;
+            text-align: center;
+            border: 1px solid #ddd;
+            vertical-align: middle;
+            font-size: calc(var(--font-size-base) * 0.9);
+        }
+        th {
+            background: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+        td {
             background: white;
         }
-
-        thead {
-            background-color: var(--primary-color);
-            color: white;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+        tr:nth-child(even) td {
+            background: #f2f2f2;
         }
-
-        th,
-        td {
-            padding: var(--padding-md);
-            text-align: center;
-            border: 1px solid var(--gray-border);
-            word-wrap: break-word;
-        }
-
-        th {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        td {
-            font-size: 0.9rem;
-        }
-
-        tr:nth-child(even) {
-            background-color: var(--gray-light);
-        }
-
-        tr:hover {
-            background-color: #fffde7;
-        }
-
-        tr.ficha-atrasada {
-            background-color: #fff59d !important;
-            font-weight: 600;
-        }
-
-        tr.ficha-atrasada:hover {
-            background-color: #fff176 !important;
-        }
-
         .equipamentos-cell {
             text-align: left;
-            max-width: 300px;
+            padding: 0.625rem;
+            text-overflow: ellipsis;
         }
-
         .equipamento-item {
-            padding: 2px 0;
-            border-bottom: 1px solid var(--gray-border);
-            font-size: 0.85rem;
+            white-space: nowrap;
+            line-height: 1.5;
         }
-
-        .equipamento-item:last-child {
-            border-bottom: none;
+        .ficha-atrasada td {
+            background-color: yellow !important;
         }
-
-        .table-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2px;
-            justify-content: center;
-            align-items: center;
+        footer {
+            text-align: center;
+            margin-top: calc(var(--margin-base) * 0.8);
+            font-size: calc(var(--font-size-base) * 0.75);
         }
-
-        .table-actions button {
-            padding: 6px 10px;
-            font-size: 0.8rem;
-            margin: 2px;
-            min-height: 36px;
-        }
-
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
+            z-index: 1;
             left: 0;
             top: 0;
             width: 100%;
@@ -267,247 +109,106 @@
             overflow: auto;
             background-color: rgba(0,0,0,0.4);
         }
-
         .modal-content {
             background-color: #fefefe;
             margin: 10% auto;
-            padding: 1.5rem;
+            padding: 1rem;
             border: 1px solid #888;
             width: 90%;
-            max-width: 500px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-width: 31.25rem;
+            border-radius: 0.3rem;
         }
-
         .close {
             color: #aaa;
             float: right;
             font-size: 1.75rem;
             font-weight: bold;
             cursor: pointer;
-            transition: color 0.3s;
         }
-
         .close:hover,
         .close:focus {
             color: black;
+            text-decoration: none;
         }
-
-        .modal h2 {
-            margin-top: 0;
-        }
-
         .form-group {
             display: flex;
-            flex-direction: column;
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            margin-bottom: var(--padding-sm);
-            font-size: 0.95rem;
-        }
-
-        .form-group select {
-            padding: var(--padding-md);
-            border: 1px solid var(--gray-border);
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-            font-family: inherit;
-            background-color: white;
-            transition: border-color 0.3s ease;
-            min-height: 44px;
-        }
-
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: var(--padding-md);
-            margin-top: 1.5rem;
-            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 0.9rem;
             flex-wrap: wrap;
         }
-
-        .modal-buttons button {
+        .form-group label {
+            width: 7.5rem;
+            text-align: right;
+            margin-right: 0.6rem;
+            font-weight: bold;
+            font-size: calc(var(--font-size-base) * 0.9);
+        }
+        .form-group select {
             flex: 1;
-            min-width: 100px;
+            max-width: 18.75rem;
+            padding: 0.5rem;
+            margin: 0.3rem;
+            box-sizing: border-box;
+            font-size: calc(var(--font-size-base) * 0.9);
+            min-height: 2.75rem;
         }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--gray-border);
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        /* Responsive Design */
         @media (max-width: 768px) {
-            html {
-                font-size: 14px;
+            :root {
+                --font-size-base: 0.9rem;
+                --padding-base: 0.8rem;
+                --margin-base: 0.8rem;
             }
-
-            .container {
-                padding: var(--padding-md);
+            th, td {
+                padding: 0.4rem;
             }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-
-            h2 {
-                font-size: 1.1rem;
-            }
-
-            th,
-            td {
-                padding: var(--padding-sm);
-                font-size: 0.8rem;
-            }
-
-            .equipamentos-cell {
-                max-width: 200px;
-            }
-
-            .table-actions button {
-                padding: 4px 8px;
-                font-size: 0.7rem;
-                margin: 1px;
-            }
-
-            button {
-                padding: var(--padding-sm) var(--padding-md);
-                font-size: 0.9rem;
-                min-height: 40px;
-            }
-
             .modal-content {
                 margin: 5% auto;
                 width: 95%;
-                padding: 1rem;
+                padding: 0.8rem;
             }
-
-            .nav-buttons {
-                gap: var(--padding-sm);
+            .form-group label {
+                width: 100%;
+                text-align: left;
+                margin-bottom: 0.3rem;
             }
-
-            .modal-buttons button {
-                min-width: 80px;
+            .form-group select {
+                max-width: 100%;
             }
         }
-
         @media (max-width: 480px) {
-            html {
-                font-size: 12px;
+            :root {
+                --font-size-base: 0.8rem;
+                --padding-base: 0.5rem;
+                --margin-base: 0.5rem;
             }
-
-            .container {
-                padding: var(--padding-sm);
+            th, td {
+                padding: 0.3rem;
+                font-size: calc(var(--font-size-base) * 0.8);
             }
-
-            h1 {
-                font-size: 1.1rem;
-                margin-bottom: 1rem;
-            }
-
-            h2 {
-                font-size: 0.95rem;
-            }
-
-            th,
-            td {
-                padding: 4px;
-                font-size: 0.7rem;
-            }
-
-            th {
-                white-space: nowrap;
-            }
-
-            .equipamentos-cell {
-                max-width: 120px;
-            }
-
-            .equipamento-item {
-                font-size: 0.65rem;
-            }
-
             button {
-                padding: 4px 8px;
-                font-size: 0.75rem;
-                min-height: 32px;
-                margin: 2px 1px;
+                padding: 0.4rem 0.8rem;
             }
-
-            .table-actions button {
-                padding: 3px 6px;
-                font-size: 0.65rem;
-                margin: 1px;
-            }
-
-            .nav-buttons {
-                gap: 4px;
-            }
-
-            .nav-buttons button {
-                flex: 1;
-                min-width: auto;
-            }
-
             .modal-content {
                 margin: 2% auto;
-                padding: 1rem;
+                padding: 0.5rem;
             }
-
-            .form-group select {
-                font-size: 14px;
-            }
-
-            .modal-buttons {
-                flex-direction: column;
-            }
-
-            .modal-buttons button {
-                width: 100%;
-            }
-        }
-
-        /* Utility Classes */
-        .text-center {
-            text-align: center;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>FICHAS PENDENTES - ALMOXARIFADO COAUD</h1>
-
         <div id="login-section">
-            <button class="btn-primary" onclick="solicitarToken()">Fazer Login com Google</button>
+            <button onclick="solicitarToken()">Fazer Login com Google</button>
         </div>
-
-        <div class="progress-container" id="progress-container">
+        <div class="progress-container" id="progress-container" style="display: none;">
             <div id="spinner" class="spinner"></div>
             <p id="progressText">Aguardando dados do Google Sheets...</p>
         </div>
 
-        <div id="pendentes-section">
-            <div class="nav-buttons">
-                <button class="btn-primary" onclick="navigateTo('index-almoxarifado.html')">Nova Retirada</button>
-                <button class="btn-primary" onclick="navigateTo('fichas-arquivadas.html')">Fichas Arquivadas</button>
-                <button class="btn-secondary" onclick="navigateTo('index.html')">Voltar</button>
-            </div>
-
+        <div id="pendentes-section" style="display: none;">
             <h2>Fichas Pendentes</h2>
-
+                <button class="backButton" onclick="window.location.href='index-almoxarifado.html'">Voltar</button>
             <div class="table-wrapper">
                 <table id="pendentesTable">
                     <thead>
@@ -529,20 +230,19 @@
 
         <div id="devolucaoModal" class="modal">
             <div class="modal-content">
-                <span class="close" onclick="fecharModal()">&times;</span>
+                <span class="close" onclick="fecharModal()">×</span>
                 <h2>Marcar Devolução</h2>
-
                 <div class="form-group">
-                    <label for="operadorDevolucaoSelect">Operador Devolução *</label>
+                    <label for="operadorDevolucaoSelect">Operador Devolução:</label>
                     <select id="operadorDevolucaoSelect" required>
                         <option value="">Selecione o operador</option>
-                        <option value="Adson Miranda dos Anjos">Adson Miranda dos Anjos</option>
+                       <option value="Adson Miranda dos Anjos">Adson Miranda dos Anjos</option>
                         <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
                         <option value="Alberto Cesar Souza Almeida">Alberto Cesar Souza Almeida</option>
                         <option value="Alexander Rafael Carvalho Paim">Alexander Rafael Carvalho Paim</option>
                         <option value="Alison Silva de Oliveira">Alison Silva de Oliveira</option>
                         <option value="Allan Cosseti Ardisson">Allan Cosseti Ardisson</option>
-                        <option value="Altamir Araújo da Silva">Altamir Araújo da Silva</option>
+                        <option value="Altamir Araújo da Silva">Altamir Araujo da Silva</option>
                         <option value="Antonio Batista Ângelo">Antonio Batista Ângelo</option>
                         <option value="Antonio Rodrigues Siqueira Filho">Antonio Rodrigues Siqueira Filho</option>
                         <option value="Arley Carvalho Alves">Arley Carvalho Alves</option>
@@ -561,7 +261,7 @@
                         <option value="Emanuel Silveira Costa">Emanuel Silveira Costa</option>
                         <option value="Eric Samuel do Ouro">Eric Samuel do Ouro</option>
                         <option value="Erika Fedosseeff Auler">Erika Fedosseeff Auler</option>
-                        <option value="Eromilson Monteiro Dutra Chaves">Eromilson Monteiro Dutra Chaves</option>
+                        <option value="Eromilson Monteiro dutra Chaves">Eromilson Monteiro dutra Chaves</option>
                         <option value="Evellyn Mendes de Souza Nunes">Evellyn Mendes de Souza Nunes</option>
                         <option value="Felipe Omena Vasconcellos de Assis">Felipe Omena Vasconcellos de Assis</option>
                         <option value="Fernando de Sousa Vasconcelos">Fernando de Sousa Vasconcelos</option>
@@ -576,6 +276,7 @@
                         <option value="Guilherme Malheiro da Rocha Pinto">Guilherme Malheiro da Rocha Pinto</option>
                         <option value="Helisson Rafael de O. Leite">Helisson Rafael de O. Leite</option>
                         <option value="Helyeber Feitosa Ferreira">Helyeber Feitosa Ferreira</option>
+                        <option value="Hilton Severiano Ferreira">Hilton Severiano Ferreira</option>
                         <option value="Huelisson Amancio de Moraes Silva">Huelisson Amancio de Moraes Silva</option>
                         <option value="Igor Mendes dos Santos">Igor Mendes dos Santos</option>
                         <option value="Isaias Pereira Soares">Isaias Pereira Soares</option>
@@ -631,9 +332,8 @@
                         <option value="Wirlem Silva Alves">Wirlem Silva Alves</option>
                     </select>
                 </div>
-
                 <div class="form-group">
-                    <label for="almoxarifadoDevolucaoSelect">Almoxarifado Devolução *</label>
+                    <label for="almoxarifadoDevolucaoSelect">Almoxarifado Devolução:</label>
                     <select id="almoxarifadoDevolucaoSelect" required>
                         <option value="">Selecione o almoxarifado</option>
                         <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
@@ -642,17 +342,11 @@
                         <option value="Waleria Bastos Cardoso">Waleria Bastos Cardoso</option>
                     </select>
                 </div>
-
-                <div class="modal-buttons">
-                    <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
-                    <button class="btn-primary" onclick="confirmarDevolucao()">Confirmar Devolução</button>
-                </div>
+                <button onclick="confirmarDevolucao()">Confirmar Devolução</button>
             </div>
         </div>
     </div>
-
     <footer class="author-signature">© 2025 BrenoDoria</footer>
-
     <script>
         const usuarios = {
             "supervisor": { senha: "12345", permissao: "Supervisor" },
@@ -661,7 +355,6 @@
 
         const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';
         const FILE_ID = '1q9RCwJ4P--QIH4kkMszffrN8ZwzkSsNoZtPH-Usk4Zw';
-
         let tokenClient;
         let accessToken = null;
         let pendentesData = [];
@@ -682,48 +375,35 @@
                 return;
             }
 
-            inicializarTokenClient();
-        };
-
-        function inicializarTokenClient() {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: 'https://www.googleapis.com/auth/spreadsheets',
-                callback: handleTokenResponse
+                callback: (tokenResponse) => {
+                    if (tokenResponse.error) {
+                        document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
+                        document.getElementById("progress-container").style.display = "block";
+                        return;
+                    }
+                    accessToken = tokenResponse.access_token;
+                    localStorage.setItem("access_token", accessToken);
+                    document.getElementById("progressText").textContent = "Autenticado com sucesso! Carregando dados...";
+                    document.getElementById("progress-container").style.display = "block";
+                    document.getElementById("login-section").style.display = "none";
+                    document.getElementById("pendentes-section").style.display = "block";
+                    carregarDadosDoSheets();
+                }
             });
 
             const savedToken = localStorage.getItem("access_token");
             if (savedToken) {
                 accessToken = savedToken;
-                mostrarSecaoPendentes();
-            } else {
-                mostrarSecaoLogin();
-            }
-        }
-
-        function handleTokenResponse(tokenResponse) {
-            if (tokenResponse.error) {
-                document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
+                document.getElementById("login-section").style.display = "none";
+                document.getElementById("pendentes-section").style.display = "block";
                 document.getElementById("progress-container").style.display = "block";
-                return;
+                document.getElementById("progressText").textContent = "Usando token salvo. Carregando dados...";
+                carregarDadosDoSheets();
             }
-            accessToken = tokenResponse.access_token;
-            localStorage.setItem("access_token", accessToken);
-            mostrarSecaoPendentes();
-        }
-
-        function mostrarSecaoLogin() {
-            document.getElementById("login-section").style.display = "block";
-            document.getElementById("pendentes-section").style.display = "none";
-        }
-
-        function mostrarSecaoPendentes() {
-            document.getElementById("login-section").style.display = "none";
-            document.getElementById("pendentes-section").style.display = "block";
-            document.getElementById("progress-container").style.display = "block";
-            document.getElementById("progressText").textContent = "Carregando fichas pendentes...";
-            carregarDadosDoSheets();
-        }
+        };
 
         function solicitarToken() {
             tokenClient.requestAccessToken();
@@ -736,14 +416,13 @@
                 });
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(`Erro ao buscar metadados: ${errorData.error?.message || response.statusText}`);
+                    throw new Error(`Erro ao buscar metadados da planilha: ${errorData.error?.message || response.statusText}`);
                 }
                 const spreadsheet = await response.json();
                 spreadsheet.sheets.forEach(sheet => {
                     sheetIds[sheet.properties.title] = sheet.properties.sheetId;
                 });
             } catch (error) {
-                console.error(error);
                 document.getElementById("progressText").textContent = "Erro ao buscar IDs das abas: " + error.message;
                 throw error;
             }
@@ -763,91 +442,97 @@
 
                 if (!pendentesResponse.ok) {
                     const errorData = await pendentesResponse.json();
-                    throw new Error(`Erro ao carregar fichas: ${errorData.error?.message || pendentesResponse.statusText}`);
+                    throw new Error(`Erro ao carregar RETIRADAS_PENDENTES: ${errorData.error?.message || pendentesResponse.statusText}`);
                 }
 
                 const pendentes = await pendentesResponse.json();
                 pendentesData = pendentes.values || [];
                 document.getElementById("progressText").textContent = "Dados carregados com sucesso!";
                 document.getElementById("spinner").style.display = "none";
-                atualizarTabela();
+                atualizarTabelas();
             } catch (error) {
                 if (error.message.includes("401") && retryCount < maxRetries) {
                     document.getElementById("progressText").textContent = "Token expirado, reautenticando...";
                     localStorage.removeItem("access_token");
                     accessToken = null;
-                    mostrarSecaoLogin();
+                    document.getElementById("login-section").style.display = "block";
+                    document.getElementById("pendentes-section").style.display = "none";
                     solicitarToken();
                     return;
                 }
-                console.error("Erro:", error);
-                document.getElementById("progressText").textContent = "Erro ao carregar: " + error.message;
+                console.error("Erro ao carregar dados:", error);
+                document.getElementById("progressText").textContent = "Erro ao carregar os dados: " + error.message;
                 document.getElementById("spinner").style.display = "none";
             }
         }
 
-        function atualizarTabela() {
+               function atualizarTabelas() {
             const pendentesList = document.getElementById("pendentesList");
             pendentesList.innerHTML = "";
+            if (pendentesData.length > 1) {
+                // Cria uma cópia dos dados (excluindo o cabeçalho) e ordena por Data Retirada em ordem decrescente
+                const sortedData = [...pendentesData.slice(1)].sort((a, b) => {
+                    // Parse da data no formato DD/MM/YYYY, HH:MM:SS
+                    const parseDate = (dateStr) => {
+                        if (!dateStr) return new Date(0); // Valor padrão para datas inválidas
+                        const [datePart, timePart] = dateStr.split(', ');
+                        const [day, month, year] = datePart.split('/').map(Number);
+                        const [hours, minutes, seconds] = timePart.split(':').map(Number);
+                        return new Date(year, month - 1, day, hours, minutes, seconds); // month - 1 pois Janeiro é 0
+                    };
+                    const dateA = parseDate(a[6]);
+                    const dateB = parseDate(b[6]);
+                    return dateB - dateA; // Ordem decrescente
+                });
 
-            if (pendentesData.length <= 1) {
-                const tr = document.createElement("tr");
-                tr.innerHTML = '<td colspan="8" style="text-align:center; padding: 2rem;">Nenhuma ficha pendente encontrada.</td>';
-                pendentesList.appendChild(tr);
-                return;
+                // Popula a tabela com os dados ordenados
+                sortedData.forEach((row, sortedIndex) => {
+                    const equipamentos = row[3] ? row[3].split('; ') : [];
+                    const equipamentosFormatados = equipamentos.length > 0
+                        ? equipamentos.map(equip => `<div class="equipamento-item">${equip}</div>`).join('')
+                        : '-';
+                    const originalIndex = pendentesData.slice(1).findIndex(r => r[0] === row[0]) + 1; // Índice original no pendentesData
+
+                    // Verifica se a ficha tem mais de 30 dias
+                    const parseDate = (dateStr) => {
+                        if (!dateStr) return new Date(0);
+                        const [datePart, timePart] = dateStr.split(', ');
+                        const [day, month, year] = datePart.split('/').map(Number);
+                        const [hours, minutes, seconds] = timePart.split(':').map(Number);
+                        return new Date(year, month - 1, day, hours, minutes, seconds);
+                    };
+                    const dataRetirada = parseDate(row[6]);
+                    const dataAtual = new Date();
+                    const diffTime = dataAtual - dataRetirada;
+                    const diffDays = diffTime / (1000 * 60 * 60 * 24); // Converte milissegundos para dias
+                    const isAtrasada = diffDays > 14;
+
+                    const tr = document.createElement("tr");
+                    if (isAtrasada) {
+                        tr.classList.add("ficha-atrasada");
+                    }
+                    tr.innerHTML = `
+                        <td>${row[0]}</td>
+                        <td>${row[1]}</td>
+                        <td>${row[2] || '-'}</td>
+                        <td class="equipamentos-cell">${equipamentosFormatados}</td>
+                        <td>${row[4]}</td>
+                        <td>${row[5]}</td>
+                        <td>${row[6]}</td>
+                        <td>
+                            <button onclick="editarFicha(${originalIndex})">Editar</button>
+                            <button onclick="abrirModalDevolucao('${row[0]}')">Marcar Devolução</button>
+                            <button onclick="imprimirFicha(${originalIndex})">Imprimir</button>
+                        </td>
+                    `;
+                    pendentesList.appendChild(tr);
+                });
+
+                // Depuração: log para verificar a ordenação
+                console.log("Dados ordenados:", sortedData.map(row => row[6]));
             }
-
-            // Ordenar por data de retirada (mais recente primeiro)
-            const sortedData = [...pendentesData.slice(1)].sort((a, b) => {
-                const dateA = parseData(a[6]);
-                const dateB = parseData(b[6]);
-                return dateB - dateA;
-            });
-
-            sortedData.forEach((row, sortedIndex) => {
-                const equipamentos = row[3] ? row[3].split('; ') : [];
-                const equipamentosFormatados = equipamentos.length > 0
-                    ? equipamentos.map(equip => `<div class="equipamento-item">${equip}</div>`).join('')
-                    : '-';
-                const originalIndex = pendentesData.slice(1).findIndex(r => r[0] === row[0]) + 1;
-
-                // Verifica se a ficha tem mais de 14 dias
-                const dataRetirada = parseData(row[6]);
-                const dataAtual = new Date();
-                const diffTime = dataAtual - dataRetirada;
-                const diffDays = diffTime / (1000 * 60 * 60 * 24);
-                const isAtrasada = diffDays > 14;
-
-                const tr = document.createElement("tr");
-                if (isAtrasada) {
-                    tr.classList.add("ficha-atrasada");
-                }
-
-                tr.innerHTML = `
-                    <td>${row[0]}</td>
-                    <td>${row[1]}</td>
-                    <td>${row[2] || '-'}</td>
-                    <td class="equipamentos-cell">${equipamentosFormatados}</td>
-                    <td>${row[4]}</td>
-                    <td>${row[5]}</td>
-                    <td>${row[6]}</td>
-                    <td class="table-actions">
-                        <button class="btn-primary" onclick="editarFicha(${originalIndex})">Editar</button>
-                        <button class="btn-secondary" onclick="abrirModalDevolucao('${row[0]}')">Devolver</button>
-                        <button class="btn-secondary" onclick="imprimirFicha(${originalIndex})">Imprimir</button>
-                    </td>
-                `;
-                pendentesList.appendChild(tr);
-            });
         }
 
-        function parseData(dateStr) {
-            if (!dateStr) return new Date(0);
-            const [datePart, timePart] = dateStr.split(', ');
-            const [day, month, year] = datePart.split('/').map(Number);
-            const [hours, minutes, seconds] = timePart.split(':').map(Number);
-            return new Date(year, month - 1, day, hours, minutes, seconds);
-        }
 
         function editarFicha(rowIndex) {
             const ficha = pendentesData[rowIndex];
@@ -882,7 +567,7 @@
             const almoxarifadoDevolucao = document.getElementById("almoxarifadoDevolucaoSelect").value;
 
             if (!operadorDevolucao || !almoxarifadoDevolucao) {
-                document.getElementById("progressText").textContent = "Preencha todos os campos obrigatórios.";
+                document.getElementById("progressText").textContent = "Preencha todos os campos obrigatórios (Operador Devolução e Almoxarifado Devolução).";
                 return;
             }
 
@@ -901,9 +586,6 @@
             const dataDevolucao = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
             const fichaArquivada = [...retirada, dataDevolucao, operadorDevolucao, almoxarifadoDevolucao];
 
-            document.getElementById("spinner").style.display = "inline-block";
-            document.getElementById("progressText").textContent = "Registrando devolução...";
-
             try {
                 const appendResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_ARQUIVADAS!A:J:append?valueInputOption=RAW`, {
                     method: 'POST',
@@ -911,12 +593,13 @@
                         'Authorization': `Bearer ${accessToken}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ values: [fichaArquivada] })
+                    body: JSON.stringify({
+                        values: [fichaArquivada]
+                    })
                 });
-
                 if (!appendResponse.ok) {
                     const errorData = await appendResponse.json();
-                    throw new Error(`Erro ao arquivar: ${errorData.error?.message || appendResponse.statusText}`);
+                    throw new Error(`Erro ao arquivar retirada: ${errorData.error?.message || appendResponse.statusText}`);
                 }
 
                 const rowIndex = retiradaIndex + 1;
@@ -939,20 +622,17 @@
                         }]
                     })
                 });
-
                 if (!deleteResponse.ok) {
                     const errorData = await deleteResponse.json();
-                    throw new Error(`Erro ao remover pendente: ${errorData.error?.message || deleteResponse.statusText}`);
+                    throw new Error(`Erro ao remover retirada pendente: ${errorData.error?.message || deleteResponse.statusText}`);
                 }
 
                 pendentesData.splice(rowIndex, 1);
-                atualizarTabela();
-                document.getElementById("progressText").textContent = "Devolução registrada com sucesso!";
-                document.getElementById("spinner").style.display = "none";
+                atualizarTabelas();
+                document.getElementById("progressText").textContent = "Devolução registrada e arquivada com sucesso!";
             } catch (error) {
+                document.getElementById("progressText").textContent = "Erro ao marcar devolução: " + error.message;
                 console.error(error);
-                document.getElementById("progressText").textContent = "Erro: " + error.message;
-                document.getElementById("spinner").style.display = "none";
             }
         }
 
@@ -971,23 +651,12 @@
             window.location.href = "ficha_Imprimir.html";
         }
 
-        function navigateTo(page) {
-            window.location.href = page;
-        }
-
         window.onclick = function(event) {
             const modal = document.getElementById("devolucaoModal");
             if (event.target == modal) {
                 fecharModal();
             }
         }
-
-        // Auto-refresh a cada 3 minutos
-        /*setInterval(() => {
-            if (accessToken) {
-                carregarDadosDoSheets();
-            }
-        }, 180000);*/
     </script>
 </body>
 </html>

@@ -4,638 +4,226 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>COAUD - CONTROLE DE EQUIPAMENTOS</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary-color: #4CAF50;
-            --primary-dark: #45a049;
-            --secondary-color: #2196F3;
-            --danger-color: #f44336;
-            --warning-color: #ff9800;
-            --gray-light: #f2f2f2;
-            --gray-border: #ddd;
-            --text-primary: #333;
-            --text-secondary: #666;
-            --padding-sm: 8px;
-            --padding-md: 12px;
-            --padding-lg: 16px;
-            --border-radius: 6px;
-        }
-
-        html {
-            font-size: 16px;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #f5f5f5;
-            color: var(--text-primary);
-            line-height: 1.6;
-        }
-
         .container {
-            width: 100%;
-            max-width: 1000px;
+            text-align: center;
+            padding: 20px;
+            max-width: 800px;
             margin: 0 auto;
-            padding: var(--padding-lg);
         }
-
         h1 {
-            font-size: 1.75rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            color: var(--primary-color);
-            word-wrap: break-word;
+            font-size: 24px;
+            margin-bottom: 20px;
         }
-
         h2 {
-            font-size: 1.25rem;
-            margin-top: 1.5rem;
-            margin-bottom: 1rem;
+            font-size: 20px;
+            margin-top: 30px;
         }
-
-        /* Login Section */
-        #login-section {
-            text-align: center;
-            padding: 2rem;
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        /* Progress Container */
         .progress-container {
-            display: none;
-            text-align: center;
-            padding: 1rem;
-            background: #e3f2fd;
-            border-radius: var(--border-radius);
-            margin-bottom: 1rem;
+            margin: 10px 0;
         }
-
         .spinner {
             display: none;
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3498db;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 20px;
+            height: 20px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 0.5rem;
+            margin: 0 auto;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        #progressText {
-            font-size: 0.95rem;
-            color: #1976d2;
-            margin: 0;
-        }
-
-        /* Buttons */
         button {
-            padding: var(--padding-md) var(--padding-lg);
-            margin: var(--padding-md) var(--padding-sm);
+            padding: 8px 16px;
+            margin: 5px;
             cursor: pointer;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            touch-action: manipulation;
-            min-height: 44px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
         }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        .backButton, .cancelButton {
+            background: #ccc;
         }
-
-        button:active {
-            transform: translateY(0);
-        }
-
         button:disabled {
-            opacity: 0.5;
+            background: #e0e0e0;
             cursor: not-allowed;
-            transform: none;
         }
-
-        .btn-primary {
-            background-color: var(--primary-color);
+        select, input[type="text"] {
+            padding: 8px;
+            margin: 5px;
+            width: 250px;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-family: Arial, sans-serif;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        th {
+            background: #4CAF50;
             color: white;
         }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
+        tr:nth-child(even) {
+            background: #f2f2f2;
         }
-
-        .btn-secondary {
-            background-color: #999;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: #777;
-        }
-
-        .btn-danger {
-            background-color: var(--danger-color);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background-color: #da190b;
-        }
-
-        /* Form Sections */
-        #retirada-section {
+        tr:nth-child(odd) {
             background: white;
-            padding: 1.5rem;
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: none;
         }
-
-        #form-title {
-            color: var(--primary-color);
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
         }
+       .form-group {
+display: grid;
+grid-template-columns: 140px 1fr 140px 1fr;
+column-gap: 10px;
+row-gap: 10px;
+align-items: center;
+margin-bottom: 20px;
+}
 
-        /* Form Groups */
-        .form-group {
-            display: grid;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            grid-template-columns: 1fr;
-        }
+.form-group label {
+text-align: right;
+font-weight: bold;
+}
 
-        .form-row {
-            display: grid;
-            gap: 1rem;
-            grid-template-columns: 1fr 1fr;
-        }
+.form-group input[type="text"],
+.form-group select {
+width: 100%;
+padding: 8px;
+box-sizing: border-box;
+margin: 0;
+}
 
-        .form-item {
-            display: flex;
-            flex-direction: column;
-        }
 
-        label {
-            font-weight: 600;
-            margin-bottom: var(--padding-sm);
-            font-size: 0.95rem;
-            color: var(--text-primary);
-        }
-
-        input[type="text"],
-        select {
-            padding: var(--padding-md);
-            border: 1px solid var(--gray-border);
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-            font-family: inherit;
-            background-color: white;
-            transition: border-color 0.3s ease;
-            min-height: 44px;
-        }
-
-        input[type="text"]:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-        }
-
-        input[type="text"]::placeholder {
-            color: var(--text-secondary);
-        }
-
-        /* Autocomplete */
+        /* Autocomplete personalizado */
         .autocomplete-wrapper {
             position: relative;
+            display: inline-block;
             width: 100%;
+            max-width: 300px;
         }
-
+        #operador1Input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
         .autocomplete-list {
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
             background: white;
-            border: 1px solid var(--gray-border);
+            border: 1px solid #ddd;
             border-top: none;
-            max-height: 250px;
+            max-height: 200px;
             overflow-y: auto;
             z-index: 1000;
             display: none;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            border-radius: 0 0 var(--border-radius) var(--border-radius);
         }
-
         .autocomplete-item {
-            padding: var(--padding-md);
+            padding: 10px;
             cursor: pointer;
-            border-bottom: 1px solid var(--gray-border);
-            transition: background-color 0.2s ease;
+            border-bottom: 1px solid #eee;
         }
-
         .autocomplete-item:hover,
         .autocomplete-item.selected {
-            background-color: var(--gray-light);
-        }
-
-        .autocomplete-item:last-child {
-            border-bottom: none;
-        }
-
-        /* Action Buttons */
-        #action-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--padding-md);
-            margin-top: 1.5rem;
-            justify-content: center;
-        }
-
-        #limparNRPsBtn {
-            display: none;
-        }
-
-        /* Navigation Buttons */
-        #navegacao-fichas {
-            display: none;
-            flex-wrap: wrap;
-            gap: var(--padding-md);
-            margin-bottom: 1.5rem;
-            justify-content: center;
-        }
-
-        .nav-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--padding-md);
-            margin: 1rem 0;
-            justify-content: center;
-        }
-
-        /* Table */
-        .table-wrapper {
-            margin-top: 2rem;
-            overflow-x: auto;
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
-        thead {
-            background-color: var(--primary-color);
-            color: white;
-            position: sticky;
-            top: 0;
-        }
-
-        th,
-        td {
-            padding: var(--padding-md);
-            text-align: center;
-            border: 1px solid var(--gray-border);
-            word-wrap: break-word;
-        }
-
-        th {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        td {
-            font-size: 0.9rem;
-        }
-
-        tr:nth-child(even) {
-            background-color: var(--gray-light);
-        }
-
-        tr:hover {
-            background-color: #fffde7;
-        }
-
-        .equipamentos-cell {
-            text-align: left;
-            max-width: 300px;
-        }
-
-        .equipamento-item {
-            padding: var(--padding-sm) 0;
-            border-bottom: 1px solid var(--gray-border);
-        }
-
-        .equipamento-item:last-child {
-            border-bottom: none;
-        }
-
-        .table-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--padding-sm);
-            justify-content: center;
-        }
-
-        .table-actions button {
-            padding: var(--padding-sm) var(--padding-md);
-            font-size: 0.85rem;
-            margin: 0;
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--gray-border);
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            html {
-                font-size: 14px;
-            }
-
-            .container {
-                padding: var(--padding-md);
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-
-            h2 {
-                font-size: 1.1rem;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .table-wrapper {
-                font-size: 0.85rem;
-            }
-
-            th,
-            td {
-                padding: var(--padding-sm);
-            }
-
-            .equipamentos-cell {
-                max-width: 200px;
-            }
-
-            button {
-                padding: var(--padding-sm) var(--padding-md);
-                font-size: 0.9rem;
-                min-height: 40px;
-            }
-
-            .table-actions {
-                gap: 2px;
-            }
-
-            .table-actions button {
-                padding: 4px 8px;
-                font-size: 0.75rem;
-            }
-
-            #action-buttons {
-                flex-direction: column;
-            }
-
-            #action-buttons button {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            html {
-                font-size: 13px;
-            }
-
-            .container {
-                padding: var(--padding-sm);
-            }
-
-            h1 {
-                font-size: 1.2rem;
-                margin-bottom: 1rem;
-            }
-
-            h2 {
-                font-size: 1rem;
-            }
-
-            th,
-            td {
-                padding: 4px;
-                font-size: 0.75rem;
-            }
-
-            th {
-                white-space: nowrap;
-            }
-
-            .equipamentos-cell {
-                max-width: 150px;
-            }
-
-            .equipamento-item {
-                padding: 4px 0;
-                font-size: 0.75rem;
-            }
-
-            button {
-                padding: 6px 10px;
-                font-size: 0.8rem;
-                min-height: 36px;
-                margin: 2px;
-            }
-
-            .table-actions button {
-                padding: 4px 6px;
-                font-size: 0.7rem;
-            }
-
-            label {
-                font-size: 0.9rem;
-            }
-
-            input[type="text"],
-            select {
-                padding: 8px;
-                font-size: 16px;
-            }
-        }
-
-        /* Utility Classes */
-        .text-center {
-            text-align: center;
-        }
-
-        .mt-1 {
-            margin-top: 1rem;
-        }
-
-        .mb-1 {
-            margin-bottom: 1rem;
+            background-color: #f0f0f0;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>COAUD - CONTROLE DE EQUIPAMENTOS</h1>
-
         <div id="login-section">
-            <button class="btn-primary" onclick="solicitarToken()">Fazer Login com Google</button>
+            <button onclick="solicitarToken()">Fazer Login com Google</button>
         </div>
-
-        <div class="progress-container" id="progress-container">
+        <div class="progress-container" id="progress-container" style="display: none;">
             <div id="spinner" class="spinner"></div>
             <p id="progressText">Aguardando autenticação...</p>
         </div>
-
-        <div id="retirada-section">
+        <div id="retirada-section" style="display: none;">
             <h2 id="form-title">Registrar Retirada de Equipamento</h2>
-
             <div class="form-group">
-                <div class="form-row">
-                    <div class="form-item">
-                        <label for="operador1Input">Operador *</label>
-                        <div class="autocomplete-wrapper">
-                            <input 
-                                type="text" 
-                                id="operador1Input" 
-                                placeholder="Digite as letras iniciais do nome" 
-                                autocomplete="off"
-                            >
-                            <div id="autocompleteList" class="autocomplete-list"></div>
-                        </div>
-                    </div>
-                    <div class="form-item">
-                        <label for="operador2Select">Almoxarifado *</label>
-                        <select id="operador2Select" required>
-                            <option value=""></option>
-                            <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
-                            <option value="Altamir Araújo da Silva">Altamir Araújo da Silva</option>
-                            <option value="Antonio Batista Ângelo">Antonio Batista Ângelo</option>
-                            <option value="Waleria Bastos Cardoso">Waleria Bastos Cardoso</option>
-                        </select>
-                    </div>
+                <label>Operador:</label>
+                <div class="autocomplete-wrapper">
+                    <input type="text" id="operador1Input" placeholder="Digite as letras iniciais do nome" autocomplete="off">
+                    <div id="autocompleteList" class="autocomplete-list"></div>
                 </div>
+                <label>Almoxarifado:</label>
+                <select id="operador2Select">
+                    <option value=""></option>
+                    <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
+                    <option value="Altamir Araújo da Silva">Altamir Araújo da Silva</option>
+                    <option value="Antonio Batista Ângelo">Antonio Batista Ângelo</option>
+                    <option value="Waleria Bastos Cardoso">Waleria Bastos Cardoso</option>
+                </select>
             </div>
-
             <div class="form-group">
-                <div class="form-row">
-                    <div class="form-item">
-                        <label for="localMontagemInput">Local *</label>
-                        <input 
-                            type="text" 
-                            id="localMontagemInput" 
-                            placeholder="Ex.: Sala 101"
-                        >
-                    </div>
-                    <div class="form-item">
-                        <label for="eventoInput">Evento/Reunião *</label>
-                        <input 
-                            type="text" 
-                            id="eventoInput" 
-                            placeholder="Ex.: Reunião Mensal"
-                        >
-                    </div>
-                </div>
+                <label>Local:</label>
+                <input type="text" id="localMontagemInput" placeholder="Ex.: Sala 101">
+                <label>Evento/Reunião:</label>
+                <input type="text" id="eventoInput" placeholder="Ex.: Reunião Mensal">
             </div>
-
             <div class="form-group">
-                <div class="form-item">
-                    <label for="nrpInput">Patrimônio (NRP) *</label>
-                    <input 
-                        type="text" 
-                        id="nrpInput" 
-                        placeholder="Digite ou bipar o NRP e pressione Enter" 
-                        onkeypress="if(event.key === 'Enter') adicionarNRP()"
-                    >
-                </div>
+                <label>Patrimônio (NRP):</label>
+                <input type="text" id="nrpInput" placeholder="Digite ou bipar o NRP e pressione Enter" onkeypress="if(event.key === 'Enter') adicionarNRP()">
             </div>
-
-            <div id="action-buttons" class="text-center">
-                <button id="limparNRPsBtn" class="btn-danger" onclick="limparNRPs()">Limpar Lista</button>
-                <button id="submitButton" class="btn-primary" onclick="registrarRetirada()">Registrar Retirada</button>
-                <button id="cancelButton" class="btn-secondary" onclick="cancelarEdicao()" style="display: none;">Cancelar Edição</button>
-            </div>
-
-            <div class="table-wrapper">
-                <table id="patrimonioTable">
-                    <thead>
-                        <tr>
-                            <th>NRP</th>
-                            <th>Material</th>
-                            <th>Localização</th>
-                            <th>Responsável</th>
-                            <th>Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="patrimonioList"></tbody>
-                </table>
+            <div id="action-buttons">
+                <button onclick="limparNRPs()" style="display: none;" id="limparNRPsBtn">Limpar Lista</button>
+                <button id="submitButton" onclick="registrarRetirada()">Registrar Retirada</button>
+                <button id="cancelButton" class="cancelButton" onclick="cancelarEdicao()" style="display: none;">Cancelar Edição</button>
             </div>
         </div>
-
-        <div id="navegacao-fichas" class="nav-buttons">
-            <button id="fichasPendentesBtn" class="btn-primary" onclick="navigateTo('fichas.html')">Fichas Pendentes</button>
-            <button id="fichasArquivadasBtn" class="btn-primary" onclick="navigateTo('fichas-arquivadas.html')">Fichas Arquivadas</button>
-            <button id="backButton" class="btn-secondary" onclick="navigateTo('index.html')">Voltar</button>
+        <div id="navegacao-fichas" style="display: none;">
+            <button id="fichasPendentesBtn" onclick="navigateTo('fichas.html')">Fichas Pendentes</button>
+            <button id="fichasArquivadasBtn" onclick="navigateTo('fichas-arquivadas.html')">Fichas Arquivadas</button>
         </div>
+        <button id="backButton" class="backButton" onclick="navigateTo('index.html')">Voltar</button>
+        <table id="patrimonioTable">
+            <thead>
+                <tr>
+                    <th>NRP</th>
+                    <th>Material</th>
+                    <th>Localização</th>
+                    <th>Responsável</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody id="patrimonioList"></tbody>
+        </table>
     </div>
-
     <footer class="author-signature">© 2025 BrenoDoria</footer>
 
     <script>
-        // Configurações
         const usuarios = {
             "supervisor": { senha: "12345", permissao: "Supervisor" },
             "operador": { senha: "12345", permissao: "Operador" }
         };
-
         const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';
         const FILE_ID = '1q9RCwJ4P--QIH4kkMszffrN8ZwzkSsNoZtPH-Usk4Zw';
         const ESCALA_SHEET_ID = '1smzyrRUnPZkfZGY-8EPDGg7Js8_6-nQ2xlpXgl8Orjw';
         const API_KEY = 'AIzaSyA8yWyDVkekhaVdxCO7BuP3pjjjKTD-cDE';
-
-        // Variáveis globais
         let tokenClient;
         let accessToken = null;
         let patrimonioData = [];
         let patrimoniosSelecionados = [];
         let fichaEditando = null;
         let escalaData = [];
-        let currentFocus = -1;
 
-        // Lista de operadores
+        // Lista completa de operadores (mantida igual)
         const operadoresList = [
             "Adson Miranda dos Anjos",
             "Afonso Viana de Mesquita Filho",
@@ -663,7 +251,7 @@
             "Eric Samuel do Ouro",
             "Erika Fedosseeff Auler",
             "Eromilson Monteiro Dutra Chaves",
-            "Evellyn Mendes de Souza Nunes",
+            "Evel lyn Mendes de Souza Nunes",
             "Felipe Omena Vasconcellos de Assis",
             "Fernando de Sousa Vasconcelos",
             "Flávio Lima Câmara",
@@ -732,14 +320,8 @@
             "Wirlem Silva Alves"
         ];
 
-        const patrimoniosPermitidosParaRepeticao = [
-            "99010001","99010002","99010003","99010004","99010005","99010006","99010007","99010008","99010009","99010010",
-            "99010011","99010012","99010013","99010014","99010015","99010016","99010017","99010018","99010019","99010020",
-            "99010021","99010022","99010023","99010024","99010025","99030001","99030002","99040001","99020001","99020002",
-            "99020003","99020004","99040002","99040003","99030003","99030004","99030005","99030006","99040004","99030011"
-        ];
+        let currentFocus = -1;
 
-        // Inicialização
         window.onload = () => {
             const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
             if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
@@ -747,68 +329,50 @@
                 window.location.href = "index.html";
                 return;
             }
-
             if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
                 alert("Acesso negado: Você não tem permissão para acessar o Controle de Almoxarifado.");
                 window.location.href = "index.html";
                 return;
             }
 
-            inicializarTokenClient();
-            configurarAutocomplete();
-            carregarFichaParaEditar();
-        };
-
-        function inicializarTokenClient() {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: 'https://www.googleapis.com/auth/spreadsheets',
-                callback: handleTokenResponse
+                callback: (tokenResponse) => {
+                    if (tokenResponse.error) {
+                        document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
+                        return;
+                    }
+                    accessToken = tokenResponse.access_token;
+                    localStorage.setItem("access_token", accessToken);
+                    document.getElementById("progressText").textContent = "Autenticado com sucesso! Carregando dados...";
+                    document.getElementById("progress-container").style.display = "block";
+                    document.getElementById("login-section").style.display = "none";
+                    document.getElementById("retirada-section").style.display = "block";
+                    document.getElementById("navegacao-fichas").style.display = "block";
+                    carregarPatrimoniosDoSheets();
+                    carregarEscala();
+                }
             });
 
             const savedToken = localStorage.getItem("access_token");
             if (savedToken) {
                 accessToken = savedToken;
-                mostrarSecaoRetirada();
+                document.getElementById("login-section").style.display = "none";
+                document.getElementById("retirada-section").style.display = "block";
+                document.getElementById("navegacao-fichas").style.display = "block";
+                document.getElementById("progress-container").style.display = "block";
+                document.getElementById("progressText").textContent = "Usando token salvo. Carregando dados...";
+                carregarPatrimoniosDoSheets();
+                carregarEscala();
             } else {
-                mostrarSecaoLogin();
+                document.getElementById("login-section").style.display = "block";
+                document.getElementById("retirada-section").style.display = "none";
+                document.getElementById("navegacao-fichas").style.display = "none";
+                document.getElementById("progress-container").style.display = "block";
             }
-        }
 
-        function handleTokenResponse(tokenResponse) {
-            if (tokenResponse.error) {
-                document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
-                return;
-            }
-            accessToken = tokenResponse.access_token;
-            localStorage.setItem("access_token", accessToken);
-            mostrarSecaoRetirada();
-        }
-
-        function mostrarSecaoLogin() {
-            document.getElementById("login-section").style.display = "block";
-            document.getElementById("retirada-section").style.display = "none";
-            document.getElementById("navegacao-fichas").style.display = "none";
-            document.getElementById("progress-container").style.display = "none";
-        }
-
-        function mostrarSecaoRetirada() {
-            document.getElementById("login-section").style.display = "none";
-            document.getElementById("retirada-section").style.display = "block";
-            document.getElementById("navegacao-fichas").style.display = "flex";
-            document.getElementById("progress-container").style.display = "block";
-            document.getElementById("progressText").textContent = "Carregando dados...";
-            
-            carregarPatrimoniosDoSheets();
-            carregarEscala();
-        }
-
-        function solicitarToken() {
-            tokenClient.requestAccessToken();
-        }
-
-        // Autocomplete
-        function configurarAutocomplete() {
+            // Configuração do autocomplete
             const input = document.getElementById("operador1Input");
             input.addEventListener("input", filtrarOperadores);
             input.addEventListener("keydown", navegarComTeclado);
@@ -818,7 +382,28 @@
                     document.getElementById("autocompleteList").style.display = "none";
                 }
             });
-        }
+
+            const fichaParaEditar = JSON.parse(localStorage.getItem('fichaParaEditar'));
+            if (fichaParaEditar) {
+                fichaEditando = fichaParaEditar;
+                document.getElementById("form-title").textContent = "Editar Ficha Pendente";
+                document.getElementById("submitButton").textContent = "Salvar Alterações";
+                document.getElementById("cancelButton").style.display = "inline-block";
+
+                document.getElementById("operador1Input").value = fichaEditando.operador1;
+                document.getElementById("operador2Select").value = fichaEditando.operador2;
+                document.getElementById("localMontagemInput").value = fichaEditando.local;
+                document.getElementById("eventoInput").value = fichaEditando.evento;
+                patrimoniosSelecionados = fichaEditando.equipamentos.map(equip => {
+                    const [nrp, ...materialParts] = equip.split(' - ');
+                    return { NRP: nrp, Material: materialParts.join(' - ') };
+                });
+                atualizarListaPatrimonios();
+                document.getElementById("limparNRPsBtn").style.display = patrimoniosSelecionados.length > 0 ? "inline-block" : "none";
+                toggleNavigationButtons(true);
+                atualizarOperador2();
+            }
+        };
 
         function filtrarOperadores() {
             const input = document.getElementById("operador1Input");
@@ -843,7 +428,7 @@
                 return;
             }
 
-            matches.forEach((nome) => {
+            matches.forEach((nome, index) => {
                 const item = document.createElement("div");
                 item.classList.add("autocomplete-item");
                 item.textContent = nome;
@@ -861,11 +446,11 @@
             if (e.key === "ArrowDown") {
                 e.preventDefault();
                 currentFocus = (currentFocus + 1) % items.length;
-                atualizarSelecaoVisual(items);
+                atualizarSelecao(items);
             } else if (e.key === "ArrowUp") {
                 e.preventDefault();
                 currentFocus = (currentFocus - 1 + items.length) % items.length;
-                atualizarSelecaoVisual(items);
+                atualizarSelecao(items);
             } else if (e.key === "Enter") {
                 e.preventDefault();
                 if (currentFocus > -1 && items[currentFocus]) {
@@ -874,7 +459,7 @@
             }
         }
 
-        function atualizarSelecaoVisual(items) {
+        function atualizarSelecao(items) {
             for (let i = 0; i < items.length; i++) {
                 items[i].classList.remove("selected");
             }
@@ -887,13 +472,14 @@
         function selecionarOperador(nome) {
             document.getElementById("operador1Input").value = nome;
             document.getElementById("autocompleteList").style.display = "none";
-            buscarOperadorNaEscala(nome);
-            atualizarOperador2();
+            selecionarOperador1(nome);
         }
 
-        function buscarOperadorNaEscala(nomeSelecionado) {
-            if (!nomeSelecionado) {
-                limparCamposOperador();
+        function selecionarOperador1(nomeSelecionado) {
+            const operador1 = nomeSelecionado || document.getElementById("operador1Input").value;
+            if (!operador1) {
+                document.getElementById("localMontagemInput").value = "";
+                document.getElementById("eventoInput").value = "";
                 return;
             }
 
@@ -902,7 +488,7 @@
                 const row = escalaData[i];
                 if (row[9]) {
                     const nomeNaEscala = normalizarNome(row[9].trim());
-                    const nomeDigitado = normalizarNome(nomeSelecionado);
+                    const nomeDigitado = normalizarNome(operador1);
                     if (nomeNaEscala === nomeDigitado) {
                         linhaOperador = row;
                         break;
@@ -913,43 +499,71 @@
             if (linhaOperador) {
                 document.getElementById("localMontagemInput").value = linhaOperador[2]?.trim() || "";
                 document.getElementById("eventoInput").value = linhaOperador[6]?.trim() || "";
-                document.getElementById("progressText").textContent = `Operador ${nomeSelecionado} encontrado na escala.`;
+                document.getElementById("progressText").textContent = `Operador ${operador1} encontrado na escala.`;
             } else {
-                limparCamposOperador();
-                document.getElementById("progressText").textContent = `Operador ${nomeSelecionado} não encontrado na escala. Digite manualmente.`;
+                document.getElementById("localMontagemInput").value = "";
+                document.getElementById("eventoInput").value = "";
+                document.getElementById("progressText").textContent = `Operador ${operador1} não encontrado na escala. Digite manualmente.`;
             }
-        }
-
-        function limparCamposOperador() {
-            document.getElementById("localMontagemInput").value = "";
-            document.getElementById("eventoInput").value = "";
+            atualizarOperador2();
         }
 
         function normalizarNome(nome) {
             return nome.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         }
 
-        function atualizarOperador2() {
-            const operador1 = document.getElementById("operador1Input").value;
-            const select = document.getElementById("operador2Select");
-            const current = select.value;
-            
-            select.innerHTML = `
-                <option value=""></option>
-                <option value="Afonso Viana de Mesquita Filho" ${operador1 === "Afonso Viana de Mesquita Filho" ? "disabled" : ""}>Afonso Viana de Mesquita Filho</option>
-                <option value="Altamir Araújo da Silva" ${operador1 === "Altamir Araújo da Silva" ? "disabled" : ""}>Altamir Araújo da Silva</option>
-                <option value="Antonio Batista Ângelo" ${operador1 === "Antonio Batista Ângelo" ? "disabled" : ""}>Antonio Batista Ângelo</option>
-                <option value="Waleria Bastos Cardoso" ${operador1 === "Waleria Bastos Cardoso" ? "disabled" : ""}>Waleria Bastos Cardoso</option>
-            `;
-            select.value = (operador1 === current) ? "" : current;
+        // === RESTANTE DO CÓDIGO (mantido 100% igual ao original) ===
+
+        function toggleNavigationButtons(disable) {
+            document.getElementById("backButton").disabled = disable;
+            document.getElementById("fichasPendentesBtn").disabled = disable;
+            document.getElementById("fichasArquivadasBtn").disabled = disable;
         }
 
-        // Carregamento de dados
+        function navigateTo(page) {
+            if (fichaEditando) {
+                document.getElementById("progressText").textContent = "Salve as alterações antes de navegar.";
+                return;
+            }
+            window.location.href = page;
+        }
+
+        function cancelarEdicao() {
+            fichaEditando = null;
+            localStorage.removeItem('fichaParaEditar');
+            toggleNavigationButtons(false);
+            document.getElementById("form-title").textContent = "Registrar Retirada de Equipamento";
+            document.getElementById("submitButton").textContent = "Registrar Retirada";
+            document.getElementById("cancelButton").style.display = "none";
+            document.getElementById("operador1Input").value = "";
+            document.getElementById("operador2Select").value = "";
+            document.getElementById("localMontagemInput").value = "";
+            document.getElementById("eventoInput").value = "";
+            patrimoniosSelecionados = [];
+            atualizarListaPatrimonios();
+            document.getElementById("limparNRPsBtn").style.display = "none";
+            document.getElementById("autocompleteList").style.display = "none";
+            atualizarOperador2();
+        }
+
+        function carregarEscala() {
+            document.getElementById("progressText").textContent = "Carregando escala de eventos...";
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ESCALA_SHEET_ID}/values/escalaAudio!A:Z?key=${API_KEY}`)
+            .then(r => r.ok ? r.json() : Promise.reject("Erro na escala"))
+            .then(data => {
+                escalaData = data.values || [];
+                document.getElementById("progressText").textContent = "Escala carregada.";
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("progressText").textContent = "Erro ao carregar escala.";
+            });
+        }
+
         function carregarPatrimoniosDoSheets(retryCount = 0) {
             const maxRetries = 3;
             document.getElementById("spinner").style.display = "inline-block";
-            document.getElementById("progressText").textContent = "Consultando Servidor...";
-
+            document.getElementById("progressText").textContent = "Consultando Servidor";
             fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A:D`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             })
@@ -957,8 +571,9 @@
                 if (!response.ok) {
                     if (response.status === 401 && retryCount < maxRetries) {
                         localStorage.removeItem("access_token");
-                        accessToken = null;
-                        mostrarSecaoLogin();
+                        document.getElementById("login-section").style.display = "block";
+                        document.getElementById("retirada-section").style.display = "none";
+                        document.getElementById("navegacao-fichas").style.display = "none";
                         solicitarToken();
                         return;
                     }
@@ -969,7 +584,7 @@
             })
             .then(data => {
                 patrimonioData = data.values || [];
-                document.getElementById("progressText").textContent = "Dados carregados com sucesso!";
+                document.getElementById("progressText").textContent = "AUTORIZADA CONSULTA";
                 document.getElementById("spinner").style.display = "none";
             })
             .catch(err => {
@@ -979,28 +594,24 @@
             });
         }
 
-        function carregarEscala() {
-            document.getElementById("progressText").textContent = "Carregando escala de eventos...";
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ESCALA_SHEET_ID}/values/escalaAudio!A:Z?key=${API_KEY}`)
-            .then(r => r.ok ? r.json() : Promise.reject("Erro na escala"))
-            .then(data => {
-                escalaData = data.values || [];
-                document.getElementById("progressText").textContent = "Escala carregada com sucesso!";
-            })
-            .catch(err => {
-                console.error(err);
-                document.getElementById("progressText").textContent = "Erro ao carregar escala.";
-            });
+        function atualizarOperador2() {
+            const operador1 = document.getElementById("operador1Input").value;
+            const select = document.getElementById("operador2Select");
+            const current = select.value;
+            select.innerHTML = `
+                <option value=""></option>
+                <option value="Afonso Viana de Mesquita Filho" ${operador1 === "Afonso Viana de Mesquita Filho" ? "disabled" : ""}>Afonso Viana de Mesquita Filho</option>
+                <option value="Altamir Araújo da Silva" ${operador1 === "Altamir Araújo da Silva" ? "disabled" : ""}>Altamir Araújo da Silva</option>
+                <option value="Antonio Batista Ângelo" ${operador1 === "Antonio Batista Ângelo" ? "disabled" : ""}>Antonio Batista Ângelo</option>
+                <option value="Waleria Bastos Cardoso" ${operador1 === "Waleria Bastos Cardoso" ? "disabled" : ""}>Waleria Bastos Cardoso</option>
+            `;
+            select.value = (operador1 === current) ? "" : current;
         }
 
-        // NRP
         function adicionarNRP() {
             let nrp = document.getElementById("nrpInput").value.trim().replace(/\./g, "");
             if (!nrp) return;
-
             const nrpSemZeros = nrp.replace(/^0+/, "");
-
-            // Verifica duplicação (se não é permitido repetir)
             if (!patrimoniosPermitidosParaRepeticao.includes(nrpSemZeros)) {
                 if (patrimoniosSelecionados.some(p => p.NRP.replace(/^0+/, "") === nrpSemZeros)) {
                     document.getElementById("progressText").textContent = `NRP "${nrp}" já adicionado.`;
@@ -1008,22 +619,17 @@
                     return;
                 }
             }
-
-            // Busca no banco de dados
             const encontrado = patrimonioData.find(row => row[0]?.toString().replace(/^0+/, "") === nrpSemZeros);
             if (encontrado) {
                 patrimoniosSelecionados.push({
-                    NRP: encontrado[0],
-                    Material: encontrado[1],
-                    Localização: encontrado[2] || "N/A",
-                    Responsável: encontrado[3] || "N/A"
+                    NRP: encontrado[0], Material: encontrado[1],
+                    Localização: encontrado[2], Responsável: encontrado[3]
                 });
                 atualizarListaPatrimonios();
-                document.getElementById("progressText").textContent = `NRP "${nrp}" adicionado com sucesso!`;
+                document.getElementById("progressText").textContent = `NRP "${nrp}" adicionado.`;
             } else {
-                document.getElementById("progressText").textContent = `NRP "${nrp}" não encontrado no sistema.`;
+                document.getElementById("progressText").textContent = `NRP "${nrp}" não encontrado.`;
             }
-
             document.getElementById("nrpInput").value = "";
             document.getElementById("limparNRPsBtn").style.display = patrimoniosSelecionados.length > 0 ? "inline-block" : "none";
         }
@@ -1033,13 +639,8 @@
             tbody.innerHTML = "";
             patrimoniosSelecionados.forEach((item, i) => {
                 const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${item.NRP}</td>
-                    <td>${item.Material}</td>
-                    <td>${item.Localização}</td>
-                    <td>${item.Responsável}</td>
-                    <td><button class="btn-danger" onclick="removerPatrimonio(${i})">Remover</button></td>
-                `;
+                tr.innerHTML = `<td>${item.NRP}</td><td>${item.Material}</td><td>${item.Localização || "N/I"}</td><td>${item.Responsável || "N/I"}</td>
+                    <td><button onclick="removerPatrimonio(${i})">Remover</button></td>`;
                 tbody.prepend(tr);
             });
         }
@@ -1056,74 +657,15 @@
             document.getElementById("limparNRPsBtn").style.display = "none";
         }
 
-        // Ficha para editar
-        function carregarFichaParaEditar() {
-            const fichaParaEditar = JSON.parse(localStorage.getItem('fichaParaEditar'));
-            if (!fichaParaEditar) return;
-
-            fichaEditando = fichaParaEditar;
-            document.getElementById("form-title").textContent = "Editar Ficha Pendente";
-            document.getElementById("submitButton").textContent = "Salvar Alterações";
-            document.getElementById("cancelButton").style.display = "inline-block";
-
-            document.getElementById("operador1Input").value = fichaEditando.operador1;
-            document.getElementById("operador2Select").value = fichaEditando.operador2;
-            document.getElementById("localMontagemInput").value = fichaEditando.local;
-            document.getElementById("eventoInput").value = fichaEditando.evento;
-
-            // Reconstruir equipamentos com dados completos do SIGMAS
-            patrimoniosSelecionados = fichaEditando.equipamentos.map(equip => {
-                const [nrp, ...materialParts] = equip.split(' - ');
-                const nrpSemZeros = nrp.trim().replace(/^0+/, "");
-                const encontrado = patrimonioData.find(row => row[0]?.toString().replace(/^0+/, "") === nrpSemZeros);
-                
-                return {
-                    NRP: encontrado ? encontrado[0] : nrp.trim(),
-                      Material: encontrado ? encontrado[1] : materialParts.join(' - '),
-                    Localização: encontrado ? encontrado[2]  : Localização.join(' - '),
-                    Responsável: encontrado ? encontrado[3]  : Responsável.join(' - ')
-                };
-            });
-
-            atualizarListaPatrimonios();
-            document.getElementById("limparNRPsBtn").style.display = patrimoniosSelecionados.length > 0 ? "inline-block" : "none";
-            toggleBotoesNavegacao(true);
-            atualizarOperador2();
+        function solicitarToken() {
+            tokenClient.requestAccessToken();
         }
 
-        function toggleBotoesNavegacao(disable) {
-            document.getElementById("fichasPendentesBtn").disabled = disable;
-            document.getElementById("fichasArquivadasBtn").disabled = disable;
-            document.getElementById("backButton").disabled = disable;
-        }
+        const patrimoniosPermitidosParaRepeticao = ["99010001","99010002","99010003","99010004","99010005","99010006","99010007","99010008","99010009","99010010",
+            "99010011","99010012","99010013","99010014","99010015","99010016","99010017","99010018","99010019","99010020",
+            "99010021","99010022","99010023","99010024","99010025","99030001","99030002","99040001","99020001","99020002",
+            "99020003","99020004","99040002","99040003","99030003","99030004","99030005","99030006","99040004","99030011"];
 
-        function navigateTo(page) {
-            if (fichaEditando) {
-                document.getElementById("progressText").textContent = "Salve as alterações antes de navegar.";
-                return;
-            }
-            window.location.href = page;
-        }
-
-        function cancelarEdicao() {
-            fichaEditando = null;
-            localStorage.removeItem('fichaParaEditar');
-            toggleBotoesNavegacao(false);
-            document.getElementById("form-title").textContent = "Registrar Retirada de Equipamento";
-            document.getElementById("submitButton").textContent = "Registrar Retirada";
-            document.getElementById("cancelButton").style.display = "none";
-            document.getElementById("operador1Input").value = "";
-            document.getElementById("operador2Select").value = "";
-            document.getElementById("localMontagemInput").value = "";
-            document.getElementById("eventoInput").value = "";
-            patrimoniosSelecionados = [];
-            atualizarListaPatrimonios();
-            document.getElementById("limparNRPsBtn").style.display = "none";
-            document.getElementById("autocompleteList").style.display = "none";
-            atualizarOperador2();
-        }
-
-        // Registrar Retirada
         async function registrarRetirada() {
             const operador1 = document.getElementById("operador1Input").value.trim();
             const operador2 = document.getElementById("operador2Select").value;
@@ -1147,7 +689,6 @@
                 const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
-
                 if (res.ok) {
                     const data = await res.json();
                     if (data.values && data.values.length > 1) {
@@ -1160,12 +701,10 @@
                                 if (nrp) usados.push(nrp);
                             });
                         });
-
                         const conflito = patrimoniosSelecionados.find(p => {
                             const n = p.NRP.replace(/^0+/, "");
                             return usados.includes(n) && !patrimoniosPermitidosParaRepeticao.includes(n);
                         });
-
                         if (conflito) {
                             alert(`O patrimônio ${conflito.NRP} já está em uso em outra ficha pendente.`);
                             document.getElementById("spinner").style.display = "none";
@@ -1176,16 +715,14 @@
 
                 if (fichaEditando) {
                     await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A${fichaEditando.rowIndex + 1}:G${fichaEditando.rowIndex + 1}?valueInputOption=RAW`, {
-                        method: 'PUT',
-                        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                        method: 'PUT', headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ values: [novaLinha] })
                     });
                     localStorage.removeItem('fichaParaEditar');
                     document.getElementById("progressText").textContent = "Ficha atualizada com sucesso!";
                 } else {
                     await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G:append?valueInputOption=RAW`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                        method: 'POST', headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ values: [novaLinha] })
                     });
                     document.getElementById("progressText").textContent = "Retirada registrada com sucesso!";
@@ -1203,7 +740,7 @@
                 document.getElementById("submitButton").textContent = "Registrar Retirada";
                 document.getElementById("cancelButton").style.display = "none";
                 fichaEditando = null;
-                toggleBotoesNavegacao(false);
+                toggleNavigationButtons(false);
                 document.getElementById("spinner").style.display = "none";
 
             } catch (err) {
@@ -1211,13 +748,7 @@
                 document.getElementById("spinner").style.display = "none";
             }
         }
-
-        // Auto-reload a cada 3 minutos
-        setInterval(() => {
-            if (!fichaEditando) {
-                location.reload();
-            }
-        }, 180000);
+        //setInterval(() => { window.location.reload(); }, 180000);
     </script>
 </body>
 </html>

@@ -588,11 +588,6 @@
                 <button id="submitButton" class="btn-primary" onclick="registrarRetirada()">Registrar Retirada</button>
                 <button id="cancelButton" class="btn-secondary" onclick="cancelarEdicao()" style="display: none;">Cancelar Edição</button>
             </div>
-            <div id="navegacao-fichas" class="nav-buttons">
-            <button id="fichasPendentesBtn" class="btn-primary" onclick="navigateTo('fichas.html')">Fichas Pendentes</button>
-            <button id="fichasArquivadasBtn" class="btn-primary" onclick="navigateTo('fichas-arquivadas.html')">Fichas Arquivadas</button>
-            <button id="backButton" class="btn-secondary" onclick="navigateTo('index.html')">Voltar</button>
-        </div>
 
             <div class="table-wrapper">
                 <table id="patrimonioTable">
@@ -610,7 +605,11 @@
             </div>
         </div>
 
-
+        <div id="navegacao-fichas" class="nav-buttons">
+            <button id="fichasPendentesBtn" class="btn-primary" onclick="navigateTo('fichas.html')">Fichas Pendentes</button>
+            <button id="fichasArquivadasBtn" class="btn-primary" onclick="navigateTo('fichas-arquivadas.html')">Fichas Arquivadas</button>
+            <button id="backButton" class="btn-secondary" onclick="navigateTo('index.html')">Voltar</button>
+        </div>
     </div>
 
     <footer class="author-signature">© 2025 BrenoDoria</footer>
@@ -757,7 +756,7 @@
 
             inicializarTokenClient();
             configurarAutocomplete();
-            //carregarFichaParaEditar();
+            carregarFichaParaEditar();
         };
 
         function inicializarTokenClient() {
@@ -972,13 +971,6 @@
                 patrimonioData = data.values || [];
                 document.getElementById("progressText").textContent = "Dados carregados com sucesso!";
                 document.getElementById("spinner").style.display = "none";
-                if (!fichaEditando) {
-                    const fichaSalva = JSON.parse(localStorage.getItem('fichaParaEditar'));
-                    if (fichaSalva) {
-                        fichaEditando = fichaSalva;
-                        carregarFichaParaEditar();
-                    }
-                }
             })
             .catch(err => {
                 console.error(err);
@@ -1066,41 +1058,32 @@
 
         // Ficha para editar
         function carregarFichaParaEditar() {
-    if (!fichaEditando) return;
+            const fichaParaEditar = JSON.parse(localStorage.getItem('fichaParaEditar'));
+            if (!fichaParaEditar) return;
 
-    document.getElementById("form-title").textContent = "Editar Ficha Pendente";
-    document.getElementById("submitButton").textContent = "Salvar Alterações";
-    document.getElementById("cancelButton").style.display = "inline-block";
+            fichaEditando = fichaParaEditar;
+            document.getElementById("form-title").textContent = "Editar Ficha Pendente";
+            document.getElementById("submitButton").textContent = "Salvar Alterações";
+            document.getElementById("cancelButton").style.display = "inline-block";
 
-    document.getElementById("operador1Input").value = fichaEditando.operador1;
-    document.getElementById("operador2Select").value = fichaEditando.operador2;
-    document.getElementById("localMontagemInput").value = fichaEditando.local;
-    document.getElementById("eventoInput").value = fichaEditando.evento;
+            document.getElementById("operador1Input").value = fichaEditando.operador1;
+            document.getElementById("operador2Select").value = fichaEditando.operador2;
+            document.getElementById("localMontagemInput").value = fichaEditando.local;
+            document.getElementById("eventoInput").value = fichaEditando.evento;
 
-    // Reconstruir equipamentos com dados completos do SIGMAS
-    patrimoniosSelecionados = fichaEditando.equipamentos.map(equip => {
-        const [nrp, ...materialParts] = equip.split(' - ');
-        const nrpSemZeros = nrp.trim().replace(/^0+/, "");
-        const encontrado = patrimonioData.find(
-            row => row[0]?.toString().replace(/^0+/, "") === nrpSemZeros
-        );
-
-        return {
-            NRP: encontrado ? encontrado[0] : nrp.trim(),
-            Material: encontrado ? encontrado[1] : materialParts.join(' - '),
-            Localização: encontrado ? (encontrado[2] || "N/A") : "N/A",
-            Responsável: encontrado ? (encontrado[3] || "N/A") : "N/A"
-        };
-    });
-
-    atualizarListaPatrimonios();
-    document.getElementById("limparNRPsBtn").style.display =
-        patrimoniosSelecionados.length > 0 ? "inline-block" : "none";
-
-    toggleBotoesNavegacao(true);
-    atualizarOperador2();
-}
-
+            // Reconstruir equipamentos com dados completos do SIGMAS
+            patrimoniosSelecionados = fichaEditando.equipamentos.map(equip => {
+                const [nrp, ...materialParts] = equip.split(' - ');
+                const nrpSemZeros = nrp.trim().replace(/^0+/, "");
+                const encontrado = patrimonioData.find(row => row[0]?.toString().replace(/^0+/, "") === nrpSemZeros);
+                
+                return {
+                    NRP: encontrado ? encontrado[0] : nrp.trim(),
+                      Material: encontrado ? encontrado[1] : materialParts.join(' - '),
+                    Localização: encontrado ? encontrado[2]  : Localização.join(' - '),
+                    Responsável: encontrado ? encontrado[3]  : Responsável.join(' - ')
+                };
+            });
 
             atualizarListaPatrimonios();
             document.getElementById("limparNRPsBtn").style.display = patrimoniosSelecionados.length > 0 ? "inline-block" : "none";
@@ -1230,11 +1213,11 @@
         }
 
         // Auto-reload a cada 3 minutos
-        /*setInterval(() => {
+        setInterval(() => {
             if (!fichaEditando) {
                 location.reload();
             }
-        }, 180000);*/
+        }, 180000);
     </script>
 </body>
 </html>

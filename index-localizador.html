@@ -791,6 +791,68 @@
             await executarTransferencia(novoResponsavel, novaLocalizacao, osTransferencia);
         }
 
+        async function removerDuplicatasNRP(nrp) {
+            // Encontrar TODOS os índices do NRP na planilha (pulando header)
+            const indices = [];
+            dadosPlanilha.forEach((row, index) => {
+                if (row[0]?.toString().trim() === nrp) {
+                    indices.push(index);
+                }
+            });
+
+            // Se houver mais de uma ocorrência, deletar as antigas
+            if (indices.length > 1) {
+                exibirMensagemProgresso("Removendo duplicatas...");
+                
+                // Manter a PRIMEIRA na planilha local (índice menor) e deletar as outras
+                const indicesToDelete = indices.slice(1); // Todas exceto a primeira
+                
+                // Deletar em ordem reversa para não alterar os índices
+                for (let i = indicesToDelete.length - 1; i >= 0; i--) {
+                    await deletarLinhaSheets(indicesToDelete[i]);
+                }
+                
+                // Recarregar dados após deletar
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                carregarPatrimoniosDoSheets();
+            }
+        }
+
+        async function deletarLinhaSheets(rowIndexLocal) {
+            try {
+                // Converter índice local para índice do Google Sheets (considerando headers)
+                const request = {
+                    deleteRange: {
+                        range: {
+                            sheetId: 0, // ID da aba SIGMAS
+                            dimension: 'ROWS',
+                            startIndex: rowIndexLocal - 1,
+                            endIndex: rowIndexLocal
+                        }
+                    }
+                };
+
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}:batchUpdate`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ requests: [request] })
+                    }
+                );
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Erro ao deletar linha:", errorData);
+                }
+            } catch (error) {
+                console.error("Erro ao deletar linha:", error);
+            }
+        }
+
         async function executarTransferencia(novoResponsavel, novaLocalizacao, osTransferencia) {
             const rowIndex = dadosPlanilha.slice(1).findIndex(
                 row => row[0]?.toString().trim() === nrpSelecionado
@@ -835,8 +897,12 @@
 
                     alert(`✅ Patrimônio ${nrpSelecionado} transferido com sucesso!`);
                     fecharModal('transferenciaModal');
-                    exibirMensagemProgresso(`Patrimônio ${nrpSelecionado} atualizado com sucesso!`);
-                    buscarPatrimonio();
+                    exibirMensagemProgresso(`Patrimônio ${nrpSelecionado} atualizado! Removendo duplicatas...`);
+                    
+                    // Remover duplicatas do NRP
+                    await removerDuplicatasNRP(nrpSelecionado);
+                    
+                    exibirMensagemProgresso(`✅ Patrimônio ${nrpSelecionado} atualizado com sucesso (duplicatas removidas)!`);
                 } else {
                     throw new Error("Falha ao atualizar a planilha.");
                 }

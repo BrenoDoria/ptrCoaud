@@ -52,7 +52,7 @@
             word-wrap: break-word;
         }
 
-        /* Tela de carregamento (index.html) */
+       /* Tela de carregamento (index.html) */
 #loading-screen {
     position: fixed;
     top: 0;
@@ -81,6 +81,10 @@
     animation: fadeIn 5s ease-in 2s forwards;
 }
 
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
         /* Login Container */
         #login-container {
             background: white;
@@ -293,8 +297,8 @@
 <body>
     <!-- Tela de carregamento com imagens -->
     <div id="loading-screen">
-        <img src="marca-camara.jpg" alt="Brasão da Câmara" id="loading-image-1">
-        <img src="LOGOCOAUD.png" alt="Logo COAUD" id="loading-image-2">
+        <img src="marca-camara.jpg" alt="Primeira Imagem" id="loading-image-1">
+        <img src="LOGOCOAUD.png" alt="Segunda Imagem" id="loading-image-2">
     </div>
 
     <!-- Tela de login -->
@@ -415,5 +419,6 @@
     </script>
 </body>
 </html>
+
 
 

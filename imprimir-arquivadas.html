@@ -5,192 +5,390 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Fichas Arquivadas - Impressão</title>
     <style>
-        :root {
-            --font-size-base: 0.5625rem;
-            --padding-base: 0.625rem;
-            --margin-base: 0.625rem;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            font-size: var(--font-size-base);
-            margin: 0.625rem;
+        * {
+            margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: calc(var(--padding-base) * 0.5);
+
+        :root {
+            --primary-color: #4CAF50;
+            --primary-dark: #45a049;
+            --danger-color: #f44336;
+            --gray-light: #f2f2f2;
+            --gray-border: #ddd;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --padding-sm: 8px;
+            --padding-md: 12px;
+            --padding-lg: 16px;
+            --border-radius: 6px;
         }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--padding-lg);
+        }
+
+        button {
+            padding: var(--padding-md) var(--padding-lg);
+            margin: var(--padding-md) var(--padding-sm);
+            cursor: pointer;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: #999;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #777;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
         @page {
             size: A4;
             margin: 12mm 10mm 15mm 10mm;
         }
+
+        .ficha-container {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            page-break-after: always;
+        }
+
+        .ficha-container:last-child {
+            page-break-after: auto;
+            margin-bottom: 0;
+        }
+
         .header {
             text-align: left;
-            margin-bottom: calc(var(--margin-base) * 0.8);
+            margin-bottom: 1.5rem;
         }
+
         .header-content {
             display: flex;
-            align-items: center;
-            justify-content: left;
-            margin-bottom: calc(var(--margin-base) * 0.8);
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
         }
+
         .brasao {
-            width: 3.4375rem;
+            width: 80px;
             height: auto;
-            margin-right: 0.9375rem;
+            flex-shrink: 0;
         }
+
+        .header-text {
+            flex: 1;
+        }
+
         .header-text p {
-            margin: 0.0625rem 0;
-            font-size: var(--font-size-base);
+            margin: 0.25rem 0;
+            font-size: 0.9rem;
         }
+
+        .header-text p strong {
+            font-weight: 600;
+        }
+
         .section-title {
-            font-weight: bold;
-            margin: calc(var(--margin-base) * 0.96) 0;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem 0;
             text-align: center;
             text-decoration: underline;
-            font-size: var(--font-size-base);
+            font-size: 1rem;
         }
-        .listaMaterial {
-            text-align: center;
-        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: calc(var(--margin-base) * 1.6);
-            font-size: var(--font-size-base);
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
             page-break-inside: avoid;
         }
+
         th, td {
-            padding: calc(var(--padding-base) * 0.64) calc(var(--padding-base) * 0.96);
-            border: 1px solid black;
+            padding: var(--padding-md);
+            border: 1px solid var(--gray-border);
             word-break: break-word;
+            text-align: left;
         }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .field-row {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .field-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .field-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
         .field-label {
-            font-weight: bold;
-            width: 3.125rem;
-            display: inline-block;
+            font-weight: 600;
+            min-width: 80px;
+            font-size: 0.9rem;
         }
-        .field-label2 {
-            font-weight: bold;
-            width: 5.25rem;
-            display: inline-block;
-        }
+
         .field-value {
-            display: inline-block;
-            width: 14.375rem;
-            min-height: 1rem;
+            flex: 1;
+            min-width: 150px;
+            padding-bottom: 2px;
+            border-bottom: 1px solid var(--gray-border);
+            font-size: 0.9rem;
         }
-        p {
-            margin: calc(var(--margin-base) * 0.32) 0 calc(var(--margin-base) * 0.96);
+
+        .field-label2 {
+            font-weight: 600;
+            min-width: 100px;
+            font-size: 0.9rem;
         }
-        .devolucao-section {
-            margin-top: calc(var(--margin-base) * 0.96);
+
+        .term-text {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            text-align: justify;
+            margin-bottom: 2rem;
         }
-        .signature {
-            margin-top: calc(var(--margin-base) * 1.92);
-            font-size: var(--font-size-base);
+
+        .signature-section {
+            margin-top: 2rem;
         }
+
         .signature-line {
-            border-bottom: 1px solid black;
-            width: 9.375rem;
+            border-bottom: 1px solid var(--gray-border);
+            width: 150px;
             display: inline-block;
-            margin-left: calc(var(--margin-base) * 0.96);
+            margin: 0 0.5rem;
         }
-        .empty-space {
-            height: 1.25rem;
+
+        .signature-text {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
         }
-        .espaco-entre-termo {
-            margin-bottom: 12.5rem;
+
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+
+            .container {
+                padding: var(--padding-md);
+            }
+
+            .ficha-container {
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .brasao {
+                width: 60px;
+            }
+
+            .header-text p {
+                font-size: 0.85rem;
+            }
+
+            .field-row {
+                grid-template-columns: 1fr;
+            }
+
+            th, td {
+                padding: var(--padding-sm);
+                font-size: 0.85rem;
+            }
+
+            button {
+                padding: var(--padding-sm) var(--padding-md);
+                font-size: 0.9rem;
+                min-height: 40px;
+            }
+
+            .signature-line {
+                width: 120px;
+            }
+
+            .term-text {
+                font-size: 0.85rem;
+            }
         }
-        .ficha-container {
-            margin-bottom: calc(var(--margin-base) * 4.8);
-            page-break-after: always;
+
+        @media (max-width: 480px) {
+            html {
+                font-size: 12px;
+            }
+
+            .container {
+                padding: var(--padding-sm);
+            }
+
+            .ficha-container {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .brasao {
+                width: 50px;
+            }
+
+            .header-text p {
+                font-size: 0.8rem;
+            }
+
+            th, td {
+                padding: 6px;
+                font-size: 0.75rem;
+            }
+
+            .field-label,
+            .field-label2 {
+                font-size: 0.8rem;
+                min-width: auto;
+            }
+
+            .field-value {
+                min-width: 100px;
+                font-size: 0.8rem;
+            }
+
+            button {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+                min-height: 36px;
+            }
+
+            .signature-line {
+                width: 100px;
+            }
+
+            .term-text {
+                font-size: 0.8rem;
+            }
+
+            .section-title {
+                font-size: 0.9rem;
+            }
         }
-        .ficha-container:last-child {
-            page-break-after: auto;
-        }
+
         @media print {
             .no-print {
                 display: none;
             }
+
             .container {
                 max-width: 100%;
+                padding: 0;
+            }
+
+            .ficha-container {
+                box-shadow: none;
+                page-break-after: always;
+                margin-bottom: 0;
+                padding: 0;
+            }
+
+            button {
+                display: none;
+            }
+
+            body {
+                background-color: white;
             }
         }
-        @media screen and (max-width: 768px) {
-            :root {
-                --font-size-base: 0.475rem;
-                --padding-base: 0.5rem;
-                --margin-base: 0.5rem;
-            }
-            .header-content {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .brasao {
-                width: 2.5rem;
-                margin-right: 0;
-                margin-bottom: calc(var(--margin-base) * 0.8);
-            }
-            .field-value {
-                width: 11.25rem;
-            }
-            .devolucao-section .field-value {
-                width: 9.375rem;
-            }
-            .signature-line {
-                width: 7.5rem;
-            }
-            .espaco-entre-termo {
-                margin-bottom: 6.25rem;
-            }
-            button {
-                min-height: 2.75rem;
-                padding: calc(var(--padding-base) * 0.8) calc(var(--padding-base) * 1.6);
-            }
+
+        .text-center {
+            text-align: center;
         }
-        @media screen and (max-width: 480px) {
-            :root {
-                --font-size-base: 0.4375rem;
-                --padding-base: 0.3rem;
-                --margin-base: 0.3rem;
-            }
-            .brasao {
-                width: 2.1875rem;
-            }
-            .field-label {
-                width: 2.1875rem;
-            }
-            .field-label2 {
-                width: 3.75rem;
-            }
-            .field-value {
-                width: 7.5rem;
-            }
-            .devolucao-section .field-value {
-                width: 6.25rem;
-            }
-            .signature-line {
-                width: 6.25rem;
-            }
-            .espaco-entre-termo {
-                margin-bottom: 3.125rem;
-            }
-            button {
-                padding: calc(var(--padding-base) * 0.64) calc(var(--padding-base) * 1.28);
-            }
+
+        .mt-2 {
+            margin-top: 1.5rem;
         }
     </style>
 </head>
 <body onload="carregarFichas()">
+    <div class="action-buttons no-print">
+        <button class="btn-primary" onclick="window.print()">Imprimir</button>
+        <button class="btn-secondary" onclick="window.location.href='fichas-arquivadas.html'">Voltar</button>
+    </div>
+
     <div class="container" id="fichasContainer">
     </div>
-    <div class="no-print">
-        <button onclick="window.print()">Imprimir</button>
-        <button onclick="window.location.href='fichas-arquivadas.html'">Voltar</button>
-    </div>
+
     <script>
         const operadoresPontos = {
             "Adson Miranda dos Anjos": "914.262",
@@ -300,6 +498,13 @@
             "Wirlem Silva Alves": "919.906"
         };
 
+        function formatarData(dataStr) {
+            if (!dataStr) return "N/A";
+            const [dataParte, horaParte] = dataStr.split(', ');
+            const [dia, mes, ano] = dataParte.split('/');
+            return { data: `${dia}/${mes}/${ano}`, hora: horaParte || "N/A" };
+        }
+
         function carregarFichas() {
             const fichas = JSON.parse(localStorage.getItem('fichasParaImprimir'));
             if (!fichas || fichas.length === 0) {
@@ -309,17 +514,12 @@
             }
 
             const container = document.getElementById('fichasContainer');
-            fichas.forEach((dadosFicha, index) => {
+            fichas.forEach((dadosFicha) => {
                 const fichaDiv = document.createElement('div');
                 fichaDiv.className = 'ficha-container';
-                const [dataRetiradaParte, horaRetiradaParte] = dadosFicha.dataRetirada.split(', ');
-                const [diaRetirada, mesRetirada, anoRetirada] = dataRetiradaParte.split('/');
-                const dataRetiradaFormatada = `${diaRetirada}/${mesRetirada}/${anoRetirada}`;
-                const horaRetiradaFormatada = horaRetiradaParte;
-                const [dataDevolucaoParte, horaDevolucaoParte] = dadosFicha.dataDevolucao.split(', ');
-                const [diaDevolucao, mesDevolucao, anoDevolucao] = dataDevolucaoParte.split('/');
-                const dataDevolucaoFormatada = `${diaDevolucao}/${mesDevolucao}/${anoDevolucao}`;
-                const horaDevolucaoFormatada = horaDevolucaoParte;
+
+                const retirada = formatarData(dadosFicha.dataRetirada);
+                const devolucao = formatarData(dadosFicha.dataDevolucao);
 
                 fichaDiv.innerHTML = `
                     <div class="header">
@@ -333,44 +533,122 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="section-title">LISTA DE MATERIAL COM PATRIMÔNIO</div>
-                    <table class="listaMaterial">
-                        <tr>
-                            <th style="width: 6.25rem;">Patrimônio</th>
-                            <th>Descrição</th>
-                        </tr>
-                        ${dadosFicha.equipamentos.map(equip => {
-                            const [patrimonio, ...descricaoParts] = equip.split(' - ');
-                            const descricao = descricaoParts.join(' - ');
-                            return `<tr><td style="border: 1px solid black; padding: calc(var(--padding-base) * 0.8);">${patrimonio}</td><td style="border: 1px solid black; padding: calc(var(--padding-base) * 0.8);">${descricao}</td></tr>`;
-                        }).join('')}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Patrimônio</th>
+                                <th>Descrição</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${dadosFicha.equipamentos.map(equip => {
+                                const [patrimonio, ...descricaoParts] = equip.split(' - ');
+                                const descricao = descricaoParts.join(' - ');
+                                return `<tr><td>${patrimonio}</td><td>${descricao}</td></tr>`;
+                            }).join('')}
+                        </tbody>
                     </table>
+
                     <div class="section-title">RETIRADA</div>
-                    <div>
-                        <p><span class="field-label">Ficha:</span> <span class="field-value">${dadosFicha.idFicha}</span></p>
-                        <p><span class="field-label">Data:</span> <span class="field-value">${dataRetiradaFormatada}</span> <span class="field-label">Evento:</span> <span class="field-value">${dadosFicha.evento}</span></p>
-                        <p><span class="field-label">Local:</span> <span class="field-value">${dadosFicha.local}</span></p>
-                        <p><span class="field-label">Hora:</span> <span class="field-value">${horaRetiradaFormatada}</span></p>
-                        <p><span class="field-label">Nome:</span> <span class="field-value">${dadosFicha.operador1}</span> <span class="field-label">Ponto:</span> <span class="field-value">${operadoresPontos[dadosFicha.operador1] || 'N/A'}</span></p>
-                        <p><span class="field-label2">Almoxarifado:</span> <span class="field-value">${dadosFicha.operador2}</span> <span class="field-label">Ponto:</span> <span class="field-value">${operadoresPontos[dadosFicha.operador2] || 'N/A'}</span></p>
+                    <div class="field-row">
+                        <div class="field-group">
+                            <span class="field-label">Ficha:</span>
+                            <span class="field-value">${dadosFicha.idFicha}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Data:</span>
+                            <span class="field-value">${retirada.data}</span>
+                        </div>
                     </div>
+                    <div class="field-row full">
+                        <div class="field-group">
+                            <span class="field-label">Evento:</span>
+                            <span class="field-value">${dadosFicha.evento}</span>
+                        </div>
+                    </div>
+                    <div class="field-row full">
+                        <div class="field-group">
+                            <span class="field-label">Local:</span>
+                            <span class="field-value">${dadosFicha.local}</span>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-group">
+                            <span class="field-label">Hora:</span>
+                            <span class="field-value">${retirada.hora}</span>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-group">
+                            <span class="field-label">Nome:</span>
+                            <span class="field-value">${dadosFicha.operador1}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Ponto:</span>
+                            <span class="field-value">${operadoresPontos[dadosFicha.operador1] || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-group">
+                            <span class="field-label2">Almoxarifado:</span>
+                            <span class="field-value">${dadosFicha.operador2}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Ponto:</span>
+                            <span class="field-value">${operadoresPontos[dadosFicha.operador2] || 'N/A'}</span>
+                        </div>
+                    </div>
+
                     <div class="section-title">DEVOLUÇÃO</div>
-                    <div class="devolucao-section">
-                        <p><span class="field-label">Data:</span> <span class="field-value">${dataDevolucaoFormatada}</span> <span class="field-label">Hora:</span> <span class="field-value">${horaDevolucaoFormatada}</span></p>
-                        <p><span class="field-label">Nome:</span> <span class="field-value">${dadosFicha.operadorDevolucao}</span> <span class="field-label">Ponto:</span> <span class="field-value">${operadoresPontos[dadosFicha.operadorDevolucao] || 'N/A'}</span></p>
-                        <p><span class="field-label2">Almoxarifado:</span> <span class="field-value">${dadosFicha.almoxarifadoDevolucao}</span> <span class="field-label">Ponto:</span> <span class="field-value">${operadoresPontos[dadosFicha.almoxarifadoDevolucao] || 'N/A'}</span></p>
+                    <div class="field-row">
+                        <div class="field-group">
+                            <span class="field-label">Data:</span>
+                            <span class="field-value">${devolucao.data}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Hora:</span>
+                            <span class="field-value">${devolucao.hora}</span>
+                        </div>
                     </div>
+                    <div class="field-row">
+                        <div class="field-group">
+                            <span class="field-label">Nome:</span>
+                            <span class="field-value">${dadosFicha.operadorDevolucao}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Ponto:</span>
+                            <span class="field-value">${operadoresPontos[dadosFicha.operadorDevolucao] || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-group">
+                            <span class="field-label2">Almoxarifado:</span>
+                            <span class="field-value">${dadosFicha.almoxarifadoDevolucao}</span>
+                        </div>
+                        <div class="field-group">
+                            <span class="field-label">Ponto:</span>
+                            <span class="field-value">${operadoresPontos[dadosFicha.almoxarifadoDevolucao] || 'N/A'}</span>
+                        </div>
+                    </div>
+
                     <div class="section-title">TERMO DE EMPRÉSTIMO</div>
-                    <div>
-                        <p>Conforme legislação vigente, o servidor abaixo-assinado e qualificado se responsabiliza pela guarda, zelo e devolução do material acima relacionado, classificado como permanente e de carga patrimonial desta seção de apoio SAUDI/SAPCO, da Coordenação de Engenharia de Telecomunicações e Audiovisual - COAUD.</p>
+                    <p class="term-text">
+                        Conforme legislação vigente, o servidor abaixo-assinado e qualificado se responsabiliza pela guarda, zelo e devolução do material acima relacionado, classificado como permanente e de carga patrimonial desta seção de apoio SAUDI/SAPCO, da Coordenação de Engenharia de Telecomunicações e Audiovisual - COAUD.
+                    </p>
+
+                    <div class="signature-section">
+                        <p class="signature-text">
+                            A SAUDI/SAPCO, representada pelo Operador: <strong>${dadosFicha.operador1}</strong>
+                            <span class="field-label">Ponto:</span> <strong>${operadoresPontos[dadosFicha.operador1] || 'N/A'}</strong>
+                        </p>
+                        <p class="signature-text" style="margin-top: 2rem;">
+                            Rubrica: <span class="signature-line"></span> recolheu, em <strong>${retirada.data}</strong>, às <strong>${retirada.hora}</strong>
+                        </p>
                     </div>
-                    <div class="signature">
-                        <p>A SAUDI/SAPCO, representada pelo Operador: <span style="font-size: calc(var(--font-size-base) * 1.5); display: inline; font-weight: bold; margin-right: 0.625rem;">${dadosFicha.operador1}</span>
-                            <span class="field-label">Ponto:</span> <span style="font-size: calc(var(--font-size-base) * 1.5); display: inline; font-weight: bold; margin-right: 0.625rem;">${operadoresPontos[dadosFicha.operador1] || 'N/A'}</span></p>
-                        <p style="margin-top: calc(var(--margin-base) * 8);">Rubrica: <span class="signature-line"></span> recolheu, em <span>${dataRetiradaFormatada}</span>, às <span>${horaRetiradaFormatada}</span></p>
-                    </div>
-                    <div class="espaco-entre-termo"></div>
                 `;
+
                 container.appendChild(fichaDiv);
             });
         }

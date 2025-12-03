@@ -635,8 +635,8 @@ margin: 0;
         }
 
         function atualizarListaPatrimonios() {
-            const tbody = document.getElementById("patrimonioList");
-            tbody.innerHTML = "";
+            const listElement = document.getElementById("patrimonioList");
+            listElement.innerHTML = "";
             patrimoniosSelecionados.forEach((item, index) => {
                 const row = document.createElement("tr");
                 row.innerHTML = `

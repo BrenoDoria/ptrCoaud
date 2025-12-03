@@ -4,14 +4,293 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>COAUD - Portal de Sistemas</title>
-    <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #4CAF50;
+            --primary-dark: #45a049;
+            --danger-color: #f44336;
+            --gray-light: #f2f2f2;
+            --gray-border: #ddd;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --padding-sm: 8px;
+            --padding-md: 12px;
+            --padding-lg: 16px;
+            --border-radius: 6px;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--padding-lg);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--primary-color);
+            word-wrap: break-word;
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100%;
+            background: white;
+            gap: 2rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+        }
+
+        #loading-image-1,
+        #loading-image-2 {
+            max-width: 200px;
+            max-height: 200px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        /* Login Container */
+        #login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 2rem auto;
+        }
+
+        #login-container input {
+            width: 100%;
+            padding: var(--padding-md);
+            margin-bottom: 1rem;
+            border: 1px solid var(--gray-border);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            min-height: 44px;
+        }
+
+        #login-container input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        #loginMessage {
+            margin-top: 1rem;
+            text-align: center;
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        /* Systems Container */
+        #systems-container {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        #systems-container img {
+            max-width: 150px;
+            max-height: 150px;
+            margin-bottom: 1.5rem;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        #system-options {
+            display: grid;
+            gap: 1rem;
+            margin: 2rem 0;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        button {
+            padding: var(--padding-md) var(--padding-lg);
+            margin: var(--padding-sm);
+            cursor: pointer;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #loginButton,
+        #system-options button {
+            background-color: var(--primary-color);
+            color: white;
+            width: 100%;
+        }
+
+        #loginButton:hover,
+        #system-options button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        #logoutButton {
+            background-color: var(--danger-color);
+            color: white;
+            width: 100%;
+            margin-top: 2rem;
+        }
+
+        #logoutButton:hover {
+            background-color: #da190b;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-border);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+
+            .container {
+                padding: var(--padding-md);
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            #loading-image-1,
+            #loading-image-2 {
+                max-width: 150px;
+                max-height: 150px;
+            }
+
+            #login-container {
+                max-width: 90%;
+                padding: 1.5rem;
+            }
+
+            #system-options {
+                grid-template-columns: 1fr;
+            }
+
+            button {
+                padding: var(--padding-sm) var(--padding-md);
+                font-size: 0.9rem;
+                min-height: 40px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                font-size: 12px;
+            }
+
+            .container {
+                padding: var(--padding-sm);
+            }
+
+            h1 {
+                font-size: 1.1rem;
+                margin-bottom: 1rem;
+            }
+
+            #loading-screen {
+                gap: 1rem;
+            }
+
+            #loading-image-1,
+            #loading-image-2 {
+                max-width: 120px;
+                max-height: 120px;
+            }
+
+            #login-container {
+                max-width: 95%;
+                padding: 1rem;
+            }
+
+            #login-container input {
+                padding: 8px;
+                font-size: 16px;
+                margin-bottom: 0.75rem;
+            }
+
+            #system-options {
+                gap: 0.75rem;
+            }
+
+            button {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+                min-height: 36px;
+            }
+
+            footer {
+                font-size: 0.75rem;
+                margin-top: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Tela de carregamento com imagens -->
     <div id="loading-screen">
-        <img src="marca-camara.jpg" alt="Primeira Imagem" id="loading-image-1">
-        <img src="LOGOCOAUD.png" alt="Segunda Imagem" id="loading-image-2">
+        <img src="marca-camara.jpg" alt="Brasão da Câmara" id="loading-image-1">
+        <img src="LOGOCOAUD.png" alt="Logo COAUD" id="loading-image-2">
     </div>
 
     <!-- Tela de login -->
@@ -23,27 +302,112 @@
         <div>
             <input type="password" id="password" placeholder="Senha">
         </div>
-        <button id="loginButton">Entrar</button>
+        <button id="loginButton" onclick="fazerLogin()">Entrar</button>
         <p id="loginMessage"></p>
     </div>
 
     <!-- Tela de sistemas -->
     <div class="container" id="systems-container" style="display: none;">
-        <img src="" alt="">
-        <h1>COAUD </h1>
+        <h1>COAUD - PORTAL DE SISTEMAS</h1>
         <div id="system-options">
-            <button id="scanSystem" onclick="window.location.href='index-escanear.html'">Sistema de Escaneamento</button>
-            <button id="compareSystem" onclick="window.location.href='index-comparador.html'" style="display: none;">Comparador de Patrimônios</button>
-            <button id="locateSystem" onclick="window.location.href='index-localizador.html'">Localizador de Patrimônios</button>
-            <button id="almoxarifadoSystem" onclick="window.location.href='index-almoxarifado.html'" style="display: none;">Controle de Almoxarifado</button>
+            <button onclick="navegarPara('index-escanear.html')">Sistema de Escaneamento</button>
+            <button id="compareSystem" onclick="navegarPara('index-comparador.html')">Comparador de Patrimônios</button>
+            <button onclick="navegarPara('index-localizador.html')">Localizador de Patrimônios</button>
+            <button id="almoxarifadoSystem" onclick="navegarPara('index-almoxarifado.html')">Controle de Almoxarifado</button>
         </div>
-        <button id="logoutButton">Sair</button>
+        <button id="logoutButton" onclick="fazerLogout()">Sair</button>
     </div>
 
-    <footer class="author-signature">
-        © 2025 BrenoDoria
-    </footer>
+    <footer class="author-signature">© 2025 BrenoDoria</footer>
 
-    <script src="script.js"></script>
+    <script>
+        const usuarios = {
+            "supervisor": { senha: "12345", permissao: "Supervisor" },
+            "operador": { senha: "12345", permissao: "Operador" }
+        };
+
+        window.onload = () => {
+            // Simula carregamento (2 segundos)
+            setTimeout(() => {
+                document.getElementById("loading-screen").style.display = "none";
+                
+                const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+                if (usuarioLogado && usuarios[usuarioLogado.username]) {
+                    mostrarSistemas(usuarioLogado);
+                } else {
+                    mostrarLogin();
+                }
+            }, 2000);
+        };
+
+        function mostrarLogin() {
+            document.getElementById("login-container").style.display = "block";
+            document.getElementById("systems-container").style.display = "none";
+        }
+
+        function mostrarSistemas(usuarioLogado) {
+            document.getElementById("login-container").style.display = "none";
+            document.getElementById("systems-container").style.display = "block";
+
+            // Mostrar/ocultar sistemas baseado em permissão
+            const ehSupervisor = usuarios[usuarioLogado.username].permissao === "Supervisor";
+            document.getElementById("compareSystem").style.display = ehSupervisor ? "inline-flex" : "none";
+            document.getElementById("almoxarifadoSystem").style.display = ehSupervisor ? "inline-flex" : "none";
+        }
+
+        function fazerLogin() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+            const loginMessage = document.getElementById("loginMessage");
+
+            if (!username || !password) {
+                loginMessage.textContent = "Preencha usuário e senha.";
+                return;
+            }
+
+            if (!usuarios[username]) {
+                loginMessage.textContent = "Usuário não encontrado.";
+                return;
+            }
+
+            if (usuarios[username].senha !== password) {
+                loginMessage.textContent = "Senha incorreta.";
+                return;
+            }
+
+            const usuarioLogado = {
+                username: username,
+                permissao: usuarios[username].permissao
+            };
+
+            localStorage.setItem("usuarioLogado", JSON.stringify(usuarioLogado));
+            mostrarSistemas(usuarioLogado);
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+            loginMessage.textContent = "";
+        }
+
+        function fazerLogout() {
+            localStorage.removeItem("usuarioLogado");
+            mostrarLogin();
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+            document.getElementById("loginMessage").textContent = "";
+        }
+
+        function navegarPara(pagina) {
+            window.location.href = pagina;
+        }
+
+        // Enter no input de senha faz login
+        document.addEventListener("DOMContentLoaded", () => {
+            const passwordInput = document.getElementById("password");
+            if (passwordInput) {
+                passwordInput.addEventListener("keypress", (e) => {
+                    if (e.key === "Enter") fazerLogin();
+                });
+            }
+        });
+    </script>
 </body>
 </html>

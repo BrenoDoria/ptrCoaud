@@ -1216,12 +1216,54 @@
             }
         }
 
-        // Auto-reload a cada 3 minutos
-        /*setInterval(() => {
+         // ============ AUTO-RELOAD E PRESERVAÇÃO DE DADOS ============
+        // Auto-reload a cada 10 minutos, preservando dados preenchidos
+        setInterval(() => {
             if (!fichaEditando) {
+                // Salvar dados atuais antes de recarregar
+                const dadosFormulario = {
+                    operador1: document.getElementById("operador1Input").value,
+                    operador2: document.getElementById("operador2Select").value,
+                    localMontagem: document.getElementById("localMontagemInput").value,
+                    evento: document.getElementById("eventoInput").value,
+                    patrimonios: patrimoniosSelecionados.map(p => ({
+                        NRP: p.NRP,
+                        Material: p.Material,
+                        Localização: p.Localização,
+                        Responsável: p.Responsável
+                    }))
+                };
+                localStorage.setItem('dadosFormularioPreservados', JSON.stringify(dadosFormulario));
                 location.reload();
             }
-        }, 180000);*/
+        }, 60000); // 10 minutos em milissegundos
+
+        // Restaurar dados ao carregar a página
+        function restaurarDadosPreservados() {
+            const dados = localStorage.getItem('dadosFormularioPreservados');
+            if (dados) {
+                try {
+                    const form = JSON.parse(dados);
+                    document.getElementById("operador1Input").value = form.operador1 || "";
+                    document.getElementById("operador2Select").value = form.operador2 || "";
+                    document.getElementById("localMontagemInput").value = form.localMontagem || "";
+                    document.getElementById("eventoInput").value = form.evento || "";
+
+                    if (form.patrimonios && form.patrimonios.length > 0) {
+                        patrimoniosSelecionados = form.patrimonios;
+                        atualizarListaPatrimonios();
+                        document.getElementById("limparNRPsBtn").style.display = "inline-block";
+                    }
+
+                    // Limpar dados do localStorage após restaurar
+                    localStorage.removeItem('dadosFormularioPreservados');
+
+                    document.getElementById("progressText").textContent = "Dados anteriores restaurados. Página atualizada com sucesso!";
+                } catch (e) {
+                    console.error("Erro ao restaurar dados:", e);
+                }
+            }
+        }
     </script>
 </body>
 </html>

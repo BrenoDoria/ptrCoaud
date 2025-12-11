@@ -1082,29 +1082,38 @@
         const patrimoniosPermitidosParaRepeticao = ["99010001","99010002","99010003","99010004","99010005","99010006","99010007","99010008","99010009","99010010","99010011","99010012","99010013","99010014","99010015","99010016","99010017","99010018","99010019","99010020","99010021","99010022","99010023","99010024","99010025","99030001","99030002","99040001","99020001","99020002","99020003","99020004","99040002","99040003","99030003","99030004","99030005","99030006","99040004","99030011"];
 
         // ============ REGISTRAR RETIRADA ============
-        async function registrarRetirada() {
+       async function registrarRetirada() {
             const operador1 = document.getElementById("operador1Input").value.trim();
             const operador2 = document.getElementById("operador2Select").value;
             const localMontagem = document.getElementById("localMontagemInput").value.trim();
             const evento = document.getElementById("eventoInput").value.trim();
             const dataRetirada = fichaEditando ? fichaEditando.dataRetirada : new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-
+        
             if (!operador1 || patrimoniosSelecionados.length === 0 || !localMontagem || !evento) {
                 document.getElementById("progressText").textContent = "Preencha todos os campos obrigatórios.";
                 return;
             }
-
+        
             const equipamentos = patrimoniosSelecionados.map(i => `${i.NRP} - ${i.Material}`).join("; ");
             const novaLinha = [fichaEditando ? fichaEditando.idFicha : Date.now().toString(), operador1, operador2, equipamentos, localMontagem, evento, dataRetirada];
-
+        
             document.getElementById("spinner").style.display = "inline-block";
             document.getElementById("progressText").textContent = fichaEditando ? "Salvando alterações..." : "Registrando retirada...";
-
+        
             try {
+                // 1. Verificar duplicação (código existente mantido)
                 const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
-
+        
+                // ADICIONAR: Verificar se a leitura foi bem-sucedida
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        throw new Error('ERRO_TOKEN_EXPIRADO');
+                    }
+                    throw new Error(`Erro ao verificar fichas existentes: ${res.status}`);
+                }
+        
                 if (res.ok) {
                     const data = await res.json();
                     if (data.values && data.values.length > 1) {
@@ -1117,12 +1126,12 @@
                                 if (nrp) usados.push(normalizarNRP(nrp));
                             });
                         });
-
+        
                         const conflito = patrimoniosSelecionados.find(p => {
                             const n = normalizarNRP(p.NRP);
                             return usados.includes(n) && !patrimoniosPermitidosParaRepeticao.includes(n);
                         });
-
+        
                         if (conflito) {
                             alert(`O patrimônio ${conflito.NRP} já está em uso em outra ficha pendente.`);
                             document.getElementById("spinner").style.display = "none";
@@ -1130,25 +1139,48 @@
                         }
                     }
                 }
-
+        
+                // 2. Salvar dados - ADICIONAR VERIFICAÇÃO DE RESPOSTA
+                let saveResponse;
                 if (fichaEditando) {
-                    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A${fichaEditando.rowIndex + 1}:G${fichaEditando.rowIndex + 1}?valueInputOption=RAW`, {
+                    saveResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A${fichaEditando.rowIndex + 1}:G${fichaEditando.rowIndex + 1}?valueInputOption=RAW`, {
                         method: 'PUT',
                         headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ values: [novaLinha] })
                     });
-                    localStorage.removeItem('fichaParaEditar');
-                    document.getElementById("progressText").textContent = "Ficha atualizada com sucesso!";
                 } else {
-                    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G:append?valueInputOption=RAW`, {
+                    saveResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G:append?valueInputOption=RAW`, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ values: [novaLinha] })
                     });
-                    document.getElementById("progressText").textContent = "Retirada registrada com sucesso!";
                 }
-
-                // Limpar formulário
+        
+                // CRÍTICO: Verificar se salvou com sucesso
+                if (!saveResponse.ok) {
+                    if (saveResponse.status === 401) {
+                        throw new Error('ERRO_TOKEN_EXPIRADO');
+                    }
+                    const errorData = await saveResponse.json().catch(() => ({}));
+                    throw new Error(`Falha ao salvar (${saveResponse.status}): ${errorData.error?.message || saveResponse.statusText}`);
+                }
+        
+                // Validar resposta
+                const saveResult = await saveResponse.json();
+                if (fichaEditando) {
+                    if (!saveResult.updatedCells || saveResult.updatedCells === 0) {
+                        throw new Error('Nenhuma célula foi atualizada. A ficha pode não ter sido salva.');
+                    }
+                } else {
+                    if (!saveResult.updates || !saveResult.updates.updatedRows || saveResult.updates.updatedRows === 0) {
+                        throw new Error('Nenhuma linha foi adicionada. O registro pode não ter sido salvo.');
+                    }
+                }
+        
+                // SOMENTE AQUI limpar o formulário, após confirmar que salvou
+                localStorage.removeItem('fichaParaEditar');
+                document.getElementById("progressText").textContent = fichaEditando ? "Ficha atualizada com sucesso!" : "Retirada registrada com sucesso!";
+                
                 document.getElementById("operador1Input").value = "";
                 document.getElementById("operador2Select").value = "";
                 document.getElementById("localMontagemInput").value = "";
@@ -1162,10 +1194,25 @@
                 fichaEditando = null;
                 toggleBotoesNavegacao(false);
                 document.getElementById("spinner").style.display = "none";
-
+        
             } catch (err) {
-                document.getElementById("progressText").textContent = "Erro: " + err.message;
+                console.error('Erro detalhado:', err); // Log para debug
                 document.getElementById("spinner").style.display = "none";
+                
+                // Tratar erro de token expirado
+                if (err.message === 'ERRO_TOKEN_EXPIRADO') {
+                    document.getElementById("progressText").textContent = "Sessão expirada. Clique em 'Autenticar' novamente.";
+                    localStorage.removeItem('access_token');
+                    accessToken = null;
+                    mostrarSecaoLogin();
+                    // NÃO limpa formulário - preserva dados
+                    return;
+                }
+                
+                // Outros erros
+                document.getElementById("progressText").textContent = "ERRO ao salvar: " + err.message + " - Tente novamente ou recarregue a página.";
+                // NÃO limpa formulário - usuário pode tentar novamente
+                alert("ATENÇÃO: A ficha pode não ter sido salva. Erro: " + err.message);
             }
         }
 

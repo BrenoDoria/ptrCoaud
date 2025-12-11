@@ -1162,21 +1162,18 @@
                         throw new Error('ERRO_TOKEN_EXPIRADO');
                     }
                     const errorData = await saveResponse.json().catch(() => ({}));
-                    throw new Error(`Falha ao salvar (${saveResponse.status}): ${errorData.error?.message || saveResponse.statusText}`);
-                    console.log('Nenhuma linha foi adicionada. O registro pode não ter sido salvo.');
+                    throw new Error(`Falha ao salvar (${saveResponse.status}): ${errorData.error?.message || saveResponse.statusText}`);                   
                 }
         
                 // Validar resposta
                 const saveResult = await saveResponse.json();
                 if (fichaEditando) {
                     if (!saveResult.updatedCells || saveResult.updatedCells === 0) {
-                        throw new Error('Nenhuma célula foi atualizada. A ficha pode não ter sido salva.');
-                        console.log('Nenhuma linha foi adicionada. O registro pode não ter sido salvo.');
+                        throw new Error('Nenhuma célula foi atualizada. A ficha pode não ter sido salva.');                     
                     }
                 } else {
                     if (!saveResult.updates || !saveResult.updates.updatedRows || saveResult.updates.updatedRows === 0) {
                         throw new Error('Nenhuma linha foi adicionada. O registro pode não ter sido salvo.');
-                        console.log('Nenhuma linha foi adicionada. O registro pode não ter sido salvo.');
                     }
                 }
         

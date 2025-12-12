@@ -919,7 +919,7 @@
                     throw new Error(`Erro ao arquivar: ${errorData.error?.message || appendResponse.statusText}`);
                 }
 
-                const rowIndex = retiradaIndex + 1;
+                const rowIndex = retiradaIndex + 2;
                 const deleteResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}:batchUpdate`, {
                     method: 'POST',
                     headers: {

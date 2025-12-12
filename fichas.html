@@ -919,58 +919,7 @@
                     throw new Error(`Erro ao arquivar: ${errorData.error?.message || appendResponse.statusText}`);
                 }
 
-                try {
-    const rowIndex = retiradaIndex + 2;
-    
-    const deleteResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}:batchUpdate`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            requests: [{
-                deleteDimension: {
-                    range: {
-                        sheetId: sheetIds['RETIRADAS_PENDENTES'],
-                        dimension: 'ROWS',
-                        startIndex: rowIndex,
-                        endIndex: rowIndex + 1
-                    }
-                }
-            }]
-        })
-    });
-
-    if (!deleteResponse.ok) {
-        const errorData = await deleteResponse.json();
-        throw new Error(`Erro ao remover pendente: ${errorData.error?.message || deleteResponse.statusText}`);
-    }
-
-    const appendResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_ARQUIVADAS!A:J:append?valueInputOption=RAW`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ values: [fichaArquivada] })
-    });
-
-    if (!appendResponse.ok) {
-        const errorData = await appendResponse.json();
-        throw new Error(`Erro ao arquivar: ${errorData.error?.message || appendResponse.statusText}`);
-    }
-
-    pendentesData.splice(rowIndex, 1);
-    atualizarTabela();
-    document.getElementById("progressText").textContent = "Devolução registrada com sucesso!";
-    document.getElementById("spinner").style.display = "none";
-} catch (error) {
-    console.error(error);
-    document.getElementById("progressText").textContent = "Erro: " + error.message;
-    document.getElementById("spinner").style.display = "none";
-}
-
+      
 
                 if (!deleteResponse.ok) {
                     const errorData = await deleteResponse.json();
@@ -986,8 +935,43 @@
                 document.getElementById("progressText").textContent = "Erro: " + error.message;
                 document.getElementById("spinner").style.display = "none";
             }
-        }
+        
+  const rowIndex = retiradaIndex + 1;
+                const deleteResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}:batchUpdate`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        requests: [{
+                            deleteDimension: {
+                                range: {
+                                    sheetId: sheetIds['RETIRADAS_PENDENTES'],
+                                    dimension: 'ROWS',
+                                    startIndex: rowIndex,
+                                    endIndex: rowIndex + 1
+                                }
+                            }
+                        }]
+                    })
+                });
 
+                if (!deleteResponse.ok) {
+                    const errorData = await deleteResponse.json();
+                    throw new Error(`Erro ao remover pendente: ${errorData.error?.message || deleteResponse.statusText}`);
+                }
+
+                pendentesData.splice(rowIndex, 1);
+                atualizarTabela();
+                document.getElementById("progressText").textContent = "DevoluÃ§Ã£o registrada com sucesso!";
+                document.getElementById("spinner").style.display = "none";
+            } catch (error) {
+                console.error(error);
+                document.getElementById("progressText").textContent = "Erro: " + error.message;
+                document.getElementById("spinner").style.display = "none";
+            }
+        }
         function imprimirFicha(rowIndex) {
             const ficha = pendentesData[rowIndex];
             const dadosFicha = {

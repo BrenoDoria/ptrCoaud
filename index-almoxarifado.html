@@ -104,7 +104,7 @@
     <div class="container">
         <h1>COAUD - CONTROLE DE EQUIPAMENTOS</h1>
         <div id="login-section">
-            <button onclick="solicitarToken()">Fazer Login com Google</button>
+           >
         </div>
         <div class="progress-container" id="progress-container" style="display: none;">
             <div id="spinner" class="spinner"></div>
@@ -626,7 +626,7 @@ document.getElementById("progressText").textContent = "✅ Retirada registrada c
 }, 1200);
 
                     
-                document.getElementById("spinner").style.display = "none";
+                               document.getElementById("spinner").style.display = "none";
                 document.getElementById("operador1Select").value = "";
                 document.getElementById("operador2Select").value = "";
                 patrimoniosSelecionados = [];
@@ -637,9 +637,14 @@ document.getElementById("progressText").textContent = "✅ Retirada registrada c
                 atualizarOperador2();
                 document.getElementById("form-title").textContent = "Registrar Retirada de Equipamento";
                 document.getElementById("submitButton").textContent = "Registrar Retirada";
-                    document.getElementById("submitButton").disabled = true;
+                document.getElementById("submitButton").disabled = false;
                 fichaEditando = null;
-            } 
+
+            } catch (error) {
+                erroCritico("❌ Retirada NÃO registrada.\n\nMotivo: " + error.message);
+            }
+        }
+
         
     </script>
 </body>

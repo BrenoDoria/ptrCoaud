@@ -256,6 +256,12 @@
     </div>
     <footer class="author-signature">© 2025 BrenoDoria</footer>
     <script>
+function erroCritico(mensagem) {
+    document.getElementById("spinner").style.display = "none";
+    document.getElementById("progressText").textContent = mensagem;
+    alert(mensagem);
+}
+
         const usuarios = {
             "supervisor": { senha: "12345", permissao: "Supervisor" },
             "operador": { senha: "12345", permissao: "Operador" }
@@ -584,21 +590,37 @@
                     document.getElementById("cancelButton").style.display = "none";
                 } else {
                     const registerResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G:append?valueInputOption=RAW`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            values: [novaRetirada]
-                        })
-                    });
-                    if (!registerResponse.ok) {
-                        const errorData = await registerResponse.json();
-                        throw new Error(`Erro ao registrar retirada: ${errorData.error?.message || registerResponse.statusText}`);
-                    }
-                    document.getElementById("progressText").textContent = "Retirada registrada com sucesso!";
-                }
+                         method: 'POST',
+    headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ values: [novaRetirada] })
+});
+
+if (!registerResponse.ok) {
+    if (registerResponse.status === 401) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+    }
+    const errorData = await registerResponse.json();
+    throw new Error(errorData.error?.message || "Falha ao registrar no Google Sheets.");
+}
+
+const registerResult = await registerResponse.json();
+
+// ✅ CONFIRMAÇÃO DO GOOGLE
+if (!registerResult.updates || !registerResult.updates.updatedRange) {
+    throw new Error("Google Sheets não confirmou o registro da retirada.");
+}
+
+// ✔️ SÓ AQUI É SUCESSO REAL
+document.getElementById("progressText").textContent = "✅ Retirada registrada com sucesso no sistema!";
+
+                    setTimeout(() => {
+    window.location.href = "fichas.html";
+}, 1200);
+
+                    
                 document.getElementById("spinner").style.display = "none";
                 document.getElementById("operador1Select").value = "";
                 document.getElementById("operador2Select").value = "";
@@ -610,10 +632,14 @@
                 atualizarOperador2();
                 document.getElementById("form-title").textContent = "Registrar Retirada de Equipamento";
                 document.getElementById("submitButton").textContent = "Registrar Retirada";
+                    document.getElementById("submitButton").disabled = true;
                 fichaEditando = null;
             } catch (error) {
+                erroCritico("❌ Retirada NÃO registrada.\n\nMotivo: " + error.message);
                 document.getElementById("progressText").textContent = "Erro: " + error.message;
                 document.getElementById("spinner").style.display = "none";
+                    document.getElementById("submitButton").disabled = false;
+
             }
         }
     </script>

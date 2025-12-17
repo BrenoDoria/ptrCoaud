@@ -264,6 +264,7 @@
         const FILE_ID = '1q9RCwJ4P--QIH4kkMszffrN8ZwzkSsNoZtPH-Usk4Zw';
         let tokenClient;
         let accessToken = null;
+        let userEmail = null;
         let patrimonioData = [];
         let patrimoniosSelecionados = [];
         let fichaEditando = null;
@@ -282,8 +283,8 @@
             }
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
-                scope: 'https://www.googleapis.com/auth/spreadsheets',
-                callback: (tokenResponse) => {
+                scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email', // Adicionado scope para email
+                callback: async (tokenResponse) => {
                     if (tokenResponse.error) {
                         document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
                         document.getElementById("progress-container").style.display = "block";
@@ -291,6 +292,7 @@
                     }
                     accessToken = tokenResponse.access_token;
                     localStorage.setItem("access_token", accessToken);
+                    await getUserEmail(); // Novo: Obtém e-mail após auth
                     document.getElementById("progressText").textContent = "Autenticado com sucesso! Carregando dados...";
                     document.getElementById("progress-container").style.display = "block";
                     document.getElementById("login-section").style.display = "none";
@@ -302,6 +304,7 @@
             const savedToken = localStorage.getItem("access_token");
             if (savedToken) {
                 accessToken = savedToken;
+                getUserEmail();
                 document.getElementById("login-section").style.display = "none";
                 document.getElementById("retirada-section").style.display = "block";
                 document.getElementById("navegacao-fichas").style.display = "block";
@@ -334,6 +337,20 @@
                 toggleNavigationButtons(true);
             }
         };
+
+        async function getUserEmail() {
+            try {
+                const response = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                if (!response.ok) throw new Error('Falha ao obter e-mail do usuário');
+                const data = await response.json();
+                userEmail = data.email;
+            } catch (error) {
+                console.error('Erro ao obter e-mail:', error);
+                document.getElementById("progressText").textContent = "Erro ao obter e-mail: " + error.message;
+            }
+        }
 
         function toggleNavigationButtons(disable) {
             document.getElementById("backButton").disabled = disable;
@@ -515,6 +532,7 @@
             const operador2 = document.getElementById("operador2Select").value;
             const localMontagem = document.getElementById("localMontagemInput").value.trim();
             const evento = document.getElementById("eventoInput").value.trim();
+            const timestamp = new Date().toISOString();
             const dataRetirada = fichaEditando ? fichaEditando.dataRetirada : new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
             if (!operador1 || patrimoniosSelecionados.length === 0 || !localMontagem || !evento) {
@@ -523,7 +541,7 @@
             }
 
             const equipamentos = patrimoniosSelecionados.map(item => `${item.NRP} - ${item.Material}`).join("; ");
-            const novaRetirada = [fichaEditando ? fichaEditando.idFicha : Date.now().toString(), operador1, operador2, equipamentos, localMontagem, evento, dataRetirada];
+            const novaRetirada = [fichaEditando ? fichaEditando.idFicha : Date.now().toString(), operador1, operador2, equipamentos, localMontagem, evento, dataRetirada, userEmail, timestamp];
 
             document.getElementById("spinner").style.display = "inline-block";
             document.getElementById("progressText").textContent = fichaEditando ? "Salvando alterações..." : "Registrando retirada...";
@@ -562,9 +580,10 @@
                         return;
                     }
                 }
+                let response;
                 if (fichaEditando) {
                     const rowIndex = fichaEditando.rowIndex;
-                    const updateResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A${rowIndex + 1}:G${rowIndex + 1}?valueInputOption=RAW`, {
+                    const updateResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A${rowIndex + 1}:I${rowIndex + 1}?valueInputOption=RAW`, {
                         method: 'PUT',
                         headers: {
                             'Authorization': `Bearer ${accessToken}`,
@@ -583,7 +602,7 @@
                     toggleNavigationButtons(false);
                     document.getElementById("cancelButton").style.display = "none";
                 } else {
-                    const registerResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G:append?valueInputOption=RAW`, {
+                    const registerResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:I:append?valueInputOption=RAW`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${accessToken}`,
@@ -613,7 +632,26 @@
                 fichaEditando = null;
             } catch (error) {
                 document.getElementById("progressText").textContent = "Erro: " + error.message;
+                await logError(error.message, novaRetirada);
+            }finally {
                 document.getElementById("spinner").style.display = "none";
+            }
+        }
+        async function logError(errorMessage, data) {
+            const logTimestamp = new Date().toISOString();
+            const logData = [logTimestamp, userEmail, errorMessage, JSON.stringify(data)];
+            try {
+                const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/LOG_ERROS!A:D:append?valueInputOption=RAW`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ values: [logData] })
+                });
+                if (!response.ok) throw new Error('Falha ao logar erro');
+            } catch (logError) {
+                console.error('Erro ao logar:', logError);
             }
         }
     </script>

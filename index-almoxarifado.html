@@ -640,7 +640,7 @@ document.getElementById("progressText").textContent = "✅ Retirada registrada c
                     document.getElementById("submitButton").disabled = true;
                 fichaEditando = null;
             } catch (error) {
-                erroCritico("❌ Retirada NÃO registrada.\n\nMotivo: " + error.message);
+                
                 document.getElementById("progressText").textContent = "Erro: " + error.message;
                 document.getElementById("spinner").style.display = "none";
                     document.getElementById("submitButton").disabled = false;

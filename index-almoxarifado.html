@@ -257,10 +257,15 @@
     <footer class="author-signature">© 2025 BrenoDoria</footer>
     <script>
 function erroCritico(mensagem) {
-    document.getElementById("spinner").style.display = "none";
-    document.getElementById("progressText").textContent = mensagem;
+    const spinner = document.getElementById("spinner");
+    const progressText = document.getElementById("progressText");
+
+    if (spinner) spinner.style.display = "none";
+    if (progressText) progressText.textContent = mensagem;
+
     alert(mensagem);
 }
+
 
         const usuarios = {
             "supervisor": { senha: "12345", permissao: "Supervisor" },

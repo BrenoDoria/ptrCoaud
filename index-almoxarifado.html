@@ -310,21 +310,20 @@ function erroCritico(mensagem) {
                     carregarPatrimoniosDoSheets();
                 }
             });
-            const savedToken = localStorage.getItem("access_token");
-            if (savedToken) {
-                accessToken = savedToken;
-                document.getElementById("login-section").style.display = "none";
-                document.getElementById("retirada-section").style.display = "block";
-                document.getElementById("navegacao-fichas").style.display = "block";
-                document.getElementById("progress-container").style.display = "block";
-                document.getElementById("progressText").textContent = "Usando token salvo. Carregando dados...";
-                carregarPatrimoniosDoSheets();
-            } else {
-                document.getElementById("login-section").style.display = "block";
-                document.getElementById("retirada-section").style.display = "none";
-                document.getElementById("navegacao-fichas").style.display = "none";
-                document.getElementById("progress-container").style.display = "block";
-            }
+           const savedToken = localStorage.getItem("access_token");
+
+document.getElementById("progress-container").style.display = "block";
+
+if (savedToken) {
+    document.getElementById("progressText").textContent =
+        "Revalidando permissões do Google...";
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+} else {
+    document.getElementById("progressText").textContent =
+        "Solicitando autenticação do Google...";
+    tokenClient.requestAccessToken();
+}
+
             const fichaParaEditar = JSON.parse(localStorage.getItem('fichaParaEditar'));
             if (fichaParaEditar) {
                 fichaEditando = fichaParaEditar;

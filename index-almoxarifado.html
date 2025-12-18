@@ -280,48 +280,63 @@ function erroCritico(mensagem) {
         let fichaEditando = null;
 
         window.onload = () => {
-            const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
-            if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
-                alert("Usuário não está logado. Faça login novamente.");
-                window.location.href = "index.html";
+    const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
+
+    if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
+        alert("Usuário não está logado.");
+        window.location.href = "index.html";
+        return;
+    }
+
+    if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
+        alert("Acesso negado.");
+        window.location.href = "index.html";
+        return;
+    }
+
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: "https://www.googleapis.com/auth/spreadsheets",
+        callback: (tokenResponse) => {
+            if (tokenResponse.error) {
+                erroCritico("Erro de autenticação Google");
                 return;
             }
-            if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
-                alert("Acesso negado: Você não tem permissão para acessar o Controle de Almoxarifado.");
-                window.location.href = "index.html";
-                return;
-            }
-            tokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: 'https://www.googleapis.com/auth/spreadsheets',
-                callback: (tokenResponse) => {
-                    if (tokenResponse.error) {
-                        document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
-                        document.getElementById("progress-container").style.display = "block";
-                        return;
-                    }
-                    accessToken = tokenResponse.access_token;
-                    localStorage.setItem("access_token", accessToken);
-                    document.getElementById("progressText").textContent = "Autenticado com sucesso! Carregando dados...";
-                    document.getElementById("progress-container").style.display = "block";
-                    document.getElementById("login-section").style.display = "none";
-                    document.getElementById("retirada-section").style.display = "block";
-                    document.getElementById("navegacao-fichas").style.display = "block";
-                    carregarPatrimoniosDoSheets();
-                }
-            });
-           const savedToken = localStorage.getItem("access_token");
 
-document.getElementById("progress-container").style.display = "block";
+            accessToken = tokenResponse.access_token;
+            localStorage.setItem("access_token", accessToken);
 
-if (savedToken) {
-    document.getElementById("progressText").textContent =
-        "Revalidando permissões do Google...";
-    tokenClient.requestAccessToken({ prompt: 'consent' });
-} else {
-    document.getElementById("progressText").textContent =
-        "Solicitando autenticação do Google...";
-    tokenClient.requestAccessToken();
+            document.getElementById("login-section").style.display = "none";
+            document.getElementById("retirada-section").style.display = "block";
+            document.getElementById("navegacao-fichas").style.display = "block";
+            document.getElementById("progress-container").style.display = "block";
+
+            document.getElementById("progressText").textContent =
+                "Autenticado com sucesso! Carregando dados...";
+
+            carregarPatrimoniosDoSheets();
+        }
+    });
+
+    verificarLogin(); // 🔴 ISSO É ESSENCIAL
+};
+
+           
+
+function verificarLogin() {
+    const savedToken = localStorage.getItem("access_token");
+
+    document.getElementById("progress-container").style.display = "block";
+
+    if (savedToken) {
+        document.getElementById("progressText").textContent =
+            "Revalidando sessão do Google...";
+        tokenClient.requestAccessToken({ prompt: "" });
+    } else {
+        document.getElementById("progressText").textContent =
+            "Solicitando autenticação do Google...";
+        tokenClient.requestAccessToken({ prompt: "consent" });
+    }
 }
 
             const fichaParaEditar = JSON.parse(localStorage.getItem('fichaParaEditar'));

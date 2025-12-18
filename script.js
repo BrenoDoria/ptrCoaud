@@ -15,7 +15,7 @@ window.addEventListener("load", function () {
   // No início do arquivo, ajuste o escopo
 tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/drive.readonly  https://www.googleapis.com/auth/spreadsheets.readonly',
+    scope: 'https://www.googleapis.com/auth/drive.readonly  https://www.googleapis.com/auth/spreadsheets',
     callback: (tokenResponse) => {
         if (tokenResponse.error) {
             document.getElementById("loginMessage").textContent = "Erro ao autenticar com Google: " + tokenResponse.error;
@@ -138,3 +138,4 @@ document.getElementById("logoutButton").addEventListener("click", function () {
         }, 600);
     }, 8000);
 });
+

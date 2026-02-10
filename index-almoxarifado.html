@@ -114,16 +114,7 @@
             <h2 id="form-title">Registrar Retirada de Equipamento</h2>
             <div class="form-group">
                 <label>Operador:</label>
-                <input 
-    type="text"
-    id="operador1Select"
-    placeholder="Digite ao menos 4 letras do nome"
-    list="operadoresDatalist"
-    oninput="buscarOperadorAutocomplete()"
-    onchange="selecionarOperadorAutocomplete()"
-/>
-
-<datalist id="operadoresDatalist">
+               <select id="operador1Select" onchange="atualizarOperador2()">
 
                     <option value="Obrigatório"></option>
                     <option value="Adson Miranda dos Anjos">Adson Miranda dos Anjos</option>
@@ -220,7 +211,7 @@
                         <option value="Wesley Maurício Ribeiro França">Wesley Maurício Ribeiro França</option>
                         <option value="Willian Neves da Silva">Willian Neves da Silva</option>
                         <option value="Wirlem Silva Alves">Wirlem Silva Alves</option>
-    </datalist>
+    
                 </select>
                 <label>Almoxarifado:</label>
                 <select id="operador2Select">
@@ -292,11 +283,6 @@ function erroCritico(mensagem) {
         let patrimonioData = [];
         let patrimoniosSelecionados = [];
         let fichaEditando = null;
-
-        const ESCALA_SHEET_ID = '1smzyrRUnPZkfZGY-8EPDGg7Js8_6-nQ2xlpXgl8Orjw';
-const ESCALA_API_KEY = 'AIzaSyA8yWyDVkekhaVdxCO7BuP3pjjjKTD-cDE';
-let escalaCache = [];
-
 
         window.onload = () => {
             const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
@@ -443,60 +429,6 @@ let escalaCache = [];
         }
 
         function atualizarOperador2() {
-
-async function buscarOperadorAutocomplete() {
-    const input = document.getElementById("operador1Select").value.trim();
-    const datalist = document.getElementById("operadoresDatalist");
-
-    if (input.length < 4) {
-        datalist.innerHTML = "";
-        return;
-    }
-
-    if (escalaCache.length === 0) {
-        const response = await fetch(
-            `https://sheets.googleapis.com/v4/spreadsheets/${ESCALA_SHEET_ID}/values/escalaAudio!A:Z?key=${ESCALA_API_KEY}`
-        );
-        const data = await response.json();
-        escalaCache = data.values || [];
-    }
-
-    const resultados = escalaCache.filter(row =>
-        row[0] &&
-        row[0].toLowerCase().includes(input.toLowerCase())
-    );
-
-    datalist.innerHTML = "";
-
-    resultados.forEach(row => {
-        const option = document.createElement("option");
-        option.value = row[0]; // Nome do operador
-        datalist.appendChild(option);
-    });
-}
-
-            function selecionarOperadorAutocomplete() {
-    const nomeSelecionado = document.getElementById("operador1Select").value;
-
-    const registro = escalaCache.find(row =>
-        row[0] === nomeSelecionado
-    );
-
-    if (!registro) return;
-
-    /*
-      AJUSTE DE COLUNAS:
-      A (0) → Nome
-      B (1) → Local
-      C (2) → Nome do Evento / Observação
-    */
-
-    document.getElementById("localMontagemInput").value = registro[1] || "";
-    document.getElementById("eventoInput").value = registro[2] || "";
-
-    atualizarOperador2();
-}
-
 
             
             const operador1 = document.getElementById("operador1Select").value;

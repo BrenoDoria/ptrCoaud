@@ -114,7 +114,7 @@
             <h2 id="form-title">Registrar Retirada de Equipamento</h2>
             <div class="form-group">
                 <label>Operador:</label>
-                <select id="operador1Select" onchange="atualizarOperador2(); buscarDadosEscala()">
+                <select id="operador1Select" onchange="atualizarOperador2(); autoPreencherLocalEEvento()">
                     <option value="Obrigatório"></option>
                     <option value="Adson Miranda dos Anjos">Adson Miranda dos Anjos</option>
                         <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
@@ -215,7 +215,7 @@
                 <select id="operador2Select">
                     <option value=""></option>
                     <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
-                    <option value="Altamir Araújo da Silva">Altamir Araujo da Silva</option>
+                    <option value="Altamir Araújo da Silva">Altamir Araújo da Silva</option>
                     <option value="Antonio Batista Ângelo">Antonio Batista Ângelo</option>
                     <option value="Waleria Bastos Cardoso">Waleria Bastos Cardoso</option>
                 </select>
@@ -269,14 +269,12 @@ function erroCritico(mensagem) {
         };
         const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';
         const FILE_ID = '1q9RCwJ4P--QIH4kkMszffrN8ZwzkSsNoZtPH-Usk4Zw';
-        const ESCALA_FILE_ID = '1smzyrRUnPZkfZGY-8EPDGg7Js8_6-nQ2xlpXgl8Orjw';
-        const ESCALA_API_KEY = 'AIzaSyA8yWyDVkekhaVdxCO7BuP3pjjjKTD-cDE';
         let tokenClient;
         let accessToken = null;
         let patrimonioData = [];
-        let escalaData = [];
         let patrimoniosSelecionados = [];
         let fichaEditando = null;
+        let escalaData = [];
         window.onload = () => {
             const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
             if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
@@ -306,6 +304,7 @@ function erroCritico(mensagem) {
                     document.getElementById("retirada-section").style.display = "block";
                     document.getElementById("navegacao-fichas").style.display = "block";
                     carregarPatrimoniosDoSheets();
+                    carregarEscalaDoSheets();
                 }
             });
             const savedToken = localStorage.getItem("access_token");
@@ -317,6 +316,7 @@ function erroCritico(mensagem) {
                 document.getElementById("progress-container").style.display = "block";
                 document.getElementById("progressText").textContent = "Usando token salvo. Carregando dados...";
                 carregarPatrimoniosDoSheets();
+                carregarEscalaDoSheets();
             } else {
                 document.getElementById("login-section").style.display = "block";
                 document.getElementById("retirada-section").style.display = "none";
@@ -416,43 +416,59 @@ function erroCritico(mensagem) {
                 document.getElementById("spinner").style.display = "none";
             });
         }
-        async function buscarDadosEscala() {
-            const operador1 = document.getElementById("operador1Select").value;
-            if (!operador1 || operador1 === "Obrigatório") {
+
+        function carregarEscalaDoSheets() {
+            fetch('https://sheets.googleapis.com/v4/spreadsheets/1smzyrRUnPZkfZGY-8EPDGg7Js8_6-nQ2xlpXgl8Orjw/values/escalaAudio!A:Z?key=AIzaSyA8yWyDVkekhaVdxCO7BuP3pjjjKTD-cDE')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Falha ao carregar a escala de áudio');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.values && data.values.length > 1) {
+                    // Pula o cabeçalho (primeira linha)
+                    escalaData = data.values.slice(1);
+                }
+            })
+            .catch(error => {
+                console.error("Erro ao carregar escala:", error);
+                document.getElementById("progressText").textContent = "Erro ao carregar escala de áudio.";
+            });
+        }
+
+        function autoPreencherLocalEEvento() {
+            const operador = document.getElementById("operador1Select").value.trim();
+            const localInput = document.getElementById("localMontagemInput");
+            const eventoInput = document.getElementById("eventoInput");
+
+            // Limpa os campos por padrão
+            localInput.value = "";
+            eventoInput.value = "";
+
+            if (!operador) {
                 return;
             }
-            
-            try {
-                document.getElementById("progressText").textContent = "Buscando dados da escala...";
-                const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${ESCALA_FILE_ID}/values/escalaAudio!A:Z?key=${ESCALA_API_KEY}`);
-                if (!response.ok) {
-                    throw new Error(`Erro ao consultar escala: ${response.statusText}`);
-                }
-                const data = await response.json();
-                escalaData = data.values || [];
-                
-                // Encontrar linha com o operador (coluna A - nome)
-                const linhaEncontrada = escalaData.find(row => 
-                    row[0] && row[0].toString().toLowerCase().includes(operador1.toLowerCase().substring(0, Math.max(4, operador1.length - 1)))
-                );
-                
-                if (linhaEncontrada) {
-                    // Coluna Local (assumindo coluna B)
-                    const local = linhaEncontrada[1] || "";
-                    // Coluna Nome do Evento / Observação (assumindo coluna C)
-                    const evento = linhaEncontrada[2] || "";
-                    
-                    document.getElementById("localMontagemInput").value = local;
-                    document.getElementById("eventoInput").value = evento;
-                    document.getElementById("progressText").textContent = `Dados da escala carregados para ${operador1}`;
-                } else {
-                    document.getElementById("progressText").textContent = `Nenhum dado de escala encontrado para "${operador1}"`;
-                }
-            } catch (error) {
-                console.error("Erro ao buscar dados da escala:", error);
-                document.getElementById("progressText").textContent = "Erro ao consultar escala: " + error.message;
+
+            if (escalaData.length === 0) {
+                document.getElementById("progressText").textContent = "Escala ainda não carregada. Tente novamente em alguns segundos.";
+                return;
+            }
+
+            // Procura pela linha onde a coluna A (índice 0) tem o nome exato do operador
+            const rowEncontrada = escalaData.find(row => row[0] && row[0].trim() === operador);
+
+            if (rowEncontrada) {
+                // Coluna B (índice 1) = Local
+                // Coluna C (índice 2) = Nome do Evento / Observação
+                localInput.value = (rowEncontrada[1] || "").trim();
+                eventoInput.value = (rowEncontrada[2] || "").trim();
+                document.getElementById("progressText").textContent = "Local e Evento preenchidos automaticamente pela escala do dia.";
+            } else {
+                document.getElementById("progressText").textContent = "Operador não encontrado na escala atual. Preencha Local e Evento manualmente.";
             }
         }
+
         function atualizarOperador2() {
             const operador1 = document.getElementById("operador1Select").value;
             const operador2Select = document.getElementById("operador2Select");
@@ -475,7 +491,7 @@ function erroCritico(mensagem) {
                 document.getElementById("progressText").textContent = "Digite um NRP para adicionar.";
                 return;
             }
-            nrp = nrp.replace(/\\./g, "");
+            nrp = nrp.replace(/\./g, "");
             const nrpSemZeros = nrp.replace(/^0+/, "");
             if (!patrimoniosPermitidosParaRepeticao.includes(nrpSemZeros)) {
                 const jaAdicionado = patrimoniosSelecionados.some(item => item.NRP === nrp);
@@ -655,7 +671,7 @@ function erroCritico(mensagem) {
                 document.getElementById("submitButton").disabled = false;
                 fichaEditando = null;
             } catch (error) {
-                erroCritico("❌ Retirada NÃO registrada.\\n\\nMotivo: " + error.message);
+                erroCritico("❌ Retirada NÃO registrada.\n\nMotivo: " + error.message);
             }
         }
        

@@ -114,8 +114,16 @@
             <h2 id="form-title">Registrar Retirada de Equipamento</h2>
             <div class="form-group">
                 <label>Operador:</label>
-                <select id="operador1Select" onchange="atualizarOperador2()">
-                    <option value="Obrigatório"></option>
+<input 
+    type="text"
+    id="operador1Select"
+    placeholder="Digite ao menos 4 letras do nome"
+    list="operadoresDatalist"
+    oninput="buscarOperadorAutocomplete()"
+    onchange="selecionarOperadorAutocomplete()"
+/>
+
+<datalist id="operadoresDatalist">
                     <option value="Adson Miranda dos Anjos">Adson Miranda dos Anjos</option>
                         <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
                         <option value="Alberto Cesar Souza Almeida">Alberto Cesar Souza Almeida</option>
@@ -210,7 +218,7 @@
                         <option value="Wesley Maurício Ribeiro França">Wesley Maurício Ribeiro França</option>
                         <option value="Willian Neves da Silva">Willian Neves da Silva</option>
                         <option value="Wirlem Silva Alves">Wirlem Silva Alves</option>
-                </select>
+                </datalist>
                 <label>Almoxarifado:</label>
                 <select id="operador2Select">
                     <option value=""></option>
@@ -256,6 +264,73 @@
     </div>
     <footer class="author-signature">© 2025 BrenoDoria</footer>
     <script>
+
+        let cacheOperadores = [];
+let ultimoTermoBusca = "";
+
+async function buscarOperadorAutocomplete() {
+    const input = document.getElementById("operador1Select");
+    const termo = input.value.trim();
+
+    if (termo.length < 4 || termo === ultimoTermoBusca) return;
+
+    ultimoTermoBusca = termo;
+
+    try {
+        const response = await fetch(
+            "https://script.google.com/macros/s/AKfycbx54rMcAtiSdTXxWeZnt3xyTNEx8bhU8sH0jwLHQSS-gVr45XaMmcvuvA8-BDiaJA/exec"
+        );
+
+        if (!response.ok) return;
+
+        const dados = await response.json();
+        cacheOperadores = dados;
+
+        const datalist = document.getElementById("operadoresDatalist");
+        datalist.innerHTML = "";
+
+        const termoLower = termo.toLowerCase();
+
+        dados
+            .filter(item =>
+                item.nome &&
+                item.nome.toLowerCase().startsWith(termoLower)
+            )
+            .forEach(item => {
+                const option = document.createElement("option");
+                option.value = item.nome;
+                datalist.appendChild(option);
+            });
+
+    } catch (error) {
+        console.warn("Autocomplete indisponível:", error);
+    }
+}
+
+function selecionarOperadorAutocomplete() {
+    const nomeSelecionado = document.getElementById("operador1Select").value;
+
+    if (!cacheOperadores.length) return;
+
+    const operador = cacheOperadores.find(
+        item => item.nome === nomeSelecionado
+    );
+
+    if (!operador) return;
+
+    // Preenche automaticamente
+    if (operador.local) {
+        document.getElementById("localMontagemInput").value = operador.local;
+    }
+
+    if (operador.evento) {
+        document.getElementById("eventoInput").value = operador.evento;
+    }
+
+    atualizarOperador2();
+}
+
+        
 function erroCritico(mensagem) {
     const spinner = document.getElementById("spinner");
     const progressText = document.getElementById("progressText");

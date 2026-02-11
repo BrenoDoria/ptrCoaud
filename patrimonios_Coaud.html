@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Localizador de Patrimônios COAUD (Atual)</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="data:,"> <!-- Remove o erro 404 do favicon -->
+    <link rel="icon" href="data:,"> <!-- Remove erro 404 do favicon -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -44,13 +44,12 @@
         };
 
         const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';
-        // TROQUE PELO NOVO ID DA CÓPIA NATIVA
-        const FILE_ID = 'COLE_O_NOVO_ID_AQUI';
+        // ID da cópia nativa (agora funciona!)
+        const FILE_ID = '1cJHgxQXsUaRtUFZL6aatRMaFP50dM1vW';
         let tokenClient;
         let accessToken = null;
         let dadosPlanilha = null;
 
-        // onload único (corrigido - combina permissão + auth)
         window.onload = () => {
             // Verificação de permissão
             const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
@@ -111,7 +110,8 @@
             const maxRetries = 3;
             document.getElementById("spinner").style.display = "inline-block";
             document.getElementById("progressText").textContent = "Consultando Servidor";
-            // TROQUE "Planilha1" pelo nome exato da aba da cópia nativa
+            
+            // <<< MUDE AQUI O NOME DA ABA SE NÃO FOR "Planilha1" >>>
             fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/Planilha1!A:D`, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`

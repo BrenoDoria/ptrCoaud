@@ -106,7 +106,7 @@
             document.getElementById("spinner").style.display = "inline-block";
             document.getElementById("progressText").textContent = "Consultando Servidor";
             // Se a aba não se chamar "SIGMAS", altere aqui para "NomeDaAba!A:D"
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/Patrimônios COAUD - Atual - Nativa!A:D`, {
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/ptr_Coaud.xlsx!A:D`, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }

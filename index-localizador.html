@@ -113,7 +113,7 @@
             document.getElementById("spinner").style.display = "inline-block";
             document.getElementById("progressText").textContent = "Consultando Servidor";
 
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A:D`, {
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS_LOCAL!A:D`, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }

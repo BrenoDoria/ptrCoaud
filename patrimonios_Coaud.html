@@ -45,7 +45,7 @@
 
         const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';
         // ID da cópia nativa (agora funciona!)
-        const FILE_ID = '1Gi7GfsBpCc2IpCwjCsLMLH8d_psyJ1AkKgbiWQ-LP9A';
+        const FILE_ID = '1iNeSf0wakQ6j9Eg_qOCzVNKcIVVIsukeThL0Phpd5LE';
         let tokenClient;
         let accessToken = null;
         let dadosPlanilha = null;
@@ -112,7 +112,7 @@
             document.getElementById("progressText").textContent = "Consultando Servidor";
             
             // <<< MUDE AQUI O NOME DA ABA SE NÃO FOR "Planilha1" >>>
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/Planilha1!A:D`, {
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/COAUD!A:D`, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }

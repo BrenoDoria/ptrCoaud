@@ -62,7 +62,7 @@
         }
 
         const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';
-        const FILE_ID = '1q9RCwJ4P--QIH4kkMszffrN8ZwzkSsNoZtPH-Usk4Zw';
+        const FILE_ID = '1iNeSf0wakQ6j9Eg_qOCzVNKcIVVIsukeThL0Phpd5LE';
         let tokenClient;
         let accessToken = null;
         let dadosPlanilha = null;
@@ -113,7 +113,7 @@
             document.getElementById("spinner").style.display = "inline-block";
             document.getElementById("progressText").textContent = "Consultando Servidor";
 
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS_LOCAL!A:D`, {
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A:D`, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }

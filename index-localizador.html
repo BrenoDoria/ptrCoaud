@@ -6,7 +6,6 @@
     <title>Localizador de Patrimônios SIGMAS</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-  
 </head>
 <body>
     <div class="container">
@@ -29,6 +28,7 @@
                     <th>Material</th>
                     <th>Localização</th>
                     <th>Responsável</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody id="patrimonioList"></tbody>
@@ -37,7 +37,7 @@
     </div>
     <footer class="author-signature">© 2025 BrenoDoria</footer>
     <script>
-         // Usuários e permissões
+        // Usuários e permissões
         const usuarios = {
             "supervisor": { senha: "12345", permissao: "Supervisor" },
             "operador": { senha: "12345", permissao: "Operador" }
@@ -50,7 +50,7 @@
                 window.location.href = "index.html";
                 return;
             }
-       
+      
             // Verifica se o usuário tem permissão para acessar o Comparador
             if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
                 alert("Acesso negado: Você não tem permissão para acessar o Localizador de Patrimônios.");
@@ -66,7 +66,7 @@
         window.onload = () => {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
-                scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
+                scope: 'https://www.googleapis.com/auth/spreadsheets',  // Alterado para permitir escrita
                 callback: (tokenResponse) => {
                     if (tokenResponse.error) {
                         document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
@@ -163,15 +163,17 @@
                 listElement.innerHTML = "";
                 return;
             }
-            const patrimonio = dadosPlanilha.slice(1).find(row => row[0] && row[0].toString().trim().replace(/\./g, "").replace(/^0+/, "") === cleanedNrp);
+            const rowIndex = dadosPlanilha.findIndex(row => row[0] && row[0].toString().trim().replace(/\./g, "").replace(/^0+/, "") === cleanedNrp);
             listElement.innerHTML = "";
-            if (patrimonio) {
+            if (rowIndex !== -1) {
+                const patrimonio = dadosPlanilha[rowIndex];
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td>${patrimonio[0] || "N/A"}</td>
                     <td>${patrimonio[1] || "N/A"}</td>
-                    <td>${patrimonio[2] || "Não especificada"}</td>
+                    <td id="localizacao-${rowIndex}">${patrimonio[2] || "Não especificada"}</td>
                     <td>${patrimonio[3] || "Não informado"}</td>
+                    <td><button onclick="alterarLocal(${rowIndex}, '${nrp}')">Alterar Local</button></td>
                 `;
                 listElement.appendChild(row);
                 progressText.textContent = `Patrimônio ${nrp} encontrado!`;
@@ -182,9 +184,57 @@
             patrimonioInput.value = "";
             patrimonioInput.focus();
         }
-       
-       
+        function alterarLocal(rowIndex, nrp) {
+            const novoLocal = prompt("Digite o novo local para o patrimônio " + nrp + ":");
+            if (novoLocal !== null && novoLocal.trim() !== "") {
+                atualizarPlanilha(rowIndex, novoLocal);
+            }
+        }
+        function atualizarPlanilha(rowIndex, novoLocal) {
+            const linha = rowIndex + 1;  // Linha 1-based para o Google Sheets
+            const range = `SIGMAS!C${linha}`;  // Coluna C é Localização
+            document.getElementById("progressText").textContent = "Atualizando planilha...";
+            document.getElementById("progress-container").style.display = "block";
+            document.getElementById("spinner").style.display = "inline-block";
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/${range}?valueInputOption=USER_ENTERED`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    values: [[novoLocal]]
+                })
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        document.getElementById("progressText").textContent = "Token expirado, reautenticando...";
+                        localStorage.removeItem("access_token");
+                        document.getElementById("login-section").style.display = "block";
+                        document.getElementById("busca-section").style.display = "none";
+                        document.getElementById("progress-container").style.display = "none";
+                        solicitarToken();
+                        return;
+                    }
+                    const errorData = await response.json();
+                    throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(() => {
+                // Atualiza localmente e na UI
+                dadosPlanilha[rowIndex][2] = novoLocal;
+                document.getElementById(`localizacao-${rowIndex}`).textContent = novoLocal;
+                document.getElementById("progressText").textContent = "Local atualizado com sucesso!";
+                document.getElementById("spinner").style.display = "none";
+            })
+            .catch(error => {
+                console.error("Erro ao atualizar a planilha:", error);
+                document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
+                document.getElementById("spinner").style.display = "none";
+            });
+        }
     </script>
 </body>
 </html>
-

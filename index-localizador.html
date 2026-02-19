@@ -6,69 +6,6 @@
     <title>Localizador de Patrimônios SIGMAS</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <style>
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-            padding-top: 60px;
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
-        }
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        #responsavelList {
-            list-style-type: none;
-            padding: 0;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        #responsavelList li {
-            padding: 10px;
-            cursor: pointer;
-            border-bottom: 1px solid #ddd;
-        }
-        #responsavelList li:hover {
-            background-color: #f1f1f1;
-        }
-        #novoLocalInput {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-        .confirm-button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        .confirm-button:hover {
-            background-color: #0056b3;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -97,22 +34,6 @@
             <tbody id="patrimonioList"></tbody>
         </table>
         <button class="backButton" onclick="window.location.href='index.html'">Voltar</button>
-    </div>
-    <div id="responsavelModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2>Selecione o Responsável</h2>
-            <input type="text" id="responsavelSearch" placeholder="Digite pelo menos 3 letras para buscar" oninput="filterResponsaveis()">
-            <ul id="responsavelList"></ul>
-        </div>
-    </div>
-    <div id="localModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close" onclick="closeLocalModal()">&times;</span>
-            <h2>Alterar Local</h2>
-            <input type="text" id="novoLocalInput" placeholder="Digite o novo local">
-            <button class="confirm-button" onclick="confirmarNovoLocal()">Confirmar</button>
-        </div>
     </div>
     <footer class="author-signature">© 2025 BrenoDoria</footer>
     <script>
@@ -145,8 +66,6 @@
         let responsaveisUnicos = new Set();
         let sheetIdSigmas = null;
         let sheetIdCoaud = null;
-        let currentRowIndex = null;
-        let currentNrp = null;
         window.onload = () => {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
@@ -300,22 +219,9 @@
             patrimonioInput.focus();
         }
         function alterarLocal(rowIndex, nrp) {
-            currentRowIndex = rowIndex;
-            currentNrp = nrp;
-            document.getElementById('localModal').style.display = 'block';
-            document.getElementById('novoLocalInput').value = '';
-            document.getElementById('novoLocalInput').focus();
-        }
-        function closeLocalModal() {
-            document.getElementById('localModal').style.display = 'none';
-        }
-        function confirmarNovoLocal() {
-            const novoLocal = document.getElementById('novoLocalInput').value.trim();
-            if (novoLocal !== "") {
-                atualizarLocal(currentRowIndex, novoLocal);
-                closeLocalModal();
-            } else {
-                alert('Por favor, digite um local válido.');
+            const novoLocal = prompt("Digite o novo local para o patrimônio " + nrp + ":");
+            if (novoLocal !== null && novoLocal.trim() !== "") {
+                atualizarLocal(rowIndex, novoLocal);
             }
         }
         function atualizarLocal(rowIndex, novoLocal) {
@@ -364,42 +270,30 @@
             });
         }
         function alterarResponsavel(rowIndex, nrp) {
-            currentRowIndex = rowIndex;
-            currentNrp = nrp;
-            document.getElementById('responsavelModal').style.display = 'block';
-            document.getElementById('responsavelSearch').value = '';
-            filterResponsaveis();
-            document.getElementById('responsavelSearch').focus();
-        }
-        function closeModal() {
-            document.getElementById('responsavelModal').style.display = 'none';
-        }
-        function filterResponsaveis() {
-            const search = document.getElementById('responsavelSearch').value.trim().toLowerCase();
-            const list = document.getElementById('responsavelList');
-            list.innerHTML = '';
-            if (search.length < 3) {
-                const li = document.createElement('li');
-                li.textContent = 'Digite 3 ou mais letras para ver sugestões.';
-                list.appendChild(li);
-                return;
+            let search = prompt("Digite pelo menos 3 letras do nome do responsável para filtrar:");
+            if (search === null) return;
+            search = search.trim().toLowerCase();
+            while (search.length < 3) {
+                alert("Por favor, digite pelo menos 3 letras.");
+                search = prompt("Digite pelo menos 3 letras do nome do responsável para filtrar:");
+                if (search === null) return;
+                search = search.trim().toLowerCase();
             }
             const filtered = Array.from(responsaveisUnicos).filter(name => name.toLowerCase().includes(search)).sort();
             if (filtered.length === 0) {
-                const li = document.createElement('li');
-                li.textContent = 'Nenhum responsável encontrado.';
-                list.appendChild(li);
-            } else {
-                filtered.forEach(name => {
-                    const li = document.createElement('li');
-                    li.textContent = name;
-                    li.onclick = () => {
-                        closeModal();
-                        atualizarResponsavel(currentRowIndex, name, currentNrp);
-                    };
-                    list.appendChild(li);
-                });
+                alert("Nenhum responsável encontrado com esses termos.");
+                return;
             }
+            const listaStr = filtered.map((n, i) => `${i + 1}. ${n}`).join('\n');
+            const escolha = prompt(`Selecione o responsável:\n${listaStr}\nDigite o número:`);
+            if (escolha === null) return;
+            const num = parseInt(escolha, 10);
+            if (isNaN(num) || num < 1 || num > filtered.length) {
+                alert("Seleção inválida.");
+                return;
+            }
+            const novoResp = filtered[num - 1];
+            atualizarResponsavel(rowIndex, novoResp, nrp);
         }
         function atualizarResponsavel(rowIndex, novoResp, nrp) {
             document.getElementById("progressText").textContent = "Atualizando planilha...";

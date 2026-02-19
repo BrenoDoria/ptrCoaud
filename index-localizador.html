@@ -107,6 +107,7 @@
         const FILE_ID = '1iNeSf0wakQ6j9Eg_qOCzVNKcIVVIsukeThL0Phpd5LE';
         let tokenClient;
         let accessToken = null;
+        let userEmail = null;
         let dadosPlanilha = null;
         let responsaveisUnicos = new Set();
         let sheetIdSigmas = null;
@@ -117,7 +118,7 @@
         window.onload = () => {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
-                scope: 'https://www.googleapis.com/auth/spreadsheets',  // Alterado para permitir escrita
+                scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email',
                 callback: (tokenResponse) => {
                     if (tokenResponse.error) {
                         document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
@@ -126,6 +127,7 @@
                     }
                     accessToken = tokenResponse.access_token;
                     localStorage.setItem("access_token", accessToken);
+                    loadUserEmail();
                     document.getElementById("progressText").textContent = "Autenticado com sucesso! Carregando dados...";
                     document.getElementById("progress-container").style.display = "block";
                     document.getElementById("login-section").style.display = "none";
@@ -136,6 +138,7 @@
             const savedToken = localStorage.getItem("access_token");
             if (savedToken) {
                 accessToken = savedToken;
+                loadUserEmail();
                 document.getElementById("login-section").style.display = "none";
                 document.getElementById("busca-section").style.display = "block";
                 document.getElementById("progress-container").style.display = "block";
@@ -149,17 +152,42 @@
                 }
             });
         };
+        function loadUserEmail() {
+            fetch('https://www.googleapis.com/userinfo/v2/me', {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                userEmail = data.email;
+            })
+            .catch(error => {
+                console.error("Erro ao carregar email do usuário:", error);
+                document.getElementById("progressText").textContent = "Erro ao carregar email do usuário.";
+            });
+        }
         function solicitarToken() {
             tokenClient.requestAccessToken();
         }
         function refreshResponsaveis() {
             responsaveisUnicos = new Set(dadosPlanilha.slice(1).map(row => row[3] ? row[3].trim() : '').filter(t => t));
         }
+        function getLog(type) {
+            if (!userEmail) {
+                alert("Email do usuário não disponível.");
+                return "";
+            }
+            const now = new Date();
+            const date = now.toLocaleDateString('pt-BR');
+            const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            return `alterado: "${type}" data: ${date} hora: ${time}hs pelo operador: ${userEmail}`;
+        }
         function carregarPatrimoniosDoSheets(retryCount = 0) {
             const maxRetries = 3;
             document.getElementById("spinner").style.display = "inline-block";
             document.getElementById("progressText").textContent = "Consultando Servidor";
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A:D`, {
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A:E`, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }
@@ -180,7 +208,7 @@
                         return;
                     } else if (response.status === 400) {
                         const errorData = await response.json();
-                        throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || "Intervalo inválido. Verifique se a aba SIGMAS contém dados em A:D."}`);
+                        throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || "Intervalo inválido. Verifique se a aba SIGMAS contém dados em A:E."}`);
                     }
                     const errorData = await response.json();
                     throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
@@ -303,18 +331,29 @@
         }
         function atualizarLocal(rowIndex, novoLocal) {
             const linha = rowIndex + 1;  // Linha 1-based para o Google Sheets
-            const range = `SIGMAS!C${linha}`;  // Coluna C é Localização
+            const log = getLog('sala');
+            if (!log) return;
             document.getElementById("progressText").textContent = "Atualizando planilha...";
             document.getElementById("progress-container").style.display = "block";
             document.getElementById("spinner").style.display = "inline-block";
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/${range}?valueInputOption=USER_ENTERED`, {
-                method: 'PUT',
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
+                method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    values: [[novoLocal]]
+                    valueInputOption: 'USER_ENTERED',
+                    data: [
+                        {
+                            range: `SIGMAS!C${linha}`,
+                            values: [[novoLocal]]
+                        },
+                        {
+                            range: `SIGMAS!E${linha}`,
+                            values: [[log]]
+                        }
+                    ]
                 })
             })
             .then(async response => {
@@ -336,6 +375,7 @@
             .then(() => {
                 // Atualiza localmente e na UI
                 dadosPlanilha[rowIndex][2] = novoLocal;
+                dadosPlanilha[rowIndex][4] = log;
                 document.getElementById(`localizacao-${rowIndex}`).textContent = novoLocal;
                 document.getElementById("progressText").textContent = "Local atualizado com sucesso!";
                 document.getElementById("spinner").style.display = "none";
@@ -377,10 +417,13 @@
             document.getElementById("progressText").textContent = "Atualizando planilha...";
             document.getElementById("progress-container").style.display = "block";
             document.getElementById("spinner").style.display = "inline-block";
+            const log = getLog('responsavel');
+            if (!log) return;
             const isMove = novoResp === "ALBERTO CESAR SOUZA ALMEIDA (5302)" || novoResp === "PAULO FERNANDO VOLPE (5933)";
             if (isMove) {
                 let rowData = [...dadosPlanilha[rowIndex]];
                 rowData[3] = novoResp;
+                rowData[4] = log;
                 fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/COAUD!A1:append?valueInputOption=USER_ENTERED`, {
                     method: 'POST',
                     headers: {
@@ -437,15 +480,24 @@
                 });
             } else {
                 const linha = rowIndex + 1;
-                const range = `SIGMAS!D${linha}`;
-                fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/${range}?valueInputOption=USER_ENTERED`, {
-                    method: 'PUT',
+                fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
+                    method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        values: [[novoResp]]
+                        valueInputOption: 'USER_ENTERED',
+                        data: [
+                            {
+                                range: `SIGMAS!D${linha}`,
+                                values: [[novoResp]]
+                            },
+                            {
+                                range: `SIGMAS!E${linha}`,
+                                values: [[log]]
+                            }
+                        ]
                     })
                 })
                 .then(async response => {
@@ -466,6 +518,7 @@
                 })
                 .then(() => {
                     dadosPlanilha[rowIndex][3] = novoResp;
+                    dadosPlanilha[rowIndex][4] = log;
                     document.getElementById(`responsavel-${rowIndex}`).textContent = novoResp;
                     refreshResponsaveis();
                     document.getElementById("progressText").textContent = "Responsável atualizado com sucesso!";

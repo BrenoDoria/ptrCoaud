@@ -53,6 +53,21 @@
         #responsavelList li:hover {
             background-color: #f1f1f1;
         }
+        #novoLocalInput {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .confirm-button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .confirm-button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -89,6 +104,14 @@
             <h2>Selecione o Responsável</h2>
             <input type="text" id="responsavelSearch" placeholder="Digite pelo menos 3 letras para buscar" oninput="filterResponsaveis()">
             <ul id="responsavelList"></ul>
+        </div>
+    </div>
+    <div id="localModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeLocalModal()">&times;</span>
+            <h2>Alterar Local</h2>
+            <input type="text" id="novoLocalInput" placeholder="Digite o novo local">
+            <button class="confirm-button" onclick="confirmarNovoLocal()">Confirmar</button>
         </div>
     </div>
     <footer class="author-signature">© 2025 BrenoDoria</footer>
@@ -277,12 +300,25 @@
             patrimonioInput.focus();
         }
         function alterarLocal(rowIndex, nrp) {
-            const novoLocal = prompt("Digite o novo local para o patrimônio " + nrp + ":");
-            if (novoLocal !== null && novoLocal.trim() !== "") {
-                atualizarPlanilha(rowIndex, novoLocal);
+            currentRowIndex = rowIndex;
+            currentNrp = nrp;
+            document.getElementById('localModal').style.display = 'block';
+            document.getElementById('novoLocalInput').value = '';
+            document.getElementById('novoLocalInput').focus();
+        }
+        function closeLocalModal() {
+            document.getElementById('localModal').style.display = 'none';
+        }
+        function confirmarNovoLocal() {
+            const novoLocal = document.getElementById('novoLocalInput').value.trim();
+            if (novoLocal !== "") {
+                atualizarLocal(currentRowIndex, novoLocal);
+                closeLocalModal();
+            } else {
+                alert('Por favor, digite um local válido.');
             }
         }
-        function atualizarPlanilha(rowIndex, novoLocal) {
+        function atualizarLocal(rowIndex, novoLocal) {
             const linha = rowIndex + 1;  // Linha 1-based para o Google Sheets
             const range = `SIGMAS!C${linha}`;  // Coluna C é Localização
             document.getElementById("progressText").textContent = "Atualizando planilha...";

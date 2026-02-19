@@ -6,6 +6,37 @@
     <title>Localizador de Patrimônios SIGMAS</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        #editor-section {
+            display: none;
+            margin-top: 20px;
+        }
+        #local-editor, #responsavel-editor {
+            display: none;
+        }
+        #responsavel-list {
+            list-style-type: none;
+            padding: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #responsavel-list li {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #ccc;
+        }
+        #responsavel-list li:hover {
+            background-color: #eee;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            table {
+                font-size: 12px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -33,6 +64,20 @@
             </thead>
             <tbody id="patrimonioList"></tbody>
         </table>
+        <div id="editor-section">
+            <div id="local-editor">
+                <h3>Alterar Local</h3>
+                <input type="text" id="novoLocalInput" placeholder="Digite o novo local">
+                <button onclick="confirmarNovoLocal()">Confirmar</button>
+                <button onclick="cancelarEdicao()">Cancelar</button>
+            </div>
+            <div id="responsavel-editor">
+                <h3>Alterar Responsável</h3>
+                <input type="text" id="responsavelSearch" placeholder="Digite pelo menos 3 letras para buscar" oninput="filterResponsaveis()">
+                <ul id="responsavel-list"></ul>
+                <button onclick="cancelarEdicao()">Cancelar</button>
+            </div>
+        </div>
         <button class="backButton" onclick="window.location.href='index.html'">Voltar</button>
     </div>
     <footer class="author-signature">© 2025 BrenoDoria</footer>
@@ -66,6 +111,9 @@
         let responsaveisUnicos = new Set();
         let sheetIdSigmas = null;
         let sheetIdCoaud = null;
+        let currentRowIndex = null;
+        let currentNrp = null;
+        let currentEditor = null;
         window.onload = () => {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
@@ -205,8 +253,8 @@
                     <td id="localizacao-${rowIndex}">${patrimonio[2] || "Não especificada"}</td>
                     <td id="responsavel-${rowIndex}">${patrimonio[3] || "Não informado"}</td>
                     <td>
-                        <button onclick="alterarLocal(${rowIndex}, '${nrp}')">Alterar Local</button>
-                        <button onclick="alterarResponsavel(${rowIndex}, '${nrp}')">Alterar Responsável</button>
+                        <button onclick="mostrarEditorLocal(${rowIndex}, '${nrp}')">Alterar Local</button>
+                        <button onclick="mostrarEditorResponsavel(${rowIndex}, '${nrp}')">Alterar Responsável</button>
                     </td>
                 `;
                 listElement.appendChild(row);
@@ -218,10 +266,39 @@
             patrimonioInput.value = "";
             patrimonioInput.focus();
         }
-        function alterarLocal(rowIndex, nrp) {
-            const novoLocal = prompt("Digite o novo local para o patrimônio " + nrp + ":");
-            if (novoLocal !== null && novoLocal.trim() !== "") {
-                atualizarLocal(rowIndex, novoLocal);
+        function mostrarEditorLocal(rowIndex, nrp) {
+            currentRowIndex = rowIndex;
+            currentNrp = nrp;
+            currentEditor = 'local';
+            document.getElementById('editor-section').style.display = 'block';
+            document.getElementById('local-editor').style.display = 'block';
+            document.getElementById('responsavel-editor').style.display = 'none';
+            document.getElementById('novoLocalInput').value = '';
+            document.getElementById('novoLocalInput').focus();
+        }
+        function mostrarEditorResponsavel(rowIndex, nrp) {
+            currentRowIndex = rowIndex;
+            currentNrp = nrp;
+            currentEditor = 'responsavel';
+            document.getElementById('editor-section').style.display = 'block';
+            document.getElementById('local-editor').style.display = 'none';
+            document.getElementById('responsavel-editor').style.display = 'block';
+            document.getElementById('responsavelSearch').value = '';
+            filterResponsaveis();
+            document.getElementById('responsavelSearch').focus();
+        }
+        function cancelarEdicao() {
+            document.getElementById('editor-section').style.display = 'none';
+            document.getElementById('local-editor').style.display = 'none';
+            document.getElementById('responsavel-editor').style.display = 'none';
+        }
+        function confirmarNovoLocal() {
+            const novoLocal = document.getElementById('novoLocalInput').value.trim();
+            if (novoLocal !== "") {
+                atualizarLocal(currentRowIndex, novoLocal);
+                cancelarEdicao();
+            } else {
+                alert('Por favor, digite um local válido.');
             }
         }
         function atualizarLocal(rowIndex, novoLocal) {
@@ -269,31 +346,32 @@
                 document.getElementById("spinner").style.display = "none";
             });
         }
-        function alterarResponsavel(rowIndex, nrp) {
-            let search = prompt("Digite pelo menos 3 letras do nome do responsável para filtrar:");
-            if (search === null) return;
-            search = search.trim().toLowerCase();
-            while (search.length < 3) {
-                alert("Por favor, digite pelo menos 3 letras.");
-                search = prompt("Digite pelo menos 3 letras do nome do responsável para filtrar:");
-                if (search === null) return;
-                search = search.trim().toLowerCase();
+        function filterResponsaveis() {
+            const search = document.getElementById('responsavelSearch').value.trim().toLowerCase();
+            const list = document.getElementById('responsavel-list');
+            list.innerHTML = '';
+            if (search.length < 3) {
+                const li = document.createElement('li');
+                li.textContent = 'Digite 3 ou mais letras para ver sugestões.';
+                list.appendChild(li);
+                return;
             }
             const filtered = Array.from(responsaveisUnicos).filter(name => name.toLowerCase().includes(search)).sort();
             if (filtered.length === 0) {
-                alert("Nenhum responsável encontrado com esses termos.");
-                return;
+                const li = document.createElement('li');
+                li.textContent = 'Nenhum responsável encontrado.';
+                list.appendChild(li);
+            } else {
+                filtered.forEach(name => {
+                    const li = document.createElement('li');
+                    li.textContent = name;
+                    li.onclick = () => {
+                        atualizarResponsavel(currentRowIndex, name, currentNrp);
+                        cancelarEdicao();
+                    };
+                    list.appendChild(li);
+                });
             }
-            const listaStr = filtered.map((n, i) => `${i + 1}. ${n}`).join('\n');
-            const escolha = prompt(`Selecione o responsável:\n${listaStr}\nDigite o número:`);
-            if (escolha === null) return;
-            const num = parseInt(escolha, 10);
-            if (isNaN(num) || num < 1 || num > filtered.length) {
-                alert("Seleção inválida.");
-                return;
-            }
-            const novoResp = filtered[num - 1];
-            atualizarResponsavel(rowIndex, novoResp, nrp);
         }
         function atualizarResponsavel(rowIndex, novoResp, nrp) {
             document.getElementById("progressText").textContent = "Atualizando planilha...";

@@ -379,7 +379,8 @@
             document.getElementById("spinner").style.display = "inline-block";
             const isMove = novoResp === "ALBERTO CESAR SOUZA ALMEIDA (5302)" || novoResp === "PAULO FERNANDO VOLPE (5933)";
             if (isMove) {
-                const rowData = dadosPlanilha[rowIndex];
+                let rowData = [...dadosPlanilha[rowIndex]];
+                rowData[3] = novoResp;
                 fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/COAUD!A1:append?valueInputOption=USER_ENTERED`, {
                     method: 'POST',
                     headers: {

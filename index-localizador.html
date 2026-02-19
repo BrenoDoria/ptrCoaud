@@ -63,6 +63,9 @@
         let tokenClient;
         let accessToken = null;
         let dadosPlanilha = null;
+        let responsaveisUnicos = new Set();
+        let sheetIdSigmas = null;
+        let sheetIdCoaud = null;
         window.onload = () => {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
@@ -134,8 +137,33 @@
                 return response.json();
             })
             .then(data => {
-                document.getElementById("progressText").textContent = "AUTORIZADA CONSULTA";
                 dadosPlanilha = data.values || [];
+                responsaveisUnicos = new Set(dadosPlanilha.slice(1).map(row => row[3]?.trim()).filter(t => t));
+                return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Erro ao carregar metadados: ${errorData.error?.message || response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(meta => {
+                meta.sheets.forEach(sheet => {
+                    if (sheet.properties.title === 'SIGMAS') {
+                        sheetIdSigmas = sheet.properties.sheetId;
+                    } else if (sheet.properties.title === 'COAUD') {
+                        sheetIdCoaud = sheet.properties.sheetId;
+                    }
+                });
+                if (!sheetIdSigmas || !sheetIdCoaud) {
+                    throw new Error('Abas SIGMAS ou COAUD não encontradas.');
+                }
+                document.getElementById("progressText").textContent = "AUTORIZADA CONSULTA";
                 document.getElementById("spinner").style.display = "none";
                 document.getElementById("patrimonioTable").style.display = "table";
             })
@@ -172,8 +200,11 @@
                     <td>${patrimonio[0] || "N/A"}</td>
                     <td>${patrimonio[1] || "N/A"}</td>
                     <td id="localizacao-${rowIndex}">${patrimonio[2] || "Não especificada"}</td>
-                    <td>${patrimonio[3] || "Não informado"}</td>
-                    <td><button onclick="alterarLocal(${rowIndex}, '${nrp}')">Alterar Local</button></td>
+                    <td id="responsavel-${rowIndex}">${patrimonio[3] || "Não informado"}</td>
+                    <td>
+                        <button onclick="alterarLocal(${rowIndex}, '${nrp}')">Alterar Local</button>
+                        <button onclick="alterarResponsavel(${rowIndex}, '${nrp}')">Alterar Responsável</button>
+                    </td>
                 `;
                 listElement.appendChild(row);
                 progressText.textContent = `Patrimônio ${nrp} encontrado!`;
@@ -234,6 +265,127 @@
                 document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
                 document.getElementById("spinner").style.display = "none";
             });
+        }
+        function alterarResponsavel(rowIndex, nrp) {
+            const lista = Array.from(responsaveisUnicos).sort();
+            if (lista.length === 0) {
+                alert('Nenhum responsável disponível.');
+                return;
+            }
+            const listaStr = lista.map((n, i) => `${i + 1}. ${n}`).join('\n');
+            const escolha = prompt(`Selecione o responsável:\n${listaStr}\nDigite o número:`);
+            const num = parseInt(escolha, 10);
+            if (isNaN(num) || num < 1 || num > lista.length) {
+                alert('Seleção inválida.');
+                return;
+            }
+            const novoResp = lista[num - 1];
+            atualizarResponsavel(rowIndex, novoResp, nrp);
+        }
+        function atualizarResponsavel(rowIndex, novoResp, nrp) {
+            document.getElementById("progressText").textContent = "Atualizando planilha...";
+            document.getElementById("progress-container").style.display = "block";
+            document.getElementById("spinner").style.display = "inline-block";
+            const isMove = novoResp === "ALBERTO CESAR SOUZA ALMEIDA (5302)" || novoResp === "PAULO FERNANDO VOLPE (5933)";
+            if (isMove) {
+                const rowData = dadosPlanilha[rowIndex];
+                fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/COAUD!A1:append?valueInputOption=USER_ENTERED`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        values: [rowData]
+                    })
+                })
+                .then(async response => {
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Erro ao append: ${errorData.error?.message || response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}:batchUpdate`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            requests: [{
+                                deleteDimension: {
+                                    range: {
+                                        sheetId: sheetIdSigmas,
+                                        dimension: 'ROWS',
+                                        startIndex: rowIndex,
+                                        endIndex: rowIndex + 1
+                                    }
+                                }
+                            }]
+                        })
+                    });
+                })
+                .then(async response => {
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Erro ao delete: ${errorData.error?.message || response.statusText}`);
+                    }
+                    dadosPlanilha.splice(rowIndex, 1);
+                    responsaveisUnicos.delete(rowData[3]?.trim());
+                    document.getElementById("patrimonioList").innerHTML = '';
+                    document.getElementById("progressText").textContent = `Patrimônio ${nrp} movido para COAUD!`;
+                    document.getElementById("spinner").style.display = "none";
+                })
+                .catch(error => {
+                    console.error("Erro ao mover patrimônio:", error);
+                    document.getElementById("progressText").textContent = "Erro ao mover: " + error.message;
+                    document.getElementById("spinner").style.display = "none";
+                });
+            } else {
+                const linha = rowIndex + 1;
+                const range = `SIGMAS!D${linha}`;
+                const oldResp = dadosPlanilha[rowIndex][3];
+                fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/${range}?valueInputOption=USER_ENTERED`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        values: [[novoResp]]
+                    })
+                })
+                .then(async response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            document.getElementById("progressText").textContent = "Token expirado, reautenticando...";
+                            localStorage.removeItem("access_token");
+                            document.getElementById("login-section").style.display = "block";
+                            document.getElementById("busca-section").style.display = "none";
+                            document.getElementById("progress-container").style.display = "none";
+                            solicitarToken();
+                            return;
+                        }
+                        const errorData = await response.json();
+                        throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    dadosPlanilha[rowIndex][3] = novoResp;
+                    document.getElementById(`responsavel-${rowIndex}`).textContent = novoResp;
+                    responsaveisUnicos.add(novoResp.trim());
+                    document.getElementById("progressText").textContent = "Responsável atualizado com sucesso!";
+                    document.getElementById("spinner").style.display = "none";
+                })
+                .catch(error => {
+                    console.error("Erro ao atualizar responsável:", error);
+                    document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
+                    document.getElementById("spinner").style.display = "none";
+                });
+            }
         }
     </script>
 </body>

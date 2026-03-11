@@ -346,4 +346,12 @@
             document.getElementById("progress-container").style.display = "block";
             document.getElementById("spinner").style.display = "inline-block";
             fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
-                method
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    valueInputOption: 'USER_ENTERED',
+                    data: [
+                       

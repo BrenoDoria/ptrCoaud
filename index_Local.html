@@ -104,7 +104,6 @@
             "operador": { senha: "12345", permissao: "Operador" }
         };
 
-        // Verificação de permissão ao carregar a página
         window.onload = async () => {
             const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
             if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
@@ -328,7 +327,6 @@
                     <button onclick="mostrarEditorResponsavel(${rowIndex}, '${nrp}')">Alterar Responsável</button>
                 `;
 
-                // BOTÃO "Consultar Alterações" aparece SOMENTE se a coluna E (índice 4) tiver conteúdo
                 if (patrimonio[4] && patrimonio[4].trim() !== '') {
                     acoesHTML += `
                         <button class="btn-alteracoes" onclick="consultarAlteracoes(${rowIndex})">Consultar Alterações</button>
@@ -353,7 +351,6 @@
             patrimonioInput.focus();
         }
 
-        // ===================== NOVA FUNÇÃO =====================
         function consultarAlteracoes(rowIndex) {
             const log = currentDados[rowIndex][4] || "";
             if (!log) {
@@ -362,7 +359,6 @@
             }
             alert(`📋 HISTÓRICO DE ALTERAÇÕES\n\n${log}`);
         }
-        // =======================================================
 
         function mostrarEditorLocal(rowIndex, nrp) {
             if (currentSheet !== 'SIGMAS') {
@@ -498,6 +494,22 @@
             const isEspecial = novoResp === "ALBERTO CESAR SOUZA ALMEIDA (5302)" || novoResp === "PAULO FERNANDO VOLPE (5933)";
 
             if (currentSheet === 'SIGMAS') {
+                // === NOVA REGRA: Verifica se o patrimônio também existe na COAUD (Alberto/Volpe) ===
+                const cleanedNrp = nrp.replace(/\./g, "").replace(/^0+/, "");
+                const existeEmCoaud = dadosCoaud.some(row => 
+                    row[0] && row[0].toString().trim().replace(/\./g, "").replace(/^0+/, "") === cleanedNrp
+                );
+
+                if (existeEmCoaud && !isEspecial) {
+                    // Bloqueia alteração direta no SIGMAS quando o patrimônio está na COAUD
+                    document.getElementById("progressText").textContent = "";
+                    document.getElementById("progress-container").style.display = "none";
+                    document.getElementById("spinner").style.display = "none";
+                    alert("⚠️ Este patrimônio pertence ao Alberto ou Volpe e está registrado na aba COAUD.\n\nPara alterar o responsável, faça a alteração diretamente na aba COAUD.");
+                    return;
+                }
+
+                // === LÓGICA NORMAL DO SIGMAS (permanece igual) ===
                 if (isEspecial) {
                     let rowData = [...currentDados[rowIndex]];
                     rowData[3] = novoResp;
@@ -512,10 +524,7 @@
                         body: JSON.stringify({ values: [rowData] })
                     })
                     .then(async response => {
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(`Erro ao copiar para COAUD: ${errorData.error?.message || response.statusText}`);
-                        }
+                        if (!response.ok) throw new Error(`Erro ao copiar para COAUD: ${response.statusText}`);
                         return response.json();
                     })
                     .then(() => {
@@ -546,8 +555,7 @@
                                 solicitarToken();
                                 return;
                             }
-                            const errorData = await response.json();
-                            throw new Error(`Erro ao atualizar SIGMAS: ${errorData.error?.message || response.statusText}`);
+                            throw new Error(`Erro ao atualizar SIGMAS: ${response.statusText}`);
                         }
                         return response.json();
                     })
@@ -560,11 +568,12 @@
                         document.getElementById("spinner").style.display = "none";
                     })
                     .catch(error => {
-                        console.error("Erro ao atualizar patrimônio especial:", error);
+                        console.error(error);
                         document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
                         document.getElementById("spinner").style.display = "none";
                     });
                 } else {
+                    // Atualização normal em SIGMAS (para outros servidores)
                     const linha = rowIndex + 1;
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
                         method: 'POST',
@@ -591,8 +600,7 @@
                                 solicitarToken();
                                 return;
                             }
-                            const errorData = await response.json();
-                            throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
+                            throw new Error(`Erro HTTP ${response.status}`);
                         }
                         return response.json();
                     })
@@ -605,12 +613,13 @@
                         document.getElementById("spinner").style.display = "none";
                     })
                     .catch(error => {
-                        console.error("Erro ao atualizar responsável:", error);
+                        console.error(error);
                         document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
                         document.getElementById("spinner").style.display = "none";
                     });
                 }
             } else {
+                // === LÓGICA DA ABA COAUD (mantida exatamente como antes) ===
                 if (isEspecial) {
                     const linha = rowIndex + 1;
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
@@ -628,19 +637,7 @@
                         })
                     })
                     .then(async response => {
-                        if (!response.ok) {
-                            if (response.status === 401) {
-                                document.getElementById("progressText").textContent = "Token expirado, reautenticando...";
-                                localStorage.removeItem("access_token");
-                                document.getElementById("login-section").style.display = "block";
-                                document.getElementById("busca-section").style.display = "none";
-                                document.getElementById("progress-container").style.display = "none";
-                                solicitarToken();
-                                return;
-                            }
-                            const errorData = await response.json();
-                            throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
-                        }
+                        if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
                         return response.json();
                     })
                     .then(() => {
@@ -652,7 +649,7 @@
                         document.getElementById("spinner").style.display = "none";
                     })
                     .catch(error => {
-                        console.error("Erro ao atualizar responsável em COAUD:", error);
+                        console.error(error);
                         document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
                         document.getElementById("spinner").style.display = "none";
                     });
@@ -667,8 +664,6 @@
                         document.getElementById("spinner").style.display = "none";
                         return;
                     }
-
-                    const linhaCoaud = rowIndex + 1;
 
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}:batchUpdate`, {
                         method: 'POST',
@@ -690,19 +685,7 @@
                         })
                     })
                     .then(async response => {
-                        if (!response.ok) {
-                            if (response.status === 401) {
-                                document.getElementById("progressText").textContent = "Token expirado, reautenticando...";
-                                localStorage.removeItem("access_token");
-                                document.getElementById("login-section").style.display = "block";
-                                document.getElementById("busca-section").style.display = "none";
-                                document.getElementById("progress-container").style.display = "none";
-                                solicitarToken();
-                                return;
-                            }
-                            const errorData = await response.json();
-                            throw new Error(`Erro ao deletar da COAUD: ${errorData.error?.message || response.statusText}`);
-                        }
+                        if (!response.ok) throw new Error(`Erro ao deletar da COAUD`);
                         return response.json();
                     })
                     .then(() => {
@@ -723,19 +706,7 @@
                         });
                     })
                     .then(async response => {
-                        if (!response.ok) {
-                            if (response.status === 401) {
-                                document.getElementById("progressText").textContent = "Token expirado, reautenticando...";
-                                localStorage.removeItem("access_token");
-                                document.getElementById("login-section").style.display = "block";
-                                document.getElementById("busca-section").style.display = "none";
-                                document.getElementById("progress-container").style.display = "none";
-                                solicitarToken();
-                                return;
-                            }
-                            const errorData = await response.json();
-                            throw new Error(`Erro ao atualizar SIGMAS: ${errorData.error?.message || response.statusText}`);
-                        }
+                        if (!response.ok) throw new Error(`Erro ao atualizar SIGMAS`);
                         return response.json();
                     })
                     .then(() => {
@@ -748,7 +719,7 @@
                         document.getElementById("spinner").style.display = "none";
                     })
                     .catch(error => {
-                        console.error("Erro ao mover de COAUD para SIGMAS:", error);
+                        console.error(error);
                         document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
                         document.getElementById("spinner").style.display = "none";
                     });

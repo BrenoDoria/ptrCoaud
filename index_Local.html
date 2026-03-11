@@ -418,10 +418,7 @@
         }
 
         function mostrarEditorLocal(rowIndex, nrp) {
-            if (currentSheet !== 'SIGMAS') {
-                alert('Alteração de localização disponível apenas na aba SIGMAS.');
-                return;
-            }
+            // REMOVIDO O BLOQUEIO → agora permite alterar local na COAUD também
             currentRowIndex = rowIndex;
             currentNrp = nrp;
             currentEditor = 'local';
@@ -461,9 +458,11 @@
         }
 
         function atualizarLocal(rowIndex, novoLocal) {
+            const sheetName = currentSheet; // 'SIGMAS' ou 'COAUD'
             const linha = rowIndex + 1;
             const log = getLog('sala');
             if (!log) return;
+
             document.getElementById("progressText").textContent = "Atualizando planilha...";
             document.getElementById("progress-container").style.display = "block";
             document.getElementById("spinner").style.display = "inline-block";
@@ -477,8 +476,8 @@
                 body: JSON.stringify({
                     valueInputOption: 'USER_ENTERED',
                     data: [
-                        { range: `SIGMAS!C${linha}`, values: [[novoLocal]] },
-                        { range: `SIGMAS!E${linha}`, values: [[log]] }
+                        { range: `${sheetName}!C${linha}`, values: [[novoLocal]] },
+                        { range: `${sheetName}!E${linha}`, values: [[log]] }
                     ]
                 })
             })
@@ -499,14 +498,14 @@
                 return response.json();
             })
             .then(() => {
-                dadosSigmas[rowIndex][2] = novoLocal;
-                dadosSigmas[rowIndex][4] = log;
+                currentDados[rowIndex][2] = novoLocal;
+                currentDados[rowIndex][4] = log;
                 document.getElementById(`localizacao-${rowIndex}`).textContent = novoLocal;
                 document.getElementById("progressText").textContent = "Local atualizado com sucesso!";
                 document.getElementById("spinner").style.display = "none";
             })
             .catch(error => {
-                console.error("Erro ao atualizar a planilha:", error);
+                console.error("Erro ao atualizar local:", error);
                 document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
                 document.getElementById("spinner").style.display = "none";
             });
@@ -672,6 +671,7 @@
                     });
                 }
             } else {
+                // === COAUD ===
                 if (isEspecial) {
                     const linha = rowIndex + 1;
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {

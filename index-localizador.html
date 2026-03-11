@@ -95,14 +95,13 @@
                 window.location.href = "index.html";
                 return;
             }
-      
+     
             // Verifica se o usuário tem permissão para acessar o Comparador
             if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
                 alert("Acesso negado: Você não tem permissão para acessar o Localizador de Patrimônios.");
                 window.location.href = "index.html";
                 return;
             }
-
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email',
@@ -340,207 +339,11 @@
             }
         }
         function atualizarLocal(rowIndex, novoLocal) {
-            const linha = rowIndex + 1;  // Linha 1-based para o Google Sheets
+            const linha = rowIndex + 1; // Linha 1-based para o Google Sheets
             const log = getLog('sala');
             if (!log) return;
             document.getElementById("progressText").textContent = "Atualizando planilha...";
             document.getElementById("progress-container").style.display = "block";
             document.getElementById("spinner").style.display = "inline-block";
             fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    valueInputOption: 'USER_ENTERED',
-                    data: [
-                        {
-                            range: `SIGMAS!C${linha}`,
-                            values: [[novoLocal]]
-                        },
-                        {
-                            range: `SIGMAS!E${linha}`,
-                            values: [[log]]
-                        }
-                    ]
-                })
-            })
-            .then(async response => {
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        document.getElementById("progressText").textContent = "Token expirado, reautenticando...";
-                        localStorage.removeItem("access_token");
-                        document.getElementById("login-section").style.display = "block";
-                        document.getElementById("busca-section").style.display = "none";
-                        document.getElementById("progress-container").style.display = "none";
-                        solicitarToken();
-                        return;
-                    }
-                    const errorData = await response.json();
-                    throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(() => {
-                // Atualiza localmente e na UI
-                dadosPlanilha[rowIndex][2] = novoLocal;
-                dadosPlanilha[rowIndex][4] = log;
-                document.getElementById(`localizacao-${rowIndex}`).textContent = novoLocal;
-                document.getElementById("progressText").textContent = "Local atualizado com sucesso!";
-                document.getElementById("spinner").style.display = "none";
-            })
-            .catch(error => {
-                console.error("Erro ao atualizar a planilha:", error);
-                document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
-                document.getElementById("spinner").style.display = "none";
-            });
-        }
-        function filterResponsaveis() {
-            const search = document.getElementById('responsavelSearch').value.trim().toLowerCase();
-            const list = document.getElementById('responsavel-list');
-            list.innerHTML = '';
-            if (search.length < 3) {
-                const li = document.createElement('li');
-                li.textContent = 'Digite 3 ou mais letras para ver sugestões.';
-                list.appendChild(li);
-                return;
-            }
-            const filtered = Array.from(responsaveisUnicos).filter(name => name.toLowerCase().includes(search)).sort();
-            if (filtered.length === 0) {
-                const li = document.createElement('li');
-                li.textContent = 'Nenhum responsável encontrado.';
-                list.appendChild(li);
-            } else {
-                filtered.forEach(name => {
-                    const li = document.createElement('li');
-                    li.textContent = name;
-                    li.onclick = () => {
-                        atualizarResponsavel(currentRowIndex, name, currentNrp);
-                        cancelarEdicao();
-                    };
-                    list.appendChild(li);
-                });
-            }
-        }
-        function atualizarResponsavel(rowIndex, novoResp, nrp) {
-            document.getElementById("progressText").textContent = "Atualizando planilha...";
-            document.getElementById("progress-container").style.display = "block";
-            document.getElementById("spinner").style.display = "inline-block";
-            const log = getLog('responsavel');
-            if (!log) return;
-            const isMove = novoResp === "ALBERTO CESAR SOUZA ALMEIDA (5302)" || novoResp === "PAULO FERNANDO VOLPE (5933)";
-            if (isMove) {
-                let rowData = [...dadosPlanilha[rowIndex]];
-                rowData[3] = novoResp;
-                rowData[4] = log;
-                fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/COAUD!A1:append?valueInputOption=USER_ENTERED`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        values: [rowData]
-                    })
-                })
-                .then(async response => {
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`Erro ao append: ${errorData.error?.message || response.statusText}`);
-                    }
-                    return response.json();
-                })
-                .then(() => {
-                    return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}:batchUpdate`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            requests: [{
-                                deleteDimension: {
-                                    range: {
-                                        sheetId: sheetIdSigmas,
-                                        dimension: 'ROWS',
-                                        startIndex: rowIndex,
-                                        endIndex: rowIndex + 1
-                                    }
-                                }
-                            }]
-                        })
-                    });
-                })
-                .then(async response => {
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`Erro ao delete: ${errorData.error?.message || response.statusText}`);
-                    }
-                    dadosPlanilha.splice(rowIndex, 1);
-                    refreshResponsaveis();
-                    document.getElementById("patrimonioList").innerHTML = '';
-                    document.getElementById("progressText").textContent = `Patrimônio ${nrp} movido para COAUD!`;
-                    document.getElementById("spinner").style.display = "none";
-                })
-                .catch(error => {
-                    console.error("Erro ao mover patrimônio:", error);
-                    document.getElementById("progressText").textContent = "Erro ao mover: " + error.message;
-                    document.getElementById("spinner").style.display = "none";
-                });
-            } else {
-                const linha = rowIndex + 1;
-                fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        valueInputOption: 'USER_ENTERED',
-                        data: [
-                            {
-                                range: `SIGMAS!D${linha}`,
-                                values: [[novoResp]]
-                            },
-                            {
-                                range: `SIGMAS!E${linha}`,
-                                values: [[log]]
-                            }
-                        ]
-                    })
-                })
-                .then(async response => {
-                    if (!response.ok) {
-                        if (response.status === 401) {
-                            document.getElementById("progressText").textContent = "Token expirado, reautenticando...";
-                            localStorage.removeItem("access_token");
-                            document.getElementById("login-section").style.display = "block";
-                            document.getElementById("busca-section").style.display = "none";
-                            document.getElementById("progress-container").style.display = "none";
-                            solicitarToken();
-                            return;
-                        }
-                        const errorData = await response.json();
-                        throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
-                    }
-                    return response.json();
-                })
-                .then(() => {
-                    dadosPlanilha[rowIndex][3] = novoResp;
-                    dadosPlanilha[rowIndex][4] = log;
-                    document.getElementById(`responsavel-${rowIndex}`).textContent = novoResp;
-                    refreshResponsaveis();
-                    document.getElementById("progressText").textContent = "Responsável atualizado com sucesso!";
-                    document.getElementById("spinner").style.display = "none";
-                })
-                .catch(error => {
-                    console.error("Erro ao atualizar responsável:", error);
-                    document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
-                    document.getElementById("spinner").style.display = "none";
-                });
-            }
-        }
-    </script>
-</body>
-</html>
+                method

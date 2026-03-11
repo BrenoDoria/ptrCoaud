@@ -269,7 +269,7 @@
             btnBuscar.classList.add(`btn-${currentSheet.toLowerCase()}`);
 
             document.getElementById("patrimonioList").innerHTML = "";
-            document.getElementById("progressText").textContent = `Aba carregada: ${currentSheet}`;
+            document.getElementById("progressText").textContent = `Planilha carregada: ${currentSheet}`;
         }
 
         function carregarPatrimoniosDoSheets(retryCount = 0) {
@@ -399,9 +399,9 @@
                     <td>${acoesHTML}</td>
                 `;
                 listElement.appendChild(row);
-                progressText.textContent = `Patrimônio ${nrp} encontrado na aba ${currentSheet}!`;
+                progressText.textContent = `Patrimônio ${nrp} encontrado na Planilha ${currentSheet}!`;
             } else {
-                progressText.textContent = `Patrimônio ${nrp} não encontrado na aba ${currentSheet}.`;
+                progressText.textContent = `Patrimônio ${nrp} não encontrado na Planilha ${currentSheet}.`;
             }
 
             patrimonioInput.value = "";
@@ -559,7 +559,7 @@
                     document.getElementById("progressText").textContent = "";
                     document.getElementById("progress-container").style.display = "none";
                     document.getElementById("spinner").style.display = "none";
-                    alert("⚠️ Este patrimônio pertence ao Alberto ou Volpe e está registrado na aba COAUD.\n\nPara alterar o responsável, faça a alteração diretamente na aba COAUD.");
+                    alert("⚠️ Este patrimônio pertence ao Alberto ou Volpe e está registrado na Planilha COAUD.\n\nPara alterar o responsável, faça a alteração diretamente na Planilha COAUD.");
                     return;
                 }
 

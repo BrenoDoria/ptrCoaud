@@ -40,6 +40,39 @@
         .btn-alteracoes:hover {
             background-color: #0056b3;
         }
+
+        /* === CORES POR ABA === */
+        table.sigmas th {
+            background-color: #28a745 !important; /* Verde SIGMAS */
+            color: white;
+        }
+        table.coaud th {
+            background-color: #007bff !important; /* Azul COAUD */
+            color: white;
+        }
+
+        /* Botão "Consultar Alterações" também muda de cor */
+        table.sigmas .btn-alteracoes {
+            background-color: #28a745;
+        }
+        table.coaud .btn-alteracoes {
+            background-color: #007bff;
+        }
+        table.sigmas .btn-alteracoes:hover {
+            background-color: #218838;
+        }
+        table.coaud .btn-alteracoes:hover {
+            background-color: #0056b3;
+        }
+
+        /* Destaque visual no título quando troca de aba */
+        h1.sigmas {
+            color: #28a745;
+        }
+        h1.coaud {
+            color: #007bff;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 10px;
@@ -52,7 +85,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>PATRIMÔNIOS SIGMAS - LOCALIZADOR</h1>
+        <h1 id="titulo-principal">PATRIMÔNIOS SIGMAS - LOCALIZADOR</h1>
         <div id="login-section">
             <button onclick="solicitarToken()">Fazer Login com Google</button>
         </div>
@@ -111,7 +144,7 @@
                 window.location.href = "index.html";
                 return;
             }
-     
+    
             if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
                 alert("Acesso negado: Você não tem permissão para acessar o Localizador de Patrimônios.");
                 window.location.href = "index.html";
@@ -219,6 +252,17 @@
         function trocarAba() {
             currentSheet = document.getElementById('abaSelect').value;
             currentDados = currentSheet === 'SIGMAS' ? dadosSigmas : dadosCoaud;
+
+            // === Muda as cores da tabela e do título ===
+            const tabela = document.getElementById("patrimonioTable");
+            const titulo = document.getElementById("titulo-principal");
+
+            tabela.classList.remove("sigmas", "coaud");
+            tabela.classList.add(currentSheet.toLowerCase());
+
+            titulo.classList.remove("sigmas", "coaud");
+            titulo.classList.add(currentSheet.toLowerCase());
+
             document.getElementById("patrimonioList").innerHTML = "";
             document.getElementById("progressText").textContent = `Aba carregada: ${currentSheet}`;
         }
@@ -287,6 +331,11 @@
                 if (!sheetIdSigmas || !sheetIdCoaud) {
                     throw new Error('Abas SIGMAS ou COAUD não encontradas.');
                 }
+
+                // Aplica cor inicial (SIGMAS = verde)
+                document.getElementById("patrimonioTable").classList.add("sigmas");
+                document.getElementById("titulo-principal").classList.add("sigmas");
+
                 document.getElementById("progressText").textContent = "AUTORIZADA CONSULTA";
                 document.getElementById("spinner").style.display = "none";
                 document.getElementById("patrimonioTable").style.display = "table";
@@ -326,7 +375,6 @@
                     <button onclick="mostrarEditorLocal(${rowIndex}, '${nrp}')">Alterar Local</button>
                     <button onclick="mostrarEditorResponsavel(${rowIndex}, '${nrp}')">Alterar Responsável</button>
                 `;
-
                 if (patrimonio[4] && patrimonio[4].trim() !== '') {
                     acoesHTML += `
                         <button class="btn-alteracoes" onclick="consultarAlteracoes(${rowIndex})">Consultar Alterações</button>
@@ -494,14 +542,12 @@
             const isEspecial = novoResp === "ALBERTO CESAR SOUZA ALMEIDA (5302)" || novoResp === "PAULO FERNANDO VOLPE (5933)";
 
             if (currentSheet === 'SIGMAS') {
-                // === NOVA REGRA: Verifica se o patrimônio também existe na COAUD (Alberto/Volpe) ===
                 const cleanedNrp = nrp.replace(/\./g, "").replace(/^0+/, "");
-                const existeEmCoaud = dadosCoaud.some(row => 
+                const existeEmCoaud = dadosCoaud.some(row =>
                     row[0] && row[0].toString().trim().replace(/\./g, "").replace(/^0+/, "") === cleanedNrp
                 );
 
                 if (existeEmCoaud && !isEspecial) {
-                    // Bloqueia alteração direta no SIGMAS quando o patrimônio está na COAUD
                     document.getElementById("progressText").textContent = "";
                     document.getElementById("progress-container").style.display = "none";
                     document.getElementById("spinner").style.display = "none";
@@ -509,7 +555,6 @@
                     return;
                 }
 
-                // === LÓGICA NORMAL DO SIGMAS (permanece igual) ===
                 if (isEspecial) {
                     let rowData = [...currentDados[rowIndex]];
                     rowData[3] = novoResp;
@@ -573,7 +618,6 @@
                         document.getElementById("spinner").style.display = "none";
                     });
                 } else {
-                    // Atualização normal em SIGMAS (para outros servidores)
                     const linha = rowIndex + 1;
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
                         method: 'POST',
@@ -619,7 +663,6 @@
                     });
                 }
             } else {
-                // === LÓGICA DA ABA COAUD (mantida exatamente como antes) ===
                 if (isEspecial) {
                     const linha = rowIndex + 1;
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
@@ -655,10 +698,9 @@
                     });
                 } else {
                     const cleanedNrp = nrp.replace(/\./g, "").replace(/^0+/, "");
-                    const sigmasRowIndex = dadosSigmas.findIndex(row => 
+                    const sigmasRowIndex = dadosSigmas.findIndex(row =>
                         row[0] && row[0].toString().trim().replace(/\./g, "").replace(/^0+/, "") === cleanedNrp
                     );
-
                     if (sigmasRowIndex === -1) {
                         document.getElementById("progressText").textContent = "Patrimônio não encontrado na SIGMAS para atualização!";
                         document.getElementById("spinner").style.display = "none";

@@ -28,6 +28,18 @@
         #responsavel-list li:hover {
             background-color: #eee;
         }
+        .btn-alteracoes {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .btn-alteracoes:hover {
+            background-color: #0056b3;
+        }
         @media (max-width: 600px) {
             .container {
                 padding: 10px;
@@ -178,9 +190,7 @@
         async function loadUserEmail() {
             try {
                 const response = await fetch('https://www.googleapis.com/userinfo/v2/me', {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    }
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
                 if (!response.ok) throw new Error('Failed to fetch user info');
                 const data = await response.json();
@@ -247,7 +257,6 @@
                 currentDados = dadosSigmas;
                 refreshResponsaveis();
 
-                // Carrega COAUD em seguida
                 return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/COAUD!A:E`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
@@ -260,7 +269,6 @@
                 const coaudData = await response.json();
                 dadosCoaud = coaudData.values || [];
 
-                // Carrega metadados (sheetId)
                 return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
@@ -315,16 +323,25 @@
 
             if (rowIndex !== -1) {
                 const patrimonio = currentDados[rowIndex];
+                let acoesHTML = `
+                    <button onclick="mostrarEditorLocal(${rowIndex}, '${nrp}')">Alterar Local</button>
+                    <button onclick="mostrarEditorResponsavel(${rowIndex}, '${nrp}')">Alterar Responsável</button>
+                `;
+
+                // BOTÃO "Consultar Alterações" aparece SOMENTE se a coluna E (índice 4) tiver conteúdo
+                if (patrimonio[4] && patrimonio[4].trim() !== '') {
+                    acoesHTML += `
+                        <button class="btn-alteracoes" onclick="consultarAlteracoes(${rowIndex})">Consultar Alterações</button>
+                    `;
+                }
+
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td>${patrimonio[0] || "N/A"}</td>
                     <td>${patrimonio[1] || "N/A"}</td>
                     <td id="localizacao-${rowIndex}">${patrimonio[2] || "Não especificada"}</td>
                     <td id="responsavel-${rowIndex}">${patrimonio[3] || "Não informado"}</td>
-                    <td>
-                        <button onclick="mostrarEditorLocal(${rowIndex}, '${nrp}')">Alterar Local</button>
-                        <button onclick="mostrarEditorResponsavel(${rowIndex}, '${nrp}')">Alterar Responsável</button>
-                    </td>
+                    <td>${acoesHTML}</td>
                 `;
                 listElement.appendChild(row);
                 progressText.textContent = `Patrimônio ${nrp} encontrado na aba ${currentSheet}!`;
@@ -335,6 +352,17 @@
             patrimonioInput.value = "";
             patrimonioInput.focus();
         }
+
+        // ===================== NOVA FUNÇÃO =====================
+        function consultarAlteracoes(rowIndex) {
+            const log = currentDados[rowIndex][4] || "";
+            if (!log) {
+                alert("Nenhuma alteração registrada para este patrimônio.");
+                return;
+            }
+            alert(`📋 HISTÓRICO DE ALTERAÇÕES\n\n${log}`);
+        }
+        // =======================================================
 
         function mostrarEditorLocal(rowIndex, nrp) {
             if (currentSheet !== 'SIGMAS') {
@@ -470,7 +498,6 @@
             const isEspecial = novoResp === "ALBERTO CESAR SOUZA ALMEIDA (5302)" || novoResp === "PAULO FERNANDO VOLPE (5933)";
 
             if (currentSheet === 'SIGMAS') {
-                // === LÓGICA ORIGINAL (SIGMAS → COAUD) ===
                 if (isEspecial) {
                     let rowData = [...currentDados[rowIndex]];
                     rowData[3] = novoResp;
@@ -538,7 +565,6 @@
                         document.getElementById("spinner").style.display = "none";
                     });
                 } else {
-                    // Atualização normal em SIGMAS
                     const linha = rowIndex + 1;
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
                         method: 'POST',
@@ -585,9 +611,7 @@
                     });
                 }
             } else {
-                // === LÓGICA INVERTIDA (COAUD → SIGMAS) ===
                 if (isEspecial) {
-                    // Atualização normal dentro da COAUD (mantém em COAUD)
                     const linha = rowIndex + 1;
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
                         method: 'POST',
@@ -633,7 +657,6 @@
                         document.getElementById("spinner").style.display = "none";
                     });
                 } else {
-                    // === MOVIMENTO INVERSO: Apaga da COAUD e atualiza em SIGMAS ===
                     const cleanedNrp = nrp.replace(/\./g, "").replace(/^0+/, "");
                     const sigmasRowIndex = dadosSigmas.findIndex(row => 
                         row[0] && row[0].toString().trim().replace(/\./g, "").replace(/^0+/, "") === cleanedNrp
@@ -647,7 +670,6 @@
 
                     const linhaCoaud = rowIndex + 1;
 
-                    // 1. Apaga da COAUD
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}:batchUpdate`, {
                         method: 'POST',
                         headers: {
@@ -684,7 +706,6 @@
                         return response.json();
                     })
                     .then(() => {
-                        // 2. Atualiza SIGMAS com o novo responsável
                         const linhaSigmas = sigmasRowIndex + 1;
                         return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
                             method: 'POST',
@@ -718,10 +739,9 @@
                         return response.json();
                     })
                     .then(() => {
-                        // Sucesso
                         dadosSigmas[sigmasRowIndex][3] = novoResp;
                         dadosSigmas[sigmasRowIndex][4] = log;
-                        currentDados.splice(rowIndex, 1); // remove da COAUD na memória
+                        currentDados.splice(rowIndex, 1);
                         refreshResponsaveis();
                         document.getElementById("patrimonioList").innerHTML = '';
                         document.getElementById("progressText").textContent = `✅ Patrimônio removido da COAUD e atualizado em SIGMAS para ${novoResp}!`;

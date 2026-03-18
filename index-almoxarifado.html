@@ -386,6 +386,9 @@ function erroCritico(mensagem) {
                 document.getElementById("limparNRPsBtn").style.display = patrimoniosSelecionados.length > 0 ? "inline-block" : "none";
                 toggleNavigationButtons(true);
             }
+            if (accessToken) {
+                autoPreencherAlmoxarifado();
+            }
         };
         function toggleNavigationButtons(disable) {
             document.getElementById("backButton").disabled = disable;
@@ -413,8 +416,24 @@ function erroCritico(mensagem) {
             patrimoniosSelecionados = [];
             atualizarListaPatrimonios();
             document.getElementById("limparNRPsBtn").style.display = "none";
-            atualizarOperador2();
+            autoPreencherAlmoxarifado();
             document.getElementById("progressText").textContent = "Edição cancelada.";
+        }
+        function atualizarOperador2() {
+            const operador1 = document.getElementById("operador1Select").value;
+            const operador2Select = document.getElementById("operador2Select");
+            const currentOperador2 = operador2Select.value;
+
+            operador2Select.innerHTML = `
+                <option value=""></option>
+                <option value="Afonso Viana de Mesquita Filho">Afonso Viana de Mesquita Filho</option>
+                <option value="Altamir Araújo da Silva">Altamir Araújo da Silva</option>
+                <option value="Antonio Batista Ângelo">Antonio Batista Ângelo</option>
+                <option value="Waleria Bastos Cardoso">Waleria Bastos Cardoso</option>
+                <option value="Breno Doria Felicio">Breno Doria Felicio</option>
+            `;
+
+            operador2Select.value = currentOperador2; // mantém o valor bloqueado
         }
         function carregarPatrimoniosDoSheets(retryCount = 0) {
             const maxRetries = 3;

@@ -35,18 +35,15 @@
     <div class="container">
         <h1 id="titulo-principal">PATRIMÔNIOS SIGMAS - LOCALIZADOR</h1>
 
-        <!-- LOGIN GOOGLE -->
         <div id="login-section">
             <button onclick="solicitarToken()">Fazer Login com Google</button>
         </div>
 
-        <!-- PROGRESS -->
         <div class="progress-container" id="progress-container" style="display: none;">
             <div id="spinner" class="spinner"></div>
             <p id="progressText">Consultando Servidor</p>
         </div>
 
-        <!-- BUSCA + ADICIONAR -->
         <div id="busca-section" style="display: none;">
             <input type="text" id="patrimonioInput" placeholder="Digite o Número do Patrimônio" autofocus>
             <button id="btn-buscar" class="btn-sigmas" onclick="buscarPatrimonio()">Buscar Localização</button>
@@ -70,7 +67,6 @@
             <tbody id="patrimonioList"></tbody>
         </table>
 
-        <!-- EDITOR ALTERAÇÃO -->
         <div id="editor-section">
             <div id="local-editor">
                 <h3>Alterar Local</h3>
@@ -90,7 +86,6 @@
             </div>
         </div>
 
-        <!-- NOVO PATRIMÔNIO -->
         <div id="novo-patrimonio-form">
             <h3>Adicionar Novo Patrimônio</h3>
             <input type="text" id="novoNrpInput" placeholder="NRP" style="width:100%;margin-bottom:8px;">
@@ -165,21 +160,17 @@
                 }
             });
 
-            // === CORREÇÃO PRINCIPAL: se já tem token salvo, esconde o botão de login imediatamente ===
             const savedToken = localStorage.getItem("access_token");
             if (savedToken) {
                 accessToken = savedToken;
                 await loadUserEmail();
-
                 if (userEmail) {
-                    // Esconde o botão de login e mostra a área de busca
                     document.getElementById("login-section").style.display = "none";
                     document.getElementById("busca-section").style.display = "block";
                     document.getElementById("progress-container").style.display = "block";
                     document.getElementById("progressText").textContent = "Usando token salvo. Carregando dados...";
                     carregarPatrimoniosDoSheets();
                 } else {
-                    // Token inválido → limpa e mostra login
                     localStorage.removeItem("access_token");
                     document.getElementById("login-section").style.display = "block";
                 }
@@ -192,9 +183,7 @@
             });
         };
 
-        function solicitarToken() {
-            tokenClient.requestAccessToken();
-        }
+        function solicitarToken() { tokenClient.requestAccessToken(); }
 
         async function loadUserEmail() {
             try {
@@ -646,19 +635,30 @@
         }
 
         async function confirmarNovoPatrimonio() {
-            const nrp = document.getElementById('novoNrpInput').value.trim();
+            const nrpRaw = document.getElementById('novoNrpInput').value.trim();
             const material = document.getElementById('novoMaterialInput').value.trim();
             const local = document.getElementById('novoLocalInputAdd').value.trim();
             const resp = selectedResponsavelNovo;
 
-            if (!nrp || !material || !local || !resp) {
+            if (!nrpRaw || !material || !local || !resp) {
                 alert('❌ Preencha todos os campos e selecione um responsável.');
+                return;
+            }
+
+            // === BLOQUEIO DE DUPLICADOS ===
+            const cleanedNrp = nrpRaw.replace(/\./g, "").replace(/^0+/, "");
+            const jaExiste = dadosSigmas.some(row => 
+                row[0] && row[0].toString().trim().replace(/\./g, "").replace(/^0+/, "") === cleanedNrp
+            );
+
+            if (jaExiste) {
+                alert(`❌ NRP ${nrpRaw} já existe na planilha SIGMAS!\n\nNão é permitido duplicar patrimônios.`);
                 return;
             }
 
             const isEspecial = resp === "ALBERTO CESAR SOUZA ALMEIDA (5302)" || resp === "PAULO FERNANDO VOLPE (5933)";
             const log = getLogAdicionado();
-            const rowData = [nrp, material, local, resp, log];
+            const rowData = [nrpRaw, material, local, resp, log];
 
             document.getElementById("progressText").textContent = "Adicionando patrimônio...";
             document.getElementById("progress-container").style.display = "block";
@@ -683,7 +683,7 @@
 
                 refreshResponsaveis();
 
-                document.getElementById("progressText").textContent = `✅ Patrimônio ${nrp} adicionado com sucesso!`;
+                document.getElementById("progressText").textContent = `✅ Patrimônio ${nrpRaw} adicionado com sucesso!`;
                 setTimeout(() => {
                     document.getElementById("progress-container").style.display = "none";
                     document.getElementById("spinner").style.display = "none";

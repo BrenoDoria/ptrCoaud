@@ -28,7 +28,6 @@
         #responsavel-list li:hover {
             background-color: #eee;
         }
-
         /* === CORES POR ABA === */
         table.sigmas th {
             background-color: #28a745 !important;
@@ -38,7 +37,6 @@
             background-color: #007bff !important;
             color: white;
         }
-
         /* Botões principais */
         button.btn-sigmas {
             background-color: #28a745;
@@ -58,7 +56,6 @@
         }
         button.btn-sigmas:hover { background-color: #218838; }
         button.btn-coaud:hover { background-color: #0056b3; }
-
         /* Botão "Consultar Alterações" */
         .btn-alteracoes {
             padding: 6px 10px;
@@ -74,11 +71,9 @@
         }
         table.sigmas .btn-alteracoes:hover { background-color: #218838; }
         table.coaud .btn-alteracoes:hover { background-color: #0056b3; }
-
         /* Título */
         h1.sigmas { color: #28a745; }
         h1.coaud { color: #007bff; }
-
         @media (max-width: 600px) {
             .container { padding: 10px; }
             table { font-size: 12px; }
@@ -123,15 +118,22 @@
                 <button onclick="cancelarEdicao()">Cancelar</button>
             </div>
             <div id="responsavel-editor">
-                <h3>Alterar Responsável</h3>
+                <h3>Alterar Responsável e Local</h3>
+                <p><strong>Responsável:</strong></p>
                 <input type="text" id="responsavelSearch" placeholder="Digite pelo menos 3 letras para buscar" oninput="filterResponsaveis()">
                 <ul id="responsavel-list"></ul>
+                
+                <p><strong>Novo Local (OBRIGATÓRIO):</strong></p>
+                <input type="text" id="novoLocalRespInput" placeholder="Digite o novo local">
+                
+                <button onclick="confirmarAlteracaoResponsavel()">Confirmar Alteração</button>
                 <button onclick="cancelarEdicao()">Cancelar</button>
             </div>
         </div>
         <button class="backButton" onclick="window.location.href='index.html'">Voltar</button>
     </div>
     <footer class="author-signature">© 2025 BrenoDoria</footer>
+
     <script>
         // Usuários e permissões
         const usuarios = {
@@ -146,7 +148,7 @@
                 window.location.href = "index.html";
                 return;
             }
-    
+   
             if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
                 alert("Acesso negado: Você não tem permissão para acessar o Localizador de Patrimônios.");
                 window.location.href = "index.html";
@@ -216,6 +218,7 @@
         let currentRowIndex = null;
         let currentNrp = null;
         let currentEditor = null;
+        let selectedNovoResponsavel = null;   // ← NOVO: armazena o responsável selecionado
 
         function solicitarToken() {
             tokenClient.requestAccessToken();
@@ -254,20 +257,15 @@
         function trocarAba() {
             currentSheet = document.getElementById('abaSelect').value;
             currentDados = currentSheet === 'SIGMAS' ? dadosSigmas : dadosCoaud;
-
-            // Muda cores da tabela e título
             const tabela = document.getElementById("patrimonioTable");
             const titulo = document.getElementById("titulo-principal");
             tabela.classList.remove("sigmas", "coaud");
             tabela.classList.add(currentSheet.toLowerCase());
             titulo.classList.remove("sigmas", "coaud");
             titulo.classList.add(currentSheet.toLowerCase());
-
-            // Muda cor do botão "Buscar Localização"
             const btnBuscar = document.getElementById("btn-buscar");
             btnBuscar.classList.remove("btn-sigmas", "btn-coaud");
             btnBuscar.classList.add(`btn-${currentSheet.toLowerCase()}`);
-
             document.getElementById("patrimonioList").innerHTML = "";
             document.getElementById("progressText").textContent = `Planilha carregada: ${currentSheet}`;
         }
@@ -276,7 +274,6 @@
             const maxRetries = 3;
             document.getElementById("spinner").style.display = "inline-block";
             document.getElementById("progressText").textContent = "Consultando Servidor";
-
             fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A:E`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             })
@@ -304,7 +301,6 @@
                 dadosSigmas = data.values || [];
                 currentDados = dadosSigmas;
                 refreshResponsaveis();
-
                 return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/COAUD!A:E`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
@@ -316,7 +312,6 @@
                 }
                 const coaudData = await response.json();
                 dadosCoaud = coaudData.values || [];
-
                 return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
@@ -336,12 +331,9 @@
                 if (!sheetIdSigmas || !sheetIdCoaud) {
                     throw new Error('Abas SIGMAS ou COAUD não encontradas.');
                 }
-
-                // Aplica cor inicial (SIGMAS = verde)
                 document.getElementById("patrimonioTable").classList.add("sigmas");
                 document.getElementById("titulo-principal").classList.add("sigmas");
                 document.getElementById("btn-buscar").classList.add("btn-sigmas");
-
                 document.getElementById("progressText").textContent = "AUTORIZADA CONSULTA";
                 document.getElementById("spinner").style.display = "none";
                 document.getElementById("patrimonioTable").style.display = "table";
@@ -360,7 +352,6 @@
             let cleanedNrp = nrp.replace(/\./g, "").replace(/^0+/, "");
             const listElement = document.getElementById("patrimonioList");
             const progressText = document.getElementById("progressText");
-
             if (!nrp) {
                 progressText.textContent = "Digite o número do patrimônio (NRP) para buscar.";
                 listElement.innerHTML = "";
@@ -371,25 +362,20 @@
                 listElement.innerHTML = "";
                 return;
             }
-
             const rowIndex = currentDados.findIndex(row => row[0] && row[0].toString().trim().replace(/\./g, "").replace(/^0+/, "") === cleanedNrp);
             listElement.innerHTML = "";
-
             if (rowIndex !== -1) {
                 const patrimonio = currentDados[rowIndex];
                 const corClasse = currentSheet.toLowerCase();
-
                 let acoesHTML = `
                     <button class="btn-${corClasse}" onclick="mostrarEditorLocal(${rowIndex}, '${nrp}')">Alterar Local</button>
                     <button class="btn-${corClasse}" onclick="mostrarEditorResponsavel(${rowIndex}, '${nrp}')">Alterar Responsável</button>
                 `;
-
                 if (patrimonio[4] && patrimonio[4].trim() !== '') {
                     acoesHTML += `
                         <button class="btn-alteracoes" onclick="consultarAlteracoes(${rowIndex})">Consultar Alterações</button>
                     `;
                 }
-
                 const row = document.createElement("tr");
                 row.innerHTML = `
                     <td>${patrimonio[0] || "N/A"}</td>
@@ -403,7 +389,6 @@
             } else {
                 progressText.textContent = `Patrimônio ${nrp} não encontrado na Planilha ${currentSheet}.`;
             }
-
             patrimonioInput.value = "";
             patrimonioInput.focus();
         }
@@ -418,7 +403,6 @@
         }
 
         function mostrarEditorLocal(rowIndex, nrp) {
-            // REMOVIDO O BLOQUEIO → agora permite alterar local na COAUD também
             currentRowIndex = rowIndex;
             currentNrp = nrp;
             currentEditor = 'local';
@@ -433,10 +417,15 @@
             currentRowIndex = rowIndex;
             currentNrp = nrp;
             currentEditor = 'responsavel';
+
             document.getElementById('editor-section').style.display = 'block';
             document.getElementById('local-editor').style.display = 'none';
             document.getElementById('responsavel-editor').style.display = 'block';
+
             document.getElementById('responsavelSearch').value = '';
+            selectedNovoResponsavel = null;
+            document.getElementById('novoLocalRespInput').value = '';
+
             filterResponsaveis();
             document.getElementById('responsavelSearch').focus();
         }
@@ -457,8 +446,26 @@
             }
         }
 
+        function confirmarAlteracaoResponsavel() {
+            const novoResp = selectedNovoResponsavel;
+            const novoLocal = document.getElementById('novoLocalRespInput').value.trim();
+
+            if (!novoResp) {
+                alert('❌ Selecione um responsável da lista clicando nele.');
+                return;
+            }
+            if (!novoLocal) {
+                alert('❌ O campo "Novo Local" é obrigatório ao trocar de responsável.');
+                document.getElementById('novoLocalRespInput').focus();
+                return;
+            }
+
+            atualizarResponsavel(currentRowIndex, novoResp, currentNrp, novoLocal);
+            cancelarEdicao();
+        }
+
         function atualizarLocal(rowIndex, novoLocal) {
-            const sheetName = currentSheet; // 'SIGMAS' ou 'COAUD'
+            const sheetName = currentSheet;
             const linha = rowIndex + 1;
             const log = getLog('sala');
             if (!log) return;
@@ -515,13 +522,16 @@
             const search = document.getElementById('responsavelSearch').value.trim().toLowerCase();
             const list = document.getElementById('responsavel-list');
             list.innerHTML = '';
+
             if (search.length < 3) {
                 const li = document.createElement('li');
                 li.textContent = 'Digite 3 ou mais letras para ver sugestões.';
                 list.appendChild(li);
                 return;
             }
+
             const filtered = Array.from(responsaveisUnicos).filter(name => name.toLowerCase().includes(search)).sort();
+
             if (filtered.length === 0) {
                 const li = document.createElement('li');
                 li.textContent = 'Nenhum responsável encontrado.';
@@ -531,15 +541,15 @@
                     const li = document.createElement('li');
                     li.textContent = name;
                     li.onclick = () => {
-                        atualizarResponsavel(currentRowIndex, name, currentNrp);
-                        cancelarEdicao();
+                        selectedNovoResponsavel = name;
+                        document.getElementById('responsavelSearch').value = name;
                     };
                     list.appendChild(li);
                 });
             }
         }
 
-        function atualizarResponsavel(rowIndex, novoResp, nrp) {
+        function atualizarResponsavel(rowIndex, novoResp, nrp, novoLocal) {
             document.getElementById("progressText").textContent = "Atualizando planilha...";
             document.getElementById("progress-container").style.display = "block";
             document.getElementById("spinner").style.display = "inline-block";
@@ -556,15 +566,16 @@
                 );
 
                 if (existeEmCoaud && !isEspecial) {
-                    document.getElementById("progressText").textContent = "";
                     document.getElementById("progress-container").style.display = "none";
                     document.getElementById("spinner").style.display = "none";
-                    alert("⚠️ Este patrimônio pertence ao Alberto ou Volpe e está registrado na Planilha COAUD.\n\nPara alterar o responsável, faça a alteração diretamente na Planilha COAUD.");
+                    alert("⚠️ Este patrimônio pertence ao Alberto ou Volpe e está registrado na Planilha COAUD.\n\nPara alterar, faça diretamente na Planilha COAUD.");
                     return;
                 }
 
                 if (isEspecial) {
+                    // CASO ESPECIAL: SIGMAS → copia para COAUD com novo local
                     let rowData = [...currentDados[rowIndex]];
+                    rowData[2] = novoLocal;
                     rowData[3] = novoResp;
                     rowData[4] = log;
 
@@ -591,6 +602,7 @@
                             body: JSON.stringify({
                                 valueInputOption: 'USER_ENTERED',
                                 data: [
+                                    { range: `SIGMAS!C${linha}`, values: [[novoLocal]] },
                                     { range: `SIGMAS!D${linha}`, values: [[novoResp]] },
                                     { range: `SIGMAS!E${linha}`, values: [[log]] }
                                 ]
@@ -613,11 +625,13 @@
                         return response.json();
                     })
                     .then(() => {
+                        currentDados[rowIndex][2] = novoLocal;
                         currentDados[rowIndex][3] = novoResp;
                         currentDados[rowIndex][4] = log;
+                        document.getElementById(`localizacao-${rowIndex}`).textContent = novoLocal;
                         document.getElementById(`responsavel-${rowIndex}`).textContent = novoResp;
                         refreshResponsaveis();
-                        document.getElementById("progressText").textContent = `✅ Responsável atualizado em SIGMAS e patrimônio COPIADO para COAUD!`;
+                        document.getElementById("progressText").textContent = `✅ Responsável e Local atualizados! Patrimônio copiado para COAUD.`;
                         document.getElementById("spinner").style.display = "none";
                     })
                     .catch(error => {
@@ -626,6 +640,7 @@
                         document.getElementById("spinner").style.display = "none";
                     });
                 } else {
+                    // SIGMAS NORMAL (atualiza local + responsável)
                     const linha = rowIndex + 1;
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
                         method: 'POST',
@@ -636,6 +651,7 @@
                         body: JSON.stringify({
                             valueInputOption: 'USER_ENTERED',
                             data: [
+                                { range: `SIGMAS!C${linha}`, values: [[novoLocal]] },
                                 { range: `SIGMAS!D${linha}`, values: [[novoResp]] },
                                 { range: `SIGMAS!E${linha}`, values: [[log]] }
                             ]
@@ -657,11 +673,13 @@
                         return response.json();
                     })
                     .then(() => {
+                        currentDados[rowIndex][2] = novoLocal;
                         currentDados[rowIndex][3] = novoResp;
                         currentDados[rowIndex][4] = log;
+                        document.getElementById(`localizacao-${rowIndex}`).textContent = novoLocal;
                         document.getElementById(`responsavel-${rowIndex}`).textContent = novoResp;
                         refreshResponsaveis();
-                        document.getElementById("progressText").textContent = "Responsável atualizado com sucesso!";
+                        document.getElementById("progressText").textContent = "✅ Responsável e Local atualizados com sucesso!";
                         document.getElementById("spinner").style.display = "none";
                     })
                     .catch(error => {
@@ -683,6 +701,7 @@
                         body: JSON.stringify({
                             valueInputOption: 'USER_ENTERED',
                             data: [
+                                { range: `COAUD!C${linha}`, values: [[novoLocal]] },
                                 { range: `COAUD!D${linha}`, values: [[novoResp]] },
                                 { range: `COAUD!E${linha}`, values: [[log]] }
                             ]
@@ -693,11 +712,13 @@
                         return response.json();
                     })
                     .then(() => {
+                        currentDados[rowIndex][2] = novoLocal;
                         currentDados[rowIndex][3] = novoResp;
                         currentDados[rowIndex][4] = log;
+                        document.getElementById(`localizacao-${rowIndex}`).textContent = novoLocal;
                         document.getElementById(`responsavel-${rowIndex}`).textContent = novoResp;
                         refreshResponsaveis();
-                        document.getElementById("progressText").textContent = "Responsável atualizado com sucesso em COAUD!";
+                        document.getElementById("progressText").textContent = "✅ Responsável e Local atualizados em COAUD!";
                         document.getElementById("spinner").style.display = "none";
                     })
                     .catch(error => {
@@ -711,7 +732,7 @@
                         row[0] && row[0].toString().trim().replace(/\./g, "").replace(/^0+/, "") === cleanedNrp
                     );
                     if (sigmasRowIndex === -1) {
-                        document.getElementById("progressText").textContent = "Patrimônio não encontrado na SIGMAS para atualização!";
+                        document.getElementById("progressText").textContent = "Patrimônio não encontrado na SIGMAS!";
                         document.getElementById("spinner").style.display = "none";
                         return;
                     }
@@ -750,6 +771,7 @@
                             body: JSON.stringify({
                                 valueInputOption: 'USER_ENTERED',
                                 data: [
+                                    { range: `SIGMAS!C${linhaSigmas}`, values: [[novoLocal]] },
                                     { range: `SIGMAS!D${linhaSigmas}`, values: [[novoResp]] },
                                     { range: `SIGMAS!E${linhaSigmas}`, values: [[log]] }
                                 ]
@@ -761,12 +783,13 @@
                         return response.json();
                     })
                     .then(() => {
+                        dadosSigmas[sigmasRowIndex][2] = novoLocal;
                         dadosSigmas[sigmasRowIndex][3] = novoResp;
                         dadosSigmas[sigmasRowIndex][4] = log;
                         currentDados.splice(rowIndex, 1);
                         refreshResponsaveis();
                         document.getElementById("patrimonioList").innerHTML = '';
-                        document.getElementById("progressText").textContent = `✅ Patrimônio removido da COAUD e atualizado em SIGMAS para ${novoResp}!`;
+                        document.getElementById("progressText").textContent = `✅ Patrimônio removido da COAUD e atualizado em SIGMAS com novo local e responsável!`;
                         document.getElementById("spinner").style.display = "none";
                     })
                     .catch(error => {

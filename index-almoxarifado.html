@@ -693,10 +693,11 @@ function erroCritico(mensagem) {
                         const errorData = await updateResponse.json();
                         throw new Error(`Erro ao atualizar ficha: ${errorData.error?.message || updateResponse.statusText}`);
                     }
-                    document.getElementById("progressText").textContent = "Ficha atualizada com sucesso!";
-                    localStorage.removeItem('fichaParaEditar');
-                    toggleNavigationButtons(false);
-                    document.getElementById("cancelButton").style.display = "none";
+                    document.getElementById("progressText").textContent =
+        "✅ Retirada registrada com sucesso no sistema!";
+    setTimeout(() => {
+        window.location.href = "fichas.html";
+    }, 1200);
                 } else {
     const registerResponse = await fetch(
         `https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_PENDENTES!A:G:append?valueInputOption=RAW`,

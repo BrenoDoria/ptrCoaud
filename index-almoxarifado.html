@@ -295,7 +295,7 @@ function erroCritico(mensagem) {
                 });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const userInfo = await response.json();
-                return userInfo.email.toLowerCase();
+                return userInfo.email.toLowerCase().trim();
             } catch (error) {
                 console.error("Erro ao obter email:", error);
                 return null;
@@ -304,8 +304,10 @@ function erroCritico(mensagem) {
 
         async function autoPreencherAlmoxarifado() {
             const email = await getCurrentUserEmail();
-            if (!email) return;
-
+            if (!email) {
+        console.log("E-mail não obtido.");
+        return;
+    }
             const nome = emailToNome[email];
             const operador2Select = document.getElementById("operador2Select");
 

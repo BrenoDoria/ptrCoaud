@@ -46,11 +46,11 @@ function carregarPatrimoniosDoDrive(accessToken) {
     document.getElementById("spinner").style.display = "inline-block";
     document.getElementById("progressText").innerText = "Consultando Servidor";
 
-    fetch(`https://www.googleapis.com/drive/v3/files/${FILE_ID}?alt=media`, {
-        headers: {
-            'Authorization': `Bearer ${accessToken}`
-        }
-    })
+    fetch(`https://www.googleapis.com/drive/v3/files/${FILE_ID}/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, {
+    headers: {
+        'Authorization': `Bearer ${accessToken}`
+    }
+})
     .then(response => {
         if (!response.ok) throw new Error('Erro ao baixar o arquivo: ' + response.statusText);
         return response.arrayBuffer();

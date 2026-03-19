@@ -313,9 +313,9 @@ function erroCritico(mensagem) {
 
             if (nome) {
                 operador2Select.value = nome;
-                operador2Select.disabled = true;   // ← BLOQUEADO
+                operador2Select.disabled = true;  
                 document.getElementById("progressText").textContent = 
-                    `✅ Almoxarifado BLOQUEADO: ${nome} (baseado no seu e-mail logado)`;
+                    `✅ Almoxarifado: ${nome} (baseado no seu e-mail logado)`;
             } else {
                 document.getElementById("progressText").textContent = 
                     `⚠️ E-mail ${email} não cadastrado como Almoxarifado.`;

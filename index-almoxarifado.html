@@ -619,7 +619,7 @@ function erroCritico(mensagem) {
             document.getElementById("progressText").textContent = "Lista de patrimônios limpa.";
         }
         function solicitarToken() {
-            tokenClient.requestAccessToken();
+            tokenClient.requestAccessToken({ prompt: 'select_account' });
         }
         const patrimoniosPermitidosParaRepeticao = [
             "99010001", "99010002", "99010003", "99010004", "99010005",

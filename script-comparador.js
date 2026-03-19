@@ -149,11 +149,11 @@ function exportarNaoEncontrados() {
             item[3] || ""
         ])
     ];
-    const worksheet = XLSX.utils.aoa_to_sheet(newData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Nao_Encontrados");
+    const worksheet = XLS.utils.aoa_to_sheet(newData);
+    const workbook = XLS.utils.book_new();
+    XLS.utils.book_append_sheet(workbook, worksheet, "Nao_Encontrados");
     const dataFormatada = formatarData();
-    XLSX.writeFile(workbook, `Patrimonios_Não_Encontrados_${dataFormatada}.xlsx`);
+    XLS.writeFile(workbook, `Patrimonios_Não_Encontrados_${dataFormatada}.xls`);
 }
 
 function formatarData() {

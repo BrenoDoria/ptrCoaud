@@ -363,6 +363,7 @@ function erroCritico(mensagem) {
                 document.getElementById("progressText").textContent = "Usando token salvo. Carregando dados...";
                 carregarPatrimoniosDoSheets();
                 carregarEscalaDoSheets();
+                autoPreencherAlmoxarifado();
             } else {
                 document.getElementById("login-section").style.display = "block";
                 document.getElementById("retirada-section").style.display = "none";

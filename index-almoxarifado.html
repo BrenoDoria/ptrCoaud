@@ -334,7 +334,7 @@ function erroCritico(mensagem) {
             }
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
-                scope: 'https://www.googleapis.com/auth/spreadsheets',
+                scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email',
                 callback: (tokenResponse) => {
                     if (tokenResponse.error) {
                         document.getElementById("progressText").textContent = "Erro ao autenticar: " + tokenResponse.error;
@@ -350,6 +350,7 @@ function erroCritico(mensagem) {
                     document.getElementById("navegacao-fichas").style.display = "block";
                     carregarPatrimoniosDoSheets();
                     carregarEscalaDoSheets();
+                    autoPreencherAlmoxarifado();
                 }
             });
             const savedToken = localStorage.getItem("access_token");

@@ -56,9 +56,9 @@ function carregarPatrimoniosDoDrive(accessToken) {
         return response.arrayBuffer();
     })
     .then(data => {
-        const workbook = XLSX.read(new Uint8Array(data), { type: "array" });
+        const workbook = XLS.read(new Uint8Array(data), { type: "array" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        dadosOriginais = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        dadosOriginais = XLS.utils.sheet_to_json(sheet, { header: 1 });
         document.getElementById("progressText").innerText = "Consulta Autorizada";
         document.getElementById("spinner").style.display = "none";
         if (dadosExportados.length > 0) compararPlanilhas();
@@ -80,9 +80,9 @@ document.getElementById("fileInputExportada").addEventListener("change", functio
     reader.onload = (e) => {
         try {
             const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: "array" });
+            const workbook = XLS.read(data, { type: "array" });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            dadosExportados = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            dadosExportados = XLS.utils.sheet_to_json(sheet, { header: 1 });
             document.getElementById("progressText").innerText = "Planilha exportada carregada!";
             if (dadosOriginais.length > 0) compararPlanilhas();
         } catch (error) {

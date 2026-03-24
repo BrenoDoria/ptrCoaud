@@ -142,7 +142,6 @@
             <div id="spinner" class="spinner"></div>
             <p id="progressText">Aguardando dados do Google Sheets...</p>
         </div>
-
         <div id="busca-section" style="display: none;">
             <h2>Consultar Histórico por Patrimônio (NRP)</h2>
             <div>
@@ -156,7 +155,6 @@
             <button class="backButton" onclick="window.location.href='index-almoxarifado.html'">Voltar</button>
             <button id="imprimirSelecionadas" onclick="imprimirFichasSelecionadas()" style="display: none;">Imprimir Selecionadas</button>
         </div>
-
         <div id="arquivadas-section" style="display: none;">
             <h2>Fichas Arquivadas</h2>
             <div class="table-wrapper">
@@ -187,14 +185,12 @@
             "supervisor": { senha: "12345", permissao: "Supervisor" },
             "operador": { senha: "12345", permissao: "Operador" }
         };
-
         const CLIENT_ID = '286050228811-cv6vsd075480anb1i6auuc421enuaf8q.apps.googleusercontent.com';
         const FILE_ID = '1q9RCwJ4P--QIH4kkMszffrN8ZwzkSsNoZtPH-Usk4Zw';
         let tokenClient;
         let accessToken = null;
         let arquivadasData = [];
         let arquivadasFiltradas = [];
-
         window.onload = () => {
             const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
             if (!usuarioLogado || !usuarios[usuarioLogado.username]) {
@@ -202,13 +198,11 @@
                 window.location.href = "index.html";
                 return;
             }
-
             if (usuarios[usuarioLogado.username].permissao !== "Supervisor") {
                 alert("Acesso negado: Você não tem permissão para acessar o Controle de Almoxarifado.");
                 window.location.href = "index.html";
                 return;
             }
-
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: 'https://www.googleapis.com/auth/spreadsheets',
@@ -228,7 +222,6 @@
                     carregarDadosDoSheets();
                 }
             });
-
             const savedToken = localStorage.getItem("access_token");
             if (savedToken) {
                 accessToken = savedToken;
@@ -240,26 +233,21 @@
                 carregarDadosDoSheets();
             }
         };
-
         function solicitarToken() {
             tokenClient.requestAccessToken();
         }
-
         async function carregarDadosDoSheets(retryCount = 0) {
             const maxRetries = 3;
             document.getElementById("spinner").style.display = "inline-block";
             document.getElementById("progressText").textContent = "Consultando Google Sheets...";
-
             try {
                 const arquivadasResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_ARQUIVADAS!A:J`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
-
                 if (!arquivadasResponse.ok) {
                     const errorData = await arquivadasResponse.json();
                     throw new Error(`Erro ao carregar RETIRADAS_ARQUIVADAS: ${errorData.error?.message || arquivadasResponse.statusText}`);
                 }
-
                 const arquivadas = await arquivadasResponse.json();
                 arquivadasData = arquivadas.values || [];
                 arquivadasFiltradas = arquivadasData.slice();
@@ -282,26 +270,38 @@
                 document.getElementById("spinner").style.display = "none";
             }
         }
-
         function atualizarTabelaArquivadas() {
-    const arquivadasList = document.getElementById("arquivadasList");
-    arquivadasList.innerHTML = "";
-    document.getElementById("selectAll").checked = false;
-    if (arquivadasFiltradas.length > 1) {
-        // Cria uma cópia dos dados (excluindo o cabeçalho) e ordena por Data Devolução em ordem decrescente
-        const sortedData = [...arquivadasFiltradas.slice(1)].sort((a, b) => {
-            const parseDate = (dateStr) => {
-                if (!dateStr) return new Date(0); // Valor padrão para datas inválidas
-               const dataRowsWithIndex = arquivadasFiltradas.slice(1).map((row, idx) => ({
+            const arquivadasList = document.getElementById("arquivadasList");
+            arquivadasList.innerHTML = "";
+            document.getElementById("selectAll").checked = false;
+
+            if (arquivadasFiltradas.length > 1) {
+                // === ALTERAÇÃO SOLICITADA (ÚNICA MUDANÇA FEITA NO CÓDIGO) ===
+                // Agora guardamos o índice ORIGINAL de cada linha dentro de arquivadasFiltradas
+                // antes de ordenar. Assim o checkbox data-index sempre aponta para a linha correta,
+                // mesmo quando a tabela está ordenada por Data Devolução (mais recente em cima).
+                // Isso corrige o problema de imprimir a ficha antiga ao selecionar uma recente.
+
+                const dataRowsWithIndex = arquivadasFiltradas.slice(1).map((row, idx) => ({
                     row: row,
                     originalIndex: idx + 1
-            };
-            const dateA = parseDate(a[7]);
-            const dateB = parseDate(b[7]);
-            return dateB - dateA; // Ordem decrescente
-        });
+                }));
 
-       // Popula a tabela usando o índice ORIGINAL
+                // Ordena por Data Devolução (decrescente) – mantido exatamente como antes
+                dataRowsWithIndex.sort((a, b) => {
+                    const parseDate = (dateStr) => {
+                        if (!dateStr) return new Date(0);
+                        const [datePart, timePart] = dateStr.split(', ');
+                        const [day, month, year] = datePart.split('/').map(Number);
+                        const [hours, minutes, seconds] = timePart.split(':').map(Number);
+                        return new Date(year, month - 1, day, hours, minutes, seconds);
+                    };
+                    const dateA = parseDate(a.row[7]);
+                    const dateB = parseDate(b.row[7]);
+                    return dateB - dateA;
+                });
+
+                // Popula a tabela usando o índice ORIGINAL
                 dataRowsWithIndex.forEach(({ row, originalIndex }) => {
                     const equipamentos = row[3] ? row[3].split('; ') : [];
                     const equipamentosFormatados = equipamentos.length > 0
@@ -324,18 +324,12 @@
                     `;
                     arquivadasList.appendChild(tr);
                 });
-        document.getElementById("imprimirSelecionadas").style.display = "inline-block";
-        // ✅ Move o log para dentro do if
-        //console.log("Dados ordenados por Data Devolução:", sortedData.map(row => row[7]));
 
-    } else {
-        document.getElementById("imprimirSelecionadas").style.display = "none";
-    }
-
-    // Depuração: log para verificar a ordenação
-    //console.log("Dados ordenados por Data Devolução:", sortedData.map(row => row[7]));
-}
-        
+                document.getElementById("imprimirSelecionadas").style.display = "inline-block";
+            } else {
+                document.getElementById("imprimirSelecionadas").style.display = "none";
+            }
+        }
         function toggleSelectAll() {
             const selectAll = document.getElementById("selectAll");
             const checkboxes = document.querySelectorAll(".ficha-checkbox");
@@ -343,14 +337,12 @@
                 checkbox.checked = selectAll.checked;
             });
         }
-
         function imprimirFichasSelecionadas() {
             const checkboxes = document.querySelectorAll(".ficha-checkbox:checked");
             if (checkboxes.length === 0) {
                 document.getElementById("progressText").textContent = "Selecione pelo menos uma ficha para imprimir.";
                 return;
             }
-
             const fichasSelecionadas = Array.from(checkboxes).map(checkbox => {
                 const index = parseInt(checkbox.getAttribute("data-index"));
                 const row = arquivadasFiltradas[index];
@@ -367,18 +359,15 @@
                     almoxarifadoDevolucao: row[9] || '-'
                 };
             });
-
             localStorage.setItem('fichasParaImprimir', JSON.stringify(fichasSelecionadas));
             window.location.href = 'imprimir-arquivadas.html';
         }
-
         function buscarPorNRP() {
             const nrp = document.getElementById("nrpBuscaInput").value.trim();
             if (!nrp) {
                 document.getElementById("progressText").textContent = "Digite um NRP para buscar.";
                 return;
             }
-
             const nrpNormalizado = nrp.replace(/\./g, "").replace(/^0+/, "");
             arquivadasFiltradas = [arquivadasData[0]];
             const fichasFiltradas = arquivadasData.slice(1).filter(row => {
@@ -388,17 +377,14 @@
                     return nrpEquip === nrpNormalizado;
                 });
             });
-
             if (fichasFiltradas.length === 0) {
                 document.getElementById("progressText").textContent = `Nenhuma ficha arquivada encontrada para o NRP ${nrp}.`;
             } else {
                 document.getElementById("progressText").textContent = `Encontradas ${fichasFiltradas.length} fichas para o NRP ${nrp}.`;
                 arquivadasFiltradas.push(...fichasFiltradas);
             }
-
             atualizarTabelaArquivadas();
         }
-
         function limparBusca() {
             document.getElementById("nrpBuscaInput").value = "";
             arquivadasFiltradas = arquivadasData.slice();

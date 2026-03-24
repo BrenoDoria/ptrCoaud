@@ -292,38 +292,38 @@
         const sortedData = [...arquivadasFiltradas.slice(1)].sort((a, b) => {
             const parseDate = (dateStr) => {
                 if (!dateStr) return new Date(0); // Valor padrão para datas inválidas
-                const [datePart, timePart] = dateStr.split(', ');
-                const [day, month, year] = datePart.split('/').map(Number);
-                const [hours, minutes, seconds] = timePart.split(':').map(Number);
-                return new Date(year, month - 1, day, hours, minutes, seconds); // month - 1 pois Janeiro é 0
+               const dataRowsWithIndex = arquivadasFiltradas.slice(1).map((row, idx) => ({
+                    row: row,
+                    originalIndex: idx + 1
             };
             const dateA = parseDate(a[7]);
             const dateB = parseDate(b[7]);
             return dateB - dateA; // Ordem decrescente
         });
 
-        // Popula a tabela com os dados ordenados
-        sortedData.forEach((row, sortedIndex) => {
-            const equipamentos = row[3] ? row[3].split('; ') : [];
-            const equipamentosFormatados = equipamentos.length > 0
-                ? equipamentos.map(equip => `<div class="equipamento-item">${equip}</div>`).join('')
-                : '-';
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td><input type="checkbox" class="ficha-checkbox" data-index="${sortedIndex + 1}"></td>
-                <td>${row[0]}</td>
-                <td>${row[1]}</td>
-                <td>${row[2] || '-'}</td>
-                <td class="equipamentos-cell">${equipamentosFormatados}</td>
-                <td>${row[4]}</td>
-                <td>${row[5]}</td>
-                <td>${row[6]}</td>
-                <td>${row[7]}</td>
-                <td>${row[8] || '-'}</td>
-                <td>${row[9] || '-'}</td>
-            `;
-            arquivadasList.appendChild(tr);
-        });
+       // Popula a tabela usando o índice ORIGINAL
+                dataRowsWithIndex.forEach(({ row, originalIndex }) => {
+                    const equipamentos = row[3] ? row[3].split('; ') : [];
+                    const equipamentosFormatados = equipamentos.length > 0
+                        ? equipamentos.map(equip => `<div class="equipamento-item">${equip}</div>`).join('')
+                        : '-';
+
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td><input type="checkbox" class="ficha-checkbox" data-index="${originalIndex}"></td>
+                        <td>${row[0]}</td>
+                        <td>${row[1]}</td>
+                        <td>${row[2] || '-'}</td>
+                        <td class="equipamentos-cell">${equipamentosFormatados}</td>
+                        <td>${row[4]}</td>
+                        <td>${row[5]}</td>
+                        <td>${row[6]}</td>
+                        <td>${row[7]}</td>
+                        <td>${row[8] || '-'}</td>
+                        <td>${row[9] || '-'}</td>
+                    `;
+                    arquivadasList.appendChild(tr);
+                });
         document.getElementById("imprimirSelecionadas").style.display = "inline-block";
         // ✅ Move o log para dentro do if
         //console.log("Dados ordenados por Data Devolução:", sortedData.map(row => row[7]));
@@ -335,6 +335,7 @@
     // Depuração: log para verificar a ordenação
     //console.log("Dados ordenados por Data Devolução:", sortedData.map(row => row[7]));
 }
+        
         function toggleSelectAll() {
             const selectAll = document.getElementById("selectAll");
             const checkboxes = document.querySelectorAll(".ficha-checkbox");

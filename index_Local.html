@@ -380,6 +380,11 @@
             cancelarEdicao();
         }
 
+        function recarregarDados() {
+        carregarPatrimoniosDoSheets();
+    }
+
+        
         function atualizarLocal(rowIndex, novoLocal) {
             const sheetName = currentSheet;
             const linha = rowIndex + 1;
@@ -403,6 +408,7 @@
                 document.getElementById(`localizacao-${rowIndex}`).textContent = novoLocal;
                 document.getElementById("progressText").textContent = "Local atualizado!";
                 document.getElementById("progress-container").style.display = "none";
+                recarregarDados();
             });
         }
 
@@ -483,6 +489,7 @@
                         console.error(error);
                         document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
                         document.getElementById("spinner").style.display = "none";
+                        recarregarDados();
                     });
                 } else {
                     const linha = rowIndex + 1;
@@ -507,6 +514,7 @@
                         refreshResponsaveis();
                         document.getElementById("progressText").textContent = "✅ Responsável e Local atualizados com sucesso!";
                         document.getElementById("spinner").style.display = "none";
+                        recarregarDados();
                     })
                     .catch(error => {
                         console.error(error);
@@ -692,6 +700,7 @@
                     document.getElementById('novoMaterialInput').value = '';
                     document.getElementById('novoLocalInputAdd').value = '';
                     document.getElementById('novoResponsavelSearch').value = '';
+                    recarregarDados();
                 }, 1500);
             } catch (err) {
                 console.error(err);

@@ -595,10 +595,22 @@
             window.location.href = 'index-almoxarifado.html';
         }
 
-        function abrirModalDevolucao(idFicha) {
+        async function abrirModalDevolucao(idFicha) {
             idFichaSelecionada = idFicha;
             document.getElementById("operadorDevolucaoSelect").value = "";
             document.getElementById("almoxarifadoDevolucaoSelect").value = "";
+
+            // Preenchimento automático + bloqueio (mesma lógica da página inicial)
+            const email = await getCurrentUserEmail();
+            if (email) {
+                const nome = emailToNome[email];
+                if (nome) {
+                    const select = document.getElementById("almoxarifadoDevolucaoSelect");
+                    select.value = nome;
+                    select.disabled = true;   // ← BLOQUEADO
+                }
+            }
+
             document.getElementById("devolucaoModal").style.display = "block";
         }
 

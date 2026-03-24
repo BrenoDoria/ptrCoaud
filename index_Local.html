@@ -381,8 +381,8 @@
         }
 
         function recarregarDados() {
-        carregarPatrimoniosDoSheets();
-    }
+            carregarPatrimoniosDoSheets();
+        }
 
         
         function atualizarLocal(rowIndex, novoLocal) {
@@ -484,6 +484,8 @@
                         refreshResponsaveis();
                         document.getElementById("progressText").textContent = `✅ Responsável e Local atualizados! Patrimônio copiado para COAUD.`;
                         document.getElementById("spinner").style.display = "none";
+                        // === ALTERAÇÃO SOLICITADA: recarregar dados após qualquer alteração em SIGMAS ou COAUD ===
+                        recarregarDados();
                     })
                     .catch(error => {
                         console.error(error);
@@ -546,6 +548,8 @@
                         refreshResponsaveis();
                         document.getElementById("progressText").textContent = "✅ Responsável e Local atualizados em COAUD!";
                         document.getElementById("spinner").style.display = "none";
+                        // === ALTERAÇÃO SOLICITADA: recarregar dados após qualquer alteração em SIGMAS ou COAUD ===
+                        recarregarDados();
                     })
                     .catch(error => {
                         console.error(error);
@@ -603,6 +607,8 @@
                         document.getElementById("patrimonioList").innerHTML = '';
                         document.getElementById("progressText").textContent = `✅ Patrimônio removido da COAUD e atualizado em SIGMAS!`;
                         document.getElementById("spinner").style.display = "none";
+                        // === ALTERAÇÃO SOLICITADA: recarregar dados após qualquer alteração em SIGMAS ou COAUD ===
+                        recarregarDados();
                     })
                     .catch(error => {
                         console.error(error);

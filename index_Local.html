@@ -115,7 +115,6 @@
         let selectedNovoResponsavel = null;
         let selectedResponsavelNovo = null;
 
-        // ==================== FUNÇÃO CENTRAL DE LIMPEZA (NOVO) ====================
         function resetarInterface() {
             document.getElementById('editor-section').style.display = 'none';
             document.getElementById('novo-patrimonio-form').style.display = 'none';
@@ -227,7 +226,6 @@
             btnBuscar.classList.add(`btn-${currentSheet.toLowerCase()}`);
             btnAdd.classList.add(`btn-${currentSheet.toLowerCase()}`);
 
-            // === LIMPA TUDO AO TROCA DE ABA ===
             resetarInterface();
             document.getElementById("patrimonioInput").value = '';
         }
@@ -281,7 +279,6 @@
                 document.getElementById("btn-adicionar").classList.add("btn-sigmas");
                 document.getElementById("progressText").textContent = "AUTORIZADA CONSULTA";
                 document.getElementById("spinner").style.display = "none";
-                // Não escondemos o progress-container para manter o status visível
 
                 const patrimonioInputValue = document.getElementById("patrimonioInput").value.trim();
                 if (patrimonioInputValue) {
@@ -296,7 +293,7 @@
         }
 
         function buscarPatrimonio() {
-            resetarInterface();                     // Garante que nada fique acumulado
+            resetarInterface();
 
             const nrp = document.getElementById("patrimonioInput").value.trim();
             if (!nrp) return;
@@ -341,7 +338,7 @@
 
         function mostrarEditorLocal(rowIndex, nrp) {
             currentRowIndex = rowIndex; currentNrp = nrp;
-            document.getElementById('novo-patrimonio-form').style.display = 'none'; // só esconde o formulário de add
+            document.getElementById('novo-patrimonio-form').style.display = 'none';
             document.getElementById('editor-section').style.display = 'block';
             document.getElementById('local-editor').style.display = 'block';
             document.getElementById('responsavel-editor').style.display = 'none';
@@ -364,7 +361,6 @@
 
         function cancelarEdicao() {
             document.getElementById('editor-section').style.display = 'none';
-            // A tabela permanece visível (não acumula)
         }
 
         function confirmarNovoLocal() {
@@ -404,6 +400,9 @@
                         { range: `${sheetName}!E${linha}`, values: [[log]] }
                     ]
                 })
+            }).then(response => {
+                if (!response.ok) throw new Error(`Erro ao atualizar local: ${response.status}`);
+                return response;
             }).then(() => {
                 currentDados[rowIndex][2] = novoLocal;
                 currentDados[rowIndex][4] = log;
@@ -411,6 +410,10 @@
                 document.getElementById("progressText").textContent = "Local atualizado!";
                 document.getElementById("progress-container").style.display = "none";
                 recarregarDados();
+            }).catch(error => {
+                console.error(error);
+                document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
+                document.getElementById("progress-container").style.display = "none";
             });
         }
 
@@ -458,7 +461,8 @@
                         headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ values: [rowData] })
                     })
-                    .then(() => {
+                    .then(response => {
+                        if (!response.ok) throw new Error(`Erro ao copiar para COAUD: ${response.status}`);
                         const linha = rowIndex + 1;
                         return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
                             method: 'POST',
@@ -473,7 +477,8 @@
                             })
                         });
                     })
-                    .then(() => {
+                    .then(response => {
+                        if (!response.ok) throw new Error(`Erro ao atualizar SIGMAS: ${response.status}`);
                         currentDados[rowIndex][2] = novoLocal;
                         currentDados[rowIndex][3] = novoResp;
                         currentDados[rowIndex][4] = log;
@@ -504,7 +509,8 @@
                             ]
                         })
                     })
-                    .then(() => {
+                    .then(response => {
+                        if (!response.ok) throw new Error(`Erro ao atualizar SIGMAS: ${response.status}`);
                         currentDados[rowIndex][2] = novoLocal;
                         currentDados[rowIndex][3] = novoResp;
                         currentDados[rowIndex][4] = log;
@@ -522,6 +528,7 @@
                     });
                 }
             } else {
+                // ==================== CORREÇÃO DO ERRO 400 (COAUD → SIGMAS) ====================
                 if (isEspecial) {
                     const linha = rowIndex + 1;
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
@@ -536,7 +543,8 @@
                             ]
                         })
                     })
-                    .then(() => {
+                    .then(response => {
+                        if (!response.ok) throw new Error(`Erro ao atualizar COAUD: ${response.status}`);
                         currentDados[rowIndex][2] = novoLocal;
                         currentDados[rowIndex][3] = novoResp;
                         currentDados[rowIndex][4] = log;
@@ -562,6 +570,7 @@
                         document.getElementById("spinner").style.display = "none";
                         return;
                     }
+
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}:batchUpdate`, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -578,7 +587,10 @@
                             }]
                         })
                     })
-                    .then(() => {
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Erro 400 ao remover linha da COAUD: ${response.status} - Verifique se a aba COAUD existe e o sheetId está correto.`);
+                        }
                         const linhaSigmas = sigmasRowIndex + 1;
                         return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
                             method: 'POST',
@@ -593,7 +605,10 @@
                             })
                         });
                     })
-                    .then(() => {
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Erro ao atualizar SIGMAS: ${response.status}`);
+                        }
                         dadosSigmas[sigmasRowIndex][2] = novoLocal;
                         dadosSigmas[sigmasRowIndex][3] = novoResp;
                         dadosSigmas[sigmasRowIndex][4] = log;
@@ -608,13 +623,14 @@
                         console.error(error);
                         document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
                         document.getElementById("spinner").style.display = "none";
+                        recarregarDados();  // recarrega para manter a consistência com o servidor
                     });
                 }
             }
         }
 
         function mostrarFormularioNovoPatrimonio() {
-            resetarInterface();                     // Limpa tabela e editor antes de mostrar o formulário
+            resetarInterface();
             document.getElementById('novo-patrimonio-form').style.display = 'block';
             document.getElementById('novoNrpInput').focus();
             selectedResponsavelNovo = null;
@@ -624,7 +640,6 @@
 
         function cancelarNovoPatrimonio() {
             document.getElementById('novo-patrimonio-form').style.display = 'none';
-            // Se havia uma pesquisa ativa, volta a exibir a tabela automaticamente
             const nrpInput = document.getElementById("patrimonioInput").value.trim();
             if (nrpInput) {
                 buscarPatrimonio();
@@ -672,18 +687,21 @@
             document.getElementById("progress-container").style.display = "block";
             document.getElementById("spinner").style.display = "inline-block";
             try {
-                await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A1:append?valueInputOption=USER_ENTERED`, {
+                const sigmasAppend = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/SIGMAS!A1:append?valueInputOption=USER_ENTERED`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ values: [rowData] })
                 });
+                if (!sigmasAppend.ok) throw new Error(`Erro ao adicionar em SIGMAS: ${sigmasAppend.status}`);
+
                 dadosSigmas.push(rowData);
                 if (isEspecial) {
-                    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/COAUD!A1:append?valueInputOption=USER_ENTERED`, {
+                    const coaudAppend = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/COAUD!A1:append?valueInputOption=USER_ENTERED`, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ values: [rowData] })
                     });
+                    if (!coaudAppend.ok) throw new Error(`Erro ao adicionar em COAUD: ${coaudAppend.status}`);
                     dadosCoaud.push(rowData);
                 }
                 refreshResponsaveis();
@@ -691,7 +709,7 @@
                 setTimeout(() => {
                     document.getElementById("progress-container").style.display = "none";
                     document.getElementById("spinner").style.display = "none";
-                    cancelarNovoPatrimonio();           // agora limpa corretamente e volta a tabela se houver pesquisa
+                    cancelarNovoPatrimonio();
                     document.getElementById('novoNrpInput').value = '';
                     document.getElementById('novoMaterialInput').value = '';
                     document.getElementById('novoLocalInputAdd').value = '';
@@ -700,7 +718,8 @@
                 }, 1500);
             } catch (err) {
                 console.error(err);
-                document.getElementById("progressText").textContent = "Erro ao adicionar";
+                document.getElementById("progressText").textContent = "Erro ao adicionar: " + err.message;
+                document.getElementById("spinner").style.display = "none";
             }
         }
     </script>

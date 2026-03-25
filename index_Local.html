@@ -528,7 +528,6 @@
                     });
                 }
             } else {
-                // ==================== CORREÇÃO DO ERRO 400 (COAUD → SIGMAS) ====================
                 if (isEspecial) {
                     const linha = rowIndex + 1;
                     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
@@ -589,7 +588,7 @@
                     })
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error(`Erro 400 ao remover linha da COAUD: ${response.status} - Verifique se a aba COAUD existe e o sheetId está correto.`);
+                            throw new Error(`Erro 400 ao remover linha da COAUD: ${response.status}`);
                         }
                         const linhaSigmas = sigmasRowIndex + 1;
                         return fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values:batchUpdate`, {
@@ -615,7 +614,27 @@
                         currentDados.splice(rowIndex, 1);
                         refreshResponsaveis();
                         document.getElementById("patrimonioList").innerHTML = '';
-                        document.getElementById("progressText").textContent = `✅ Patrimônio removido da COAUD e atualizado em SIGMAS!`;
+
+                        // ==================== CORREÇÃO DO DETALHE VISUAL ====================
+                        // Quando removemos da COAUD e atualizamos na SIGMAS, trocamos automaticamente para a aba SIGMAS
+                        // para evitar confusão do usuário (tabela azul mostrando algo que não está mais na COAUD)
+                        currentSheet = 'SIGMAS';
+                        currentDados = dadosSigmas;
+                        document.getElementById('abaSelect').value = 'SIGMAS';
+
+                        const tabela = document.getElementById("patrimonioTable");
+                        const titulo = document.getElementById("titulo-principal");
+                        tabela.classList.remove("sigmas", "coaud"); tabela.classList.add("sigmas");
+                        titulo.classList.remove("sigmas", "coaud"); titulo.classList.add("sigmas");
+
+                        const btnBuscar = document.getElementById("btn-buscar");
+                        const btnAdd = document.getElementById("btn-adicionar");
+                        btnBuscar.classList.remove("btn-sigmas", "btn-coaud");
+                        btnAdd.classList.remove("btn-sigmas", "btn-coaud");
+                        btnBuscar.classList.add("btn-sigmas");
+                        btnAdd.classList.add("btn-sigmas");
+
+                        document.getElementById("progressText").textContent = `✅ Patrimônio removido da COAUD e atualizado em SIGMAS! (aba alterada automaticamente)`;
                         document.getElementById("spinner").style.display = "none";
                         recarregarDados();
                     })
@@ -623,7 +642,7 @@
                         console.error(error);
                         document.getElementById("progressText").textContent = "Erro ao atualizar: " + error.message;
                         document.getElementById("spinner").style.display = "none";
-                        recarregarDados();  // recarrega para manter a consistência com o servidor
+                        recarregarDados();
                     });
                 }
             }

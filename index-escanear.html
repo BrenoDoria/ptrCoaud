@@ -1,38 +1,391 @@
-<!DOCTYPE html> 
-<html lang="pt-BR"> 
-    <head> <meta charset="UTF-8"> 
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-        <title>Patrimônios COAUD</title> <link rel="stylesheet" href="style_escanear.css"> 
-    </head> 
-    <body> 
-        <div class="container"> 
-            <h1>PATRIMÔNIOS COAUD</h1> <!-- Input de arquivo para carregar a planilha --> <!--<input type="file" id="fileInput" accept=".xlsx">--> 
-            <div class="progress-container"> <div id="spinner" class="spinner"></div> 
-            <p id="progressText"></p> </div> <!-- Campo para digitar a sala --> <div> 
-                <input type="text" id="salaInput" placeholder="Digite o nome da sala" autofocus> 
-            </div> <div> <button id="confirmarSala">Confirmar Sala</button> 
-            </div> <!-- Entrada para o patrimônio --> 
-            <div> <input type="text" id="patrimonioInput" placeholder="Digite o Patrimônio" autofocus> 
-            </div> <!-- Botões de trocar sala -->
-    <button onclick="exportPlanilhaEspecifica()">Exportar Planilha - Responsáveis Específicos</button>
-    <button onclick="exportPlanilhaOutros()">Exportar Planilha - Outros Responsáveis</button>
-    
-    <div> <button id="resetarColeta">Nova Sala</button>  <!-- Botão Voltar adicionado aqui -->
-    <button class="backButton" onclick="window.location.href='index.html'">Voltar</button></div>
-    
-    <!-- Tabela de patrimônios coletados --> <table id="patrimonioTable"> 
-        <thead> 
-            <tr> 
-                <th>NRP</th> 
-                <th>Material</th> 
-                <th>Localização</th> 
-                <th>Responsável</th> 
-            </tr> 
-        </thead> 
-        <tbody id="patrimonioList"></tbody> 
-    </table> 
-    <div> 
-        <button class="refreshButton" id="refreshButton">RESET</button> 
-    </div> </div> <footer class="author-signature"> © 2025 BrenoDoria </footer> 
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script> 
-    <script src="script-escanear.js"></script> </body> </html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head> 
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Patrimônios COAUD</title> 
+        <link rel="stylesheet" href="style_escanear.css">
+        
+        <!-- CSS das cores do inventário -->
+        <style>
+            #patrimonioTable tr.red {
+                background-color: #ffe6e6 !important;
+                color: #d32f2f !important;
+                font-weight: bold;
+            }
+            #patrimonioTable tr.green {
+                background-color: #e6ffe6 !important;
+                color: #2e7d32 !important;
+                font-weight: bold;
+            }
+            #patrimonioTable tr.yellow {
+                background-color: #fff9e6 !important;
+                color: #f57c00 !important;
+                font-weight: bold;
+            }
+            .legend {
+                font-size: 0.9em;
+                color: #555;
+                margin: 8px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>PATRIMÔNIOS COAUD</h1>
+
+            <div class="progress-container"> 
+                <div id="spinner" class="spinner"></div>
+                <p id="progressText"></p> 
+            </div> 
+
+            <!-- Select de salas (substitui o input de texto) -->
+            <div>
+                <select id="salaSelect" autofocus>
+                    <option value="">Carregando salas...</option>
+                </select>
+            </div> 
+            
+            <div> 
+                <button id="confirmarSala">Confirmar Sala</button>
+            </div> 
+
+            <!-- Entrada para o patrimônio -->
+            <div> 
+                <input type="text" id="patrimonioInput" placeholder="Digite ou bip o Patrimônio" autofocus>
+            </div> 
+
+            <!-- Botões de export -->
+            <button onclick="exportPlanilhaEspecifica()">Exportar Planilha - Responsáveis Específicos</button>
+            <button onclick="exportPlanilhaOutros()">Exportar Planilha - Outros Responsáveis</button>
+            
+            <div> 
+                <button id="resetarColeta">Nova Sala</button>
+                <button class="backButton" onclick="window.location.href='index.html'">Voltar</button>
+            </div>
+
+            <!-- Cabeçalho do inventário da sala atual -->
+            <div id="inventarioHeader" style="display: none;">
+                <h2>Inventário da Sala: <span id="salaTitle"></span></h2>
+                <p class="legend">
+                    🔴 Vermelho = Ainda não encontrado<br>
+                    🟢 Verde = Encontrado / Bipado<br>
+                    🟡 Amarelo = Novo (não existe na lista da sala)
+                </p>
+            </div>
+
+            <!-- Tabela de inventário da sala (com cores) -->
+            <table id="patrimonioTable">
+                <thead>
+                    <tr>
+                        <th>NRP</th>
+                        <th>Material</th>
+                        <th>Localização</th>
+                        <th>Responsável</th>
+                    </tr>
+                </thead>
+                <tbody id="patrimonioList"></tbody>
+            </table>
+
+            <div>
+                <button class="refreshButton" id="refreshButton">RESET TOTAL</button>
+            </div> 
+        </div> 
+
+        <footer class="author-signature"> © 2025 BrenoDoria </footer>
+
+        <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+        <script>
+            const FILE_ID = '1iNeSf0wakQ6j9Eg_qOCzVNKcIVVIsukeThL0Phpd5LE';
+            
+            let salaSelecionada = "";
+            let patrimoniosColetados = [];
+            let patrimonioData = [];
+            let currentSalaInventario = [];   // ← Novo array para o inventário visual da sala
+
+            function formatarData() {
+                const data = new Date();
+                const dia = String(data.getDate()).padStart(2, '0');
+                const mes = String(data.getMonth() + 1).padStart(2, '0');
+                const ano = data.getFullYear();
+                return `${dia}-${mes}-${ano}`;
+            }
+
+            function normalizeNRP(nrp) {
+                if (!nrp) return "";
+                return nrp.toString().replace(/^0+/, "");
+            }
+
+            window.addEventListener("load", function () {
+                const accessToken = localStorage.getItem("access_token");
+                if (!accessToken) {
+                    alert("Por favor, faça login com Google na página inicial.");
+                    window.location.href = "index.html";
+                    return;
+                }
+                carregarPatrimoniosDoSheets(accessToken);
+            });
+
+            function carregarPatrimoniosDoSheets(accessToken) {
+                document.getElementById("spinner").style.display = "inline-block";
+                document.getElementById("progressText").innerText = "Consultando Servidor";
+
+                // NOVO: aba COAUD com todas as colunas (A:Z)
+                fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/COAUD!A:Z`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                })
+                .then(async response => {
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Erro HTTP ${response.status}: ${errorData.error?.message || response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    patrimonioData = data.values || [];
+                    
+                    // Popula o dropdown com as salas únicas da coluna C (índice 2)
+                    if (patrimonioData.length > 1) {
+                        const uniqueSalas = [...new Set(
+                            patrimonioData.slice(1)
+                                .map(row => row[2] ? row[2].trim() : '')
+                                .filter(sala => sala !== '')
+                        )].sort();
+
+                        const select = document.getElementById("salaSelect");
+                        select.innerHTML = '<option value="">Selecione a sala...</option>';
+                        
+                        uniqueSalas.forEach(sala => {
+                            const option = document.createElement("option");
+                            option.value = sala;
+                            option.textContent = sala;
+                            select.appendChild(option);
+                        });
+                    }
+
+                    document.getElementById("progressText").innerText = "AUTORIZADA CONSULTA";
+                    document.getElementById("spinner").style.display = "none";
+                    document.getElementById("salaSelect").focus();
+                })
+                .catch(error => {
+                    console.error("Erro ao carregar dados do Sheets:", error);
+                    document.getElementById("progressText").innerText = "Erro ao carregar os dados: " + error.message;
+                    document.getElementById("spinner").style.display = "none";
+                });
+            }
+
+            // Confirmar sala (agora usa select)
+            document.getElementById("confirmarSala").addEventListener("click", function () {
+                salaSelecionada = document.getElementById("salaSelect").value.trim();
+                if (!salaSelecionada) {
+                    alert("Por favor, selecione o nome da sala antes de confirmar!");
+                    return;
+                }
+
+                document.getElementById("salaSelect").disabled = true;
+                document.getElementById("confirmarSala").disabled = true;
+
+                alert(`ATENÇÃO! A sala '${salaSelecionada}' foi selecionada com sucesso!`);
+
+                // Monta o inventário completo dessa sala (todos os patrimônios da coluna C)
+                currentSalaInventario = patrimonioData
+                    .slice(1) // pula cabeçalho
+                    .filter(row => {
+                        const salaDaLinha = row[2] ? row[2].trim() : '';
+                        return salaDaLinha.toUpperCase() === salaSelecionada.toUpperCase();
+                    })
+                    .map(row => ({
+                        NRP: row[0] ? row[0].toString() : '',
+                        Material: row[1] ? row[1].toString() : '',
+                        Localização: salaSelecionada,
+                        Responsável: row[3] ? row[3].toString() : '',
+                        status: 'red'   // começa vermelho
+                    }));
+
+                // Mostra cabeçalho do inventário
+                const header = document.getElementById("inventarioHeader");
+                header.style.display = "block";
+                document.getElementById("salaTitle").textContent = salaSelecionada;
+
+                updateInventarioTable();
+                document.getElementById("patrimonioInput").focus();
+            });
+
+            document.getElementById("patrimonioInput").addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                    addPatrimonio();
+                }
+            });
+
+            function addPatrimonio() {
+                let patrimonioInput = document.getElementById("patrimonioInput").value.trim();
+                patrimonioInput = patrimonioInput.replace(/\./g, "");
+                
+                if (!patrimonioInput) {
+                    alert("Digite ou bip o número de patrimônio.");
+                    return;
+                }
+                if (!salaSelecionada) {
+                    alert("Selecione e confirme uma sala antes de adicionar patrimônios!");
+                    return;
+                }
+
+                const normalizedInput = normalizeNRP(patrimonioInput);
+
+                // Verifica se já foi bipado (verde ou amarelo)
+                const jaColetado = currentSalaInventario.some(item => normalizeNRP(item.NRP) === normalizedInput);
+                if (jaColetado) {
+                    alert("Este patrimônio já foi coletado.");
+                    document.getElementById("patrimonioInput").value = "";
+                    document.getElementById("patrimonioInput").focus();
+                    return;
+                }
+
+                // Procura na lista da sala atual
+                const index = currentSalaInventario.findIndex(item => normalizeNRP(item.NRP) === normalizedInput);
+
+                if (index !== -1) {
+                    // Encontrado → fica verde
+                    currentSalaInventario[index].status = 'green';
+                    patrimoniosColetados.push({
+                        NRP: currentSalaInventario[index].NRP,
+                        Material: currentSalaInventario[index].Material,
+                        Localização: currentSalaInventario[index].Localização,
+                        Responsável: currentSalaInventario[index].Responsável
+                    });
+                } else {
+                    // Não existe na sala → fica amarelo
+                    const newItem = {
+                        NRP: patrimonioInput,
+                        Material: "EQUIPAMENTO NÃO ENCONTRADO NA LISTA DA SALA",
+                        Localização: salaSelecionada,
+                        Responsável: "N/A",
+                        status: 'yellow'
+                    };
+                    currentSalaInventario.unshift(newItem); // coloca no topo
+                    patrimoniosColetados.push({
+                        NRP: newItem.NRP,
+                        Material: newItem.Material,
+                        Localização: newItem.Localização,
+                        Responsável: newItem.Responsável
+                    });
+                }
+
+                updateInventarioTable();
+                document.getElementById("patrimonioInput").value = "";
+                document.getElementById("patrimonioInput").focus();
+            }
+
+            function updateInventarioTable() {
+                const listElement = document.getElementById("patrimonioList");
+                listElement.innerHTML = "";
+
+                currentSalaInventario.forEach((item) => {
+                    const row = document.createElement("tr");
+                    row.className = item.status;
+
+                    const nrpCell = document.createElement("td");
+                    nrpCell.textContent = item.NRP;
+                    row.appendChild(nrpCell);
+
+                    const materialCell = document.createElement("td");
+                    materialCell.textContent = item.Material;
+                    row.appendChild(materialCell);
+
+                    const localizacaoCell = document.createElement("td");
+                    localizacaoCell.textContent = item.Localização;
+                    row.appendChild(localizacaoCell);
+
+                    const responsavelCell = document.createElement("td");
+                    responsavelCell.textContent = item.Responsável;
+                    row.appendChild(responsavelCell);
+
+                    listElement.appendChild(row);
+                });
+            }
+
+            // Nova Sala (limpa apenas a sala atual)
+            document.getElementById("resetarColeta").addEventListener("click", function () {
+                document.getElementById("salaSelect").disabled = false;
+                document.getElementById("salaSelect").value = "";
+                document.getElementById("confirmarSala").disabled = false;
+                
+                salaSelecionada = "";
+                currentSalaInventario = [];
+                
+                document.getElementById("inventarioHeader").style.display = "none";
+                updateInventarioTable();
+
+                alert("Campo de sala desbloqueado. Selecione uma nova sala e confirme para continuar a coleta.");
+            });
+
+            // Exportar Responsáveis Específicos (mantido igual)
+            function exportPlanilhaEspecifica() {
+                const responsaveisEspecificos = [
+                    "ALBERTO CESAR SOUZA ALMEIDA (5302)",
+                    "PAULO FERNANDO VOLPE (5933)",
+                    "JOSE HENRIQUE FERREIRA DA SILVA (7913)"
+                ];
+                const dadosFiltrados = patrimoniosColetados.filter(item =>
+                    responsaveisEspecificos.some(responsavel => responsavel.trim() === item.Responsável.trim())
+                );
+                if (dadosFiltrados.length === 0) {
+                    alert("Nenhum patrimônio encontrado para os responsáveis específicos.");
+                    return;
+                }
+                const newData = [
+                    ["NRP", "Material", "Localização", "Responsável"],
+                    ...dadosFiltrados.map(item => [item.NRP, item.Material, item.Localização, item.Responsável]),
+                ];
+                const worksheet = XLSX.utils.aoa_to_sheet(newData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Responsaveis_Especificos");
+                XLSX.writeFile(workbook, `Responsaveis_COAUD_${formatarData()}.xlsx`);
+            }
+
+            // Exportar Outros Responsáveis (mantido igual)
+            function exportPlanilhaOutros() {
+                const responsaveisEspecificos = [
+                    "ALBERTO CESAR SOUZA ALMEIDA (5302)",
+                    "PAULO FERNANDO VOLPE (5933)",
+                    "JOSE HENRIQUE FERREIRA DA SILVA (7913)"
+                ];
+                const dadosFiltrados = patrimoniosColetados.filter(item =>
+                    !responsaveisEspecificos.some(responsavel => responsavel.trim() === item.Responsável.trim())
+                );
+                if (dadosFiltrados.length === 0) {
+                    alert("Nenhum patrimônio encontrado para outros responsáveis.");
+                    return;
+                }
+                const newData = [
+                    ["NRP", "Material", "Localização", "Responsável"],
+                    ...dadosFiltrados.map(item => [item.NRP, item.Material, item.Localização, item.Responsável]),
+                ];
+                const worksheet = XLSX.utils.aoa_to_sheet(newData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Outros_Responsaveis");
+                XLSX.writeFile(workbook, `Outros_Responsaveis_${formatarData()}.xlsx`);
+            }
+
+            // RESET TOTAL
+            document.getElementById("refreshButton").addEventListener("click", function () {
+                const confirmacao = confirm("Tem certeza que deseja resetar TUDO? Isso apagará todos os dados coletados e o inventário atual.");
+                if (confirmacao) {
+                    salaSelecionada = "";
+                    patrimoniosColetados = [];
+                    currentSalaInventario = [];
+                    document.getElementById("salaSelect").value = "";
+                    document.getElementById("salaSelect").disabled = false;
+                    document.getElementById("confirmarSala").disabled = false;
+                    document.getElementById("patrimonioInput").value = "";
+                    document.getElementById("inventarioHeader").style.display = "none";
+                    document.getElementById("patrimonioList").innerHTML = "";
+                    document.getElementById("progressText").innerText = "AUTORIZADA CONSULTA";
+                    alert("Reset total concluído com sucesso!");
+                }
+            });
+        </script>
+    </body>
+</html>

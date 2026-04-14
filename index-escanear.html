@@ -39,7 +39,7 @@
                 <p id="progressText"></p> 
             </div> 
 
-            <!-- Select de salas (substitui o input de texto) -->
+            <!-- Select de salas -->
             <div>
                 <select id="salaSelect" autofocus>
                     <option value="">Carregando salas...</option>
@@ -101,7 +101,7 @@
             let salaSelecionada = "";
             let patrimoniosColetados = [];
             let patrimonioData = [];
-            let currentSalaInventario = [];   // ← Novo array para o inventário visual da sala
+            let currentSalaInventario = [];
 
             function formatarData() {
                 const data = new Date();
@@ -113,7 +113,7 @@
 
             function normalizeNRP(nrp) {
                 if (!nrp) return "";
-                return nrp.toString().replace(/^0+/, "");
+                return nrp.toString().replace(/^0+/, "").trim();
             }
 
             window.addEventListener("load", function () {
@@ -130,7 +130,6 @@
                 document.getElementById("spinner").style.display = "inline-block";
                 document.getElementById("progressText").innerText = "Consultando Servidor";
 
-                // NOVO: aba COAUD com todas as colunas (A:Z)
                 fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/COAUD!A:Z`, {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`
@@ -146,7 +145,6 @@
                 .then(data => {
                     patrimonioData = data.values || [];
                     
-                    // Popula o dropdown com as salas únicas da coluna C (índice 2)
                     if (patrimonioData.length > 1) {
                         const uniqueSalas = [...new Set(
                             patrimonioData.slice(1)
@@ -176,7 +174,6 @@
                 });
             }
 
-            // Confirmar sala (agora usa select)
             document.getElementById("confirmarSala").addEventListener("click", function () {
                 salaSelecionada = document.getElementById("salaSelect").value.trim();
                 if (!salaSelecionada) {
@@ -189,9 +186,9 @@
 
                 alert(`ATENÇÃO! A sala '${salaSelecionada}' foi selecionada com sucesso!`);
 
-                // Monta o inventário completo dessa sala (todos os patrimônios da coluna C)
+                // Monta o inventário completo dessa sala (todos em vermelho)
                 currentSalaInventario = patrimonioData
-                    .slice(1) // pula cabeçalho
+                    .slice(1)
                     .filter(row => {
                         const salaDaLinha = row[2] ? row[2].trim() : '';
                         return salaDaLinha.toUpperCase() === salaSelecionada.toUpperCase();
@@ -201,12 +198,10 @@
                         Material: row[1] ? row[1].toString() : '',
                         Localização: salaSelecionada,
                         Responsável: row[3] ? row[3].toString() : '',
-                        status: 'red'   // começa vermelho
+                        status: 'red'
                     }));
 
-                // Mostra cabeçalho do inventário
-                const header = document.getElementById("inventarioHeader");
-                header.style.display = "block";
+                document.getElementById("inventarioHeader").style.display = "block";
                 document.getElementById("salaTitle").textContent = salaSelecionada;
 
                 updateInventarioTable();
@@ -234,20 +229,28 @@
 
                 const normalizedInput = normalizeNRP(patrimonioInput);
 
-                // Verifica se já foi bipado (verde ou amarelo)
-                const jaColetado = currentSalaInventario.some(item => normalizeNRP(item.NRP) === normalizedInput);
+                // ====================== CORREÇÃO AQUI ======================
+                // Só bloqueia se o patrimônio JÁ FOI BIPADO (verde ou amarelo)
+                // Se ainda estiver vermelho → é a primeira vez, pode marcar como encontrado
+                const jaColetado = currentSalaInventario.some(item => 
+                    normalizeNRP(item.NRP) === normalizedInput && item.status !== 'red'
+                );
+
                 if (jaColetado) {
-                    alert("Este patrimônio já foi coletado.");
+                    alert("Este patrimônio já foi coletado nesta sala.");
                     document.getElementById("patrimonioInput").value = "";
                     document.getElementById("patrimonioInput").focus();
                     return;
                 }
+                // ===========================================================
 
-                // Procura na lista da sala atual
-                const index = currentSalaInventario.findIndex(item => normalizeNRP(item.NRP) === normalizedInput);
+                // Procura o patrimônio na lista da sala
+                const index = currentSalaInventario.findIndex(item => 
+                    normalizeNRP(item.NRP) === normalizedInput
+                );
 
                 if (index !== -1) {
-                    // Encontrado → fica verde
+                    // Encontrado na lista da sala → muda para VERDE
                     currentSalaInventario[index].status = 'green';
                     patrimoniosColetados.push({
                         NRP: currentSalaInventario[index].NRP,
@@ -256,7 +259,7 @@
                         Responsável: currentSalaInventario[index].Responsável
                     });
                 } else {
-                    // Não existe na sala → fica amarelo
+                    // Não existe na lista da sala → adiciona como AMARELO
                     const newItem = {
                         NRP: patrimonioInput,
                         Material: "EQUIPAMENTO NÃO ENCONTRADO NA LISTA DA SALA",
@@ -264,7 +267,7 @@
                         Responsável: "N/A",
                         status: 'yellow'
                     };
-                    currentSalaInventario.unshift(newItem); // coloca no topo
+                    currentSalaInventario.unshift(newItem);
                     patrimoniosColetados.push({
                         NRP: newItem.NRP,
                         Material: newItem.Material,
@@ -306,7 +309,6 @@
                 });
             }
 
-            // Nova Sala (limpa apenas a sala atual)
             document.getElementById("resetarColeta").addEventListener("click", function () {
                 document.getElementById("salaSelect").disabled = false;
                 document.getElementById("salaSelect").value = "";
@@ -321,7 +323,6 @@
                 alert("Campo de sala desbloqueado. Selecione uma nova sala e confirme para continuar a coleta.");
             });
 
-            // Exportar Responsáveis Específicos (mantido igual)
             function exportPlanilhaEspecifica() {
                 const responsaveisEspecificos = [
                     "ALBERTO CESAR SOUZA ALMEIDA (5302)",
@@ -345,7 +346,6 @@
                 XLSX.writeFile(workbook, `Responsaveis_COAUD_${formatarData()}.xlsx`);
             }
 
-            // Exportar Outros Responsáveis (mantido igual)
             function exportPlanilhaOutros() {
                 const responsaveisEspecificos = [
                     "ALBERTO CESAR SOUZA ALMEIDA (5302)",
@@ -369,9 +369,8 @@
                 XLSX.writeFile(workbook, `Outros_Responsaveis_${formatarData()}.xlsx`);
             }
 
-            // RESET TOTAL
             document.getElementById("refreshButton").addEventListener("click", function () {
-                const confirmacao = confirm("Tem certeza que deseja resetar TUDO? Isso apagará todos os dados coletados e o inventário atual.");
+                const confirmacao = confirm("Tem certeza que deseja resetar TUDO?");
                 if (confirmacao) {
                     salaSelecionada = "";
                     patrimoniosColetados = [];

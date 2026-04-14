@@ -81,15 +81,82 @@
         tr:nth-child(even) td {
             background: #f2f2f2;
         }
-        .equipamentos-cell {
-            text-align: left;
-            padding: 0.625rem;
-            text-overflow: ellipsis;
-        }
-        .equipamento-item {
-            white-space: nowrap;
-            line-height: 1.5;
-        }
+        /* === MELHORIA DE RESPONSIVIDADE DA TABELA === */
+.table-wrapper {
+    margin-top: calc(var(--margin-base) * 0.8);
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    table-layout: fixed;           /* ← Importante */
+    min-width: 1000px;             /* Protege em telas muito pequenas */
+}
+
+th, td {
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+    font-size: calc(var(--font-size-base) * 0.92);
+    word-break: break-word;        /* Quebra palavras longas se necessário */
+}
+
+th {
+    background: #4CAF50;
+    color: white;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Coluna de Equipamentos - a mais problemática */
+td:nth-child(4) {                    /* 4ª coluna = Equipamentos */
+    text-align: left;
+    width: 38%;                      /* Dá mais espaço para equipamentos */
+    min-width: 280px;
+    max-width: 420px;
+}
+
+.equipamentos-cell {
+    text-align: left;
+    padding: 0.75rem;
+    line-height: 1.45;
+}
+
+.equipamento-item {
+    margin-bottom: 4px;
+    word-break: break-all;           /* Quebra códigos longos */
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+/* Quebra automática em telas menores */
+@media (max-width: 1024px) {
+    table {
+        min-width: 900px;
+    }
+    td:nth-child(4) {
+        width: 35%;
+    }
+}
+
+@media (max-width: 768px) {
+    th, td {
+        padding: 0.6rem 0.4rem;
+        font-size: 0.85rem;
+    }
+    
+    td:nth-child(4) {
+        width: 32%;
+        font-size: 0.82rem;
+    }
+}
         .ficha-atrasada td {
             background-color: yellow !important;
         }
@@ -536,7 +603,9 @@
                 sortedData.forEach((row, sortedIndex) => {
                     const equipamentos = row[3] ? row[3].split('; ') : [];
                     const equipamentosFormatados = equipamentos.length > 0
-                        ? equipamentos.map(equip => `<div class="equipamento-item">${equip}</div>`).join('')
+                        ? equipamentos.map(equip => 
+                            `<div class="equipamento-item">${equip.trim()}</div>`
+                          ).join('')
                         : '-';
                     const originalIndex = pendentesData.slice(1).findIndex(r => r[0] === row[0]) + 1; // Índice original no pendentesData
 

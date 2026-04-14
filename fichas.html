@@ -602,11 +602,9 @@ td:nth-child(4) {                    /* 4ª coluna = Equipamentos */
                 // Popula a tabela com os dados ordenados
                 sortedData.forEach((row, sortedIndex) => {
                     const equipamentos = row[3] ? row[3].split('; ') : [];
-                    const equipamentosFormatados = equipamentos.length > 0
-                        ? equipamentos.map(equip => 
-                            `<div class="equipamento-item">${equip.trim()}</div>`
-                          ).join('')
-                        : '-';
+                   const equipamentosFormatados = equipamentos.length > 0
+                            ? equipamentos.map(equip => `<div class="equipamento-item">${equip}</div>`).join('')
+                            : '-';
                     const originalIndex = pendentesData.slice(1).findIndex(r => r[0] === row[0]) + 1; // Índice original no pendentesData
 
                     // Verifica se a ficha tem mais de 30 dias

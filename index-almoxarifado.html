@@ -222,6 +222,7 @@
                     <option value="Breno Doria Felicio">Breno Doria Felicio</option>
                     <option value="Waleria Bastos Cardoso">Waleria Bastos Cardoso</option>
                     <option value="Wirlem Silva Alves">Wirlem Silva Alves</option>
+                    <option value="Lucas Farias de Menezes">Lucas Farias de Menezes</option>
                 </select>
             </div>
             <div class="form-group">
@@ -286,7 +287,8 @@ function erroCritico(mensagem) {
             "waleriasbastos@gmail.com": "Waleria Bastos Cardoso",
             "antonio.angelo.agenda@gmail.com": "Antonio Batista Ângelo",
             "breno.felicio@gmail.com": "Breno Doria Felicio",
-            "wirlemalves@gmail.com": "Wirlem Silva Alves"
+            "wirlemalves@gmail.com": "Wirlem Silva Alves",
+            "lcsfirmeza@gmail.com": "Lucas Farias de Menezes",
         };
 
      async function getCurrentUserEmail() {
@@ -454,6 +456,7 @@ function erroCritico(mensagem) {
                 <option value="Waleria Bastos Cardoso">Waleria Bastos Cardoso</option>
                 <option value="Breno Doria Felicio">Breno Doria Felicio</option>
                 <option value="Wirlem Silva Alves">Wirlem Silva Alves</option>
+                <option value="Lucas Farias de Menezes">Lucas Farias de Menezes</option>
             `;
 
             operador2Select.value = currentOperador2; // mantém o valor bloqueado
@@ -571,6 +574,7 @@ function erroCritico(mensagem) {
                 <option value="Waleria Bastos Cardoso" ${operador1 === "Waleria Bastos Cardoso" ? "disabled" : ""}>Waleria Bastos Cardoso</option>
                 <option value="Wirlem Silva Alves" ${operador1 === "Wirlem Silva Alves" ? "disabled" : ""}>Wirlem Silva Alves</option>
                 <option value="Breno Doria Felicio" ${operador1 === "Breno Doria Felicio" ? "disabled" : ""}>Breno Doria Felicio</option>
+                <option value="Lucas Farias de Menezes" ${operador1 === "Lucas Farias de Menezes" ? "disabled" : ""}>Lucas Farias de Menezes</option>
             `;
             operador2Select.value = currentOperador2;
             if (operador1 === currentOperador2 && operador1 !== "") {

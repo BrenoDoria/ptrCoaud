@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-    <head> 
+    <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Patrimônios COAUD</title> 
+        <title>Patrimônios COAUD</title>
         <link rel="stylesheet" href="style_escanear.css">
-        
+       
         <!-- CSS das cores do inventário -->
         <style>
             #patrimonioTable tr.red {
@@ -33,37 +33,32 @@
     <body>
         <div class="container">
             <h1>PATRIMÔNIOS COAUD</h1>
-
-            <div class="progress-container"> 
+            <div class="progress-container">
                 <div id="spinner" class="spinner"></div>
-                <p id="progressText"></p> 
-            </div> 
-
+                <p id="progressText"></p>
+            </div>
             <!-- Select de salas -->
             <div>
                 <select id="salaSelect" autofocus>
                     <option value="">Carregando salas...</option>
                 </select>
-            </div> 
-            
-            <div> 
+            </div>
+           
+            <div>
                 <button id="confirmarSala">Confirmar Sala</button>
-            </div> 
-
+            </div>
             <!-- Entrada para o patrimônio -->
-            <div> 
+            <div>
                 <input type="text" id="patrimonioInput" placeholder="Digite ou bip o Patrimônio" autofocus>
-            </div> 
-
+            </div>
             <!-- Botões de export -->
             <button onclick="exportPlanilhaEspecifica()">Exportar Planilha - Responsáveis Específicos</button>
             <button onclick="exportPlanilhaOutros()">Exportar Planilha - Outros Responsáveis</button>
-            
-            <div> 
+           
+            <div>
                 <button id="resetarColeta">Nova Sala</button>
                 <button class="backButton" onclick="window.location.href='index.html'">Voltar</button>
             </div>
-
             <!-- Cabeçalho do inventário da sala atual -->
             <div id="inventarioHeader" style="display: none;">
                 <h2>Inventário da Sala: <span id="salaTitle"></span></h2>
@@ -73,7 +68,6 @@
                     🟡 Amarelo = Novo (não existe na lista da sala)
                 </p>
             </div>
-
             <!-- Tabela de inventário da sala (com cores) -->
             <table id="patrimonioTable">
                 <thead>
@@ -86,18 +80,15 @@
                 </thead>
                 <tbody id="patrimonioList"></tbody>
             </table>
-
             <div>
                 <button class="refreshButton" id="refreshButton">RESET TOTAL</button>
-            </div> 
-        </div> 
-
+            </div>
+        </div>
         <footer class="author-signature"> © 2025 BrenoDoria </footer>
-
         <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
         <script>
             const FILE_ID = '1iNeSf0wakQ6j9Eg_qOCzVNKcIVVIsukeThL0Phpd5LE';
-            
+           
             let salaSelecionada = "";
             let patrimoniosColetados = [];
             let patrimonioData = [];
@@ -129,7 +120,6 @@
             function carregarPatrimoniosDoSheets(accessToken) {
                 document.getElementById("spinner").style.display = "inline-block";
                 document.getElementById("progressText").innerText = "Consultando Servidor";
-
                 fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/COAUD!A:Z`, {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`
@@ -144,17 +134,16 @@
                 })
                 .then(data => {
                     patrimonioData = data.values || [];
-                    
+                   
                     if (patrimonioData.length > 1) {
                         const uniqueSalas = [...new Set(
                             patrimonioData.slice(1)
                                 .map(row => row[2] ? row[2].trim() : '')
                                 .filter(sala => sala !== '')
                         )].sort();
-
                         const select = document.getElementById("salaSelect");
                         select.innerHTML = '<option value="">Selecione a sala...</option>';
-                        
+                       
                         uniqueSalas.forEach(sala => {
                             const option = document.createElement("option");
                             option.value = sala;
@@ -162,7 +151,6 @@
                             select.appendChild(option);
                         });
                     }
-
                     document.getElementById("progressText").innerText = "AUTORIZADA CONSULTA";
                     document.getElementById("spinner").style.display = "none";
                     document.getElementById("salaSelect").focus();
@@ -180,13 +168,10 @@
                     alert("Por favor, selecione o nome da sala antes de confirmar!");
                     return;
                 }
-
                 document.getElementById("salaSelect").disabled = true;
                 document.getElementById("confirmarSala").disabled = true;
-
                 alert(`ATENÇÃO! A sala '${salaSelecionada}' foi selecionada com sucesso!`);
 
-                // Monta o inventário completo dessa sala (todos em vermelho)
                 currentSalaInventario = patrimonioData
                     .slice(1)
                     .filter(row => {
@@ -203,7 +188,6 @@
 
                 document.getElementById("inventarioHeader").style.display = "block";
                 document.getElementById("salaTitle").textContent = salaSelecionada;
-
                 updateInventarioTable();
                 document.getElementById("patrimonioInput").focus();
             });
@@ -214,10 +198,11 @@
                 }
             });
 
+            // ====================== FUNÇÃO ATUALIZADA ======================
             function addPatrimonio() {
                 let patrimonioInput = document.getElementById("patrimonioInput").value.trim();
                 patrimonioInput = patrimonioInput.replace(/\./g, "");
-                
+
                 if (!patrimonioInput) {
                     alert("Digite ou bip o número de patrimônio.");
                     return;
@@ -229,82 +214,105 @@
 
                 const normalizedInput = normalizeNRP(patrimonioInput);
 
-                // ====================== CORREÇÃO AQUI ======================
-                // Só bloqueia se o patrimônio JÁ FOI BIPADO (verde ou amarelo)
-                // Se ainda estiver vermelho → é a primeira vez, pode marcar como encontrado
-                const jaColetado = currentSalaInventario.some(item => 
+                // Verifica se já foi coletado nesta sala
+                const jaColetado = currentSalaInventario.some(item =>
                     normalizeNRP(item.NRP) === normalizedInput && item.status !== 'red'
                 );
-
                 if (jaColetado) {
                     alert("Este patrimônio já foi coletado nesta sala.");
                     document.getElementById("patrimonioInput").value = "";
                     document.getElementById("patrimonioInput").focus();
                     return;
                 }
-                // ===========================================================
 
-                // Procura o patrimônio na lista da sala
-                const index = currentSalaInventario.findIndex(item => 
+                // Busca o patrimônio em toda a planilha
+                let patrimonioEncontrado = null;
+                let salaOriginal = "";
+
+                for (let i = 1; i < patrimonioData.length; i++) {
+                    const row = patrimonioData[i];
+                    const nrpDaPlanilha = normalizeNRP(row[0]);
+
+                    if (nrpDaPlanilha === normalizedInput) {
+                        patrimonioEncontrado = row;
+                        salaOriginal = row[2] ? row[2].trim() : "";
+                        break;
+                    }
+                }
+
+                // Caso 1: Patrimônio NÃO existe na planilha
+                if (!patrimonioEncontrado) {
+                    alert("Este patrimônio novo deve ser inserido pelo supervisor responsável na área Localizador e Transferência de Patrimônio.");
+                    document.getElementById("patrimonioInput").value = "";
+                    document.getElementById("patrimonioInput").focus();
+                    return;
+                }
+
+                // Caso 2: Patrimônio existe em outra sala
+                if (salaOriginal.toUpperCase() !== salaSelecionada.toUpperCase() && salaOriginal !== "") {
+                    const confirmacao = confirm(
+                        `Este patrimônio era da sala "${salaOriginal}".\n\nConfirma a troca para a sala "${salaSelecionada}"?`
+                    );
+
+                    if (!confirmacao) {
+                        document.getElementById("patrimonioInput").value = "";
+                        document.getElementById("patrimonioInput").focus();
+                        return;
+                    }
+                }
+
+                // Adiciona ou atualiza no inventário atual
+                const indexNaSalaAtual = currentSalaInventario.findIndex(item =>
                     normalizeNRP(item.NRP) === normalizedInput
                 );
 
-                if (index !== -1) {
-                    // Encontrado na lista da sala → muda para VERDE
-                    currentSalaInventario[index].status = 'green';
-                    patrimoniosColetados.push({
-                        NRP: currentSalaInventario[index].NRP,
-                        Material: currentSalaInventario[index].Material,
-                        Localização: currentSalaInventario[index].Localização,
-                        Responsável: currentSalaInventario[index].Responsável
-                    });
+                if (indexNaSalaAtual !== -1) {
+                    // Já estava na lista da sala (vermelho)
+                    currentSalaInventario[indexNaSalaAtual].status = 'green';
                 } else {
-                    // Não existe na lista da sala → adiciona como AMARELO
+                    // Veio de outra sala
                     const newItem = {
-                        NRP: patrimonioInput,
-                        Material: "EQUIPAMENTO NÃO ENCONTRADO NA LISTA DA SALA",
+                        NRP: patrimonioEncontrado[0] ? patrimonioEncontrado[0].toString() : normalizedInput,
+                        Material: patrimonioEncontrado[1] ? patrimonioEncontrado[1].toString() : "N/A",
                         Localização: salaSelecionada,
-                        Responsável: "N/A",
-                        status: 'yellow'
+                        Responsável: patrimonioEncontrado[3] ? patrimonioEncontrado[3].toString() : "N/A",
+                        status: 'green'
                     };
                     currentSalaInventario.unshift(newItem);
-                    patrimoniosColetados.push({
-                        NRP: newItem.NRP,
-                        Material: newItem.Material,
-                        Localização: newItem.Localização,
-                        Responsável: newItem.Responsável
-                    });
                 }
+
+                // Adiciona na lista de coletados
+                patrimoniosColetados.push({
+                    NRP: patrimonioEncontrado[0] ? patrimonioEncontrado[0].toString() : normalizedInput,
+                    Material: patrimonioEncontrado[1] ? patrimonioEncontrado[1].toString() : "N/A",
+                    Localização: salaSelecionada,
+                    Responsável: patrimonioEncontrado[3] ? patrimonioEncontrado[3].toString() : "N/A"
+                });
 
                 updateInventarioTable();
                 document.getElementById("patrimonioInput").value = "";
                 document.getElementById("patrimonioInput").focus();
             }
+            // =============================================================
 
             function updateInventarioTable() {
                 const listElement = document.getElementById("patrimonioList");
                 listElement.innerHTML = "";
-
                 currentSalaInventario.forEach((item) => {
                     const row = document.createElement("tr");
                     row.className = item.status;
-
                     const nrpCell = document.createElement("td");
                     nrpCell.textContent = item.NRP;
                     row.appendChild(nrpCell);
-
                     const materialCell = document.createElement("td");
                     materialCell.textContent = item.Material;
                     row.appendChild(materialCell);
-
                     const localizacaoCell = document.createElement("td");
                     localizacaoCell.textContent = item.Localização;
                     row.appendChild(localizacaoCell);
-
                     const responsavelCell = document.createElement("td");
                     responsavelCell.textContent = item.Responsável;
                     row.appendChild(responsavelCell);
-
                     listElement.appendChild(row);
                 });
             }
@@ -313,13 +321,12 @@
                 document.getElementById("salaSelect").disabled = false;
                 document.getElementById("salaSelect").value = "";
                 document.getElementById("confirmarSala").disabled = false;
-                
+               
                 salaSelecionada = "";
                 currentSalaInventario = [];
-                
+               
                 document.getElementById("inventarioHeader").style.display = "none";
                 updateInventarioTable();
-
                 alert("Campo de sala desbloqueado. Selecione uma nova sala e confirme para continuar a coleta.");
             });
 

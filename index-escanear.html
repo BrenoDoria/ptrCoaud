@@ -251,7 +251,12 @@
                 // Caso 2: Patrimônio existe em outra sala
                 if (salaOriginal.toUpperCase() !== salaSelecionada.toUpperCase() && salaOriginal !== "") {
                     const confirmacao = confirm(
-                        `Este patrimônio era da sala "${salaOriginal}".\n\nConfirma a troca para a sala "${salaSelecionada}"?`
+                        `Este patrimônio era da sala "${salaOriginal}".\n\n` +
+                        `Deseja movê-lo para a sala "${salaSelecionada}" neste levantamento?\n\n` +
+                        `ATENÇÃO:\n` +
+                        `• Esta alteração será válida apenas neste inventário atual.\n` +
+                        `• A planilha principal (banco de dados) NÃO será alterada aqui.\n` +
+                        `• A alteração definitiva de localização deve ser feita pelo supervisor na área "Localizador e Transferência de Patrimônio".`
                     );
 
                     if (!confirmacao) {

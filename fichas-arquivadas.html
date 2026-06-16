@@ -506,6 +506,38 @@
     // Inicia o timer assim que a página carregar
     resetarTimer();
 })();
+        // ─── PAUSA AUTOMÁTICA se houver fichas selecionadas para imprimir ──────────
+(function() {
+    // Observa mudanças nos checkboxes — se algum estiver marcado, pausa
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.classList.contains('ficha-checkbox')) {
+            const algumMarcado = document.querySelectorAll('.ficha-checkbox:checked').length > 0;
+            const selectAll = document.getElementById('selectAll');
+            const selectAllMarcado = selectAll && selectAll.checked;
+
+            if (algumMarcado || selectAllMarcado) {
+                // Pausa a contagem enquanto há seleção ativa
+                if (typeof window.pausarInatividade === 'function') {
+                    window.pausarInatividade();
+                }
+            } else {
+                // Todos desmarcados: retoma a contagem
+                // Recria o timer reiniciando o módulo de inatividade via evento artificial
+                document.dispatchEvent(new Event('mousemove'));
+            }
+        }
+        // Mesma lógica para o "selecionar todos"
+        if (e.target && e.target.id === 'selectAll') {
+            if (e.target.checked) {
+                if (typeof window.pausarInatividade === 'function') {
+                    window.pausarInatividade();
+                }
+            } else {
+                document.dispatchEvent(new Event('mousemove'));
+            }
+        }
+    });
+})();
     </script>
 </body>
 </html>

@@ -774,7 +774,104 @@ function erroCritico(mensagem) {
                 erroCritico("❌ Retirada NÃO registrada.\n\nMotivo: " + error.message);
             }
         }
-       
+
+        // ─── ATUALIZAÇÃO PERIÓDICA: recarrega a página após 5 min de inatividade ──
+(function() {
+    const TEMPO_INATIVIDADE_MS = 5 * 60 * 1000;
+    const AVISO_ANTECEDENCIA_MS = 30 * 1000;
+
+    let timerRecarregar = null;
+    let timerAviso = null;
+    let elementoAviso = null;
+
+    function criarElementoAviso() {
+        const div = document.createElement('div');
+        div.id = 'aviso-inatividade';
+        div.style.cssText = `
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 9999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            max-width: 280px;
+            line-height: 1.5;
+        `;
+        div.innerHTML = `
+            ⏱️ Recarregando em <strong id="aviso-contador">30</strong>s para manter sessão ativa.
+            <br><span onclick="cancelarRecarga()" 
+                style="text-decoration:underline;cursor:pointer;color:#7dd;">
+                Cancelar
+            </span>
+        `;
+        document.body.appendChild(div);
+        return div;
+    }
+
+    function mostrarAviso(segundosRestantes) {
+        if (!elementoAviso) elementoAviso = criarElementoAviso();
+        elementoAviso.style.display = 'block';
+        let conta = segundosRestantes;
+        const intervalo = setInterval(() => {
+            conta--;
+            const el = document.getElementById('aviso-contador');
+            if (el) el.textContent = conta;
+            if (conta <= 0) clearInterval(intervalo);
+        }, 1000);
+        elementoAviso._intervalo = intervalo;
+    }
+
+    function esconderAviso() {
+        if (!elementoAviso) return;
+        elementoAviso.style.display = 'none';
+        if (elementoAviso._intervalo) {
+            clearInterval(elementoAviso._intervalo);
+            elementoAviso._intervalo = null;
+        }
+    }
+
+    window.cancelarRecarga = function() {
+        clearTimeout(timerRecarregar);
+        clearTimeout(timerAviso);
+        esconderAviso();
+        resetarTimer(); // reinicia a contagem do zero
+    };
+
+    function resetarTimer() {
+        // Não reinicia se houver NRPs adicionados ou campos preenchidos
+        const temNRPs = typeof patrimoniosSelecionados !== 'undefined' && 
+                        patrimoniosSelecionados.length > 0;
+        const temCampos = (document.getElementById('localMontagemInput')?.value?.trim() ||
+                           document.getElementById('eventoInput')?.value?.trim() ||
+                           document.getElementById('operador1Select')?.value);
+
+        if (temNRPs || temCampos) return; // não interrompe quem está no meio de um preenchimento
+
+        clearTimeout(timerRecarregar);
+        clearTimeout(timerAviso);
+        esconderAviso();
+
+        timerAviso = setTimeout(() => {
+            mostrarAviso(30);
+        }, TEMPO_INATIVIDADE_MS - AVISO_ANTECEDENCIA_MS);
+
+        timerRecarregar = setTimeout(() => {
+            window.location.reload();
+        }, TEMPO_INATIVIDADE_MS);
+    }
+
+    const EVENTOS = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'wheel'];
+    EVENTOS.forEach(evento => {
+        document.addEventListener(evento, resetarTimer, { passive: true });
+    });
+
+    resetarTimer();
+})();
     </script>
 </body>
 </html>

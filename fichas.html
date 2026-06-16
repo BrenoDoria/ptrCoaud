@@ -637,80 +637,233 @@
             idFichaSelecionada = null;
         }
 
-        async function confirmarDevolucao() {
-            const operadorDevolucao = document.getElementById("operadorDevolucaoSelect").value;
-            const almoxarifadoDevolucao = document.getElementById("almoxarifadoDevolucaoSelect").value;
+        // ─── FUNÇÃO AUXILIAR: verifica se o token ainda é válido ───────────────────
+async function verificarTokenValido() {
+    try {
+        const resp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        return resp.ok; // true se válido, false se expirado
+    } catch (e) {
+        return false;
+    }
+}
 
-            if (!operadorDevolucao || !almoxarifadoDevolucao) {
-                document.getElementById("progressText").textContent = "Preencha todos os campos obrigatórios (Operador Devolução e Almoxarifado Devolução).";
-                return;
-            }
+// ─── FUNÇÃO AUXILIAR: renova o token e aguarda o callback ──────────────────
+function renovarTokenEExecutar(callback) {
+    // Guarda o callback original do tokenClient
+    const callbackOriginal = tokenClient.callback;
+    tokenClient.callback = async (tokenResponse) => {
+        if (tokenResponse.error) {
+            document.getElementById("progressText").textContent = 
+                "Erro ao renovar autenticação: " + tokenResponse.error;
+            tokenClient.callback = callbackOriginal;
+            return;
+        }
+        accessToken = tokenResponse.access_token;
+        localStorage.setItem("access_token", accessToken);
+        tokenClient.callback = callbackOriginal;
+        // Executa a operação que estava esperando
+        await callback();
+    };
+    tokenClient.requestAccessToken({ prompt: '' }); // '' = sem tela de conta se já logado
+}
 
-            await marcarDevolucao(idFichaSelecionada, operadorDevolucao, almoxarifadoDevolucao);
-            fecharModal();
+// ─── CONFIRMAR DEVOLUÇÃO (chamada pelo botão do modal) ────────────────────
+async function confirmarDevolucao() {
+    const operadorDevolucao = document.getElementById("operadorDevolucaoSelect").value;
+    const almoxarifadoDevolucao = document.getElementById("almoxarifadoDevolucaoSelect").value;
+
+    if (!operadorDevolucao || !almoxarifadoDevolucao) {
+        document.getElementById("progressText").textContent = 
+            "Preencha todos os campos obrigatórios (Operador Devolução e Almoxarifado Devolução).";
+        return;
+    }
+
+    // CAMADA 1: verificar token antes de qualquer operação
+    const tokenOk = await verificarTokenValido();
+    if (!tokenOk) {
+        document.getElementById("progressText").textContent = 
+            "⚠️ Sessão expirada. Renovando autenticação, aguarde...";
+        fecharModal();
+        // Renova e reabre o modal com os mesmos valores após login
+        const idFichaAtual = idFichaSelecionada;
+        const operadorGuardado = operadorDevolucao;
+        const almoxGuardado = almoxarifadoDevolucao;
+        renovarTokenEExecutar(async () => {
+            // Recarrega os dados e reabre o modal
+            await carregarDadosDoSheets();
+            idFichaSelecionada = idFichaAtual;
+            document.getElementById("operadorDevolucaoSelect").value = operadorGuardado;
+            document.getElementById("almoxarifadoDevolucaoSelect").value = almoxGuardado;
+            document.getElementById("devolucaoModal").style.display = "block";
+            document.getElementById("progressText").textContent = 
+                "✅ Sessão renovada. Confirme a devolução novamente.";
+        });
+        return;
+    }
+
+    await marcarDevolucao(idFichaSelecionada, operadorDevolucao, almoxarifadoDevolucao);
+    fecharModal();
+}
+
+// ─── MARCAR DEVOLUÇÃO (operação principal) ────────────────────────────────
+async function marcarDevolucao(idFicha, operadorDevolucao, almoxarifadoDevolucao) {
+    const retiradaIndex = pendentesData.slice(1).findIndex(row => row[0] === idFicha);
+    if (retiradaIndex === -1) {
+        document.getElementById("progressText").textContent = 
+            "Ficha não encontrada nos dados locais. Recarregue a página.";
+        return;
+    }
+
+    document.getElementById("spinner").style.display = "inline-block";
+    document.getElementById("progressText").textContent = "Verificando duplicidade...";
+
+    try {
+        // CAMADA 2: verificar se idFicha já existe em ARQUIVADAS antes de gravar
+        const arquivadasResp = await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_ARQUIVADAS!A:A`,
+            { headers: { 'Authorization': `Bearer ${accessToken}` } }
+        );
+        if (!arquivadasResp.ok) {
+            const err = await arquivadasResp.json();
+            throw new Error(`Erro ao verificar ARQUIVADAS: ${err.error?.message || arquivadasResp.statusText}`);
+        }
+        const arquivadasIds = await arquivadasResp.json();
+        const idsExistentes = (arquivadasIds.values || []).flat();
+
+        if (idsExistentes.includes(idFicha)) {
+            // Já foi arquivada (provavelmente numa tentativa anterior)
+            // Só remove de PENDENTES se ainda estiver lá
+            document.getElementById("progressText").textContent = 
+                "⚠️ Esta ficha já foi arquivada anteriormente. Removendo de Pendentes...";
+            await deletarDePendentes(retiradaIndex);
+            pendentesData.splice(retiradaIndex + 1, 1);
+            atualizarTabelas();
+            document.getElementById("progressText").textContent = 
+                "✅ Ficha já estava arquivada. Pendente removida com sucesso!";
+            document.getElementById("spinner").style.display = "none";
+            return;
         }
 
-        async function marcarDevolucao(idFicha, operadorDevolucao, almoxarifadoDevolucao) {
-            const retiradaIndex = pendentesData.slice(1).findIndex(row => row[0] === idFicha);
-            if (retiradaIndex === -1) {
-                document.getElementById("progressText").textContent = "Ficha não encontrada.";
-                return;
+        // Não existe em ARQUIVADAS: prosseguir normalmente
+        const retirada = pendentesData[retiradaIndex + 1];
+        const dataDevolucao = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const fichaArquivada = [...retirada, dataDevolucao, operadorDevolucao, almoxarifadoDevolucao];
+
+        document.getElementById("progressText").textContent = "Arquivando ficha...";
+
+        // PASSO 1: gravar em ARQUIVADAS
+        const appendResp = await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_ARQUIVADAS!A:J:append?valueInputOption=RAW`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ values: [fichaArquivada] })
             }
+        );
+        if (!appendResp.ok) {
+            const err = await appendResp.json();
+            throw new Error(`Erro ao arquivar: ${err.error?.message || appendResp.statusText}`);
+        }
 
-            const retirada = pendentesData[retiradaIndex + 1];
-            const dataDevolucao = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-            const fichaArquivada = [...retirada, dataDevolucao, operadorDevolucao, almoxarifadoDevolucao];
+        document.getElementById("progressText").textContent = "Removendo de Pendentes...";
 
-            try {
-                const appendResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}/values/RETIRADAS_ARQUIVADAS!A:J:append?valueInputOption=RAW`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        values: [fichaArquivada]
-                    })
-                });
-                if (!appendResponse.ok) {
-                    const errorData = await appendResponse.json();
-                    throw new Error(`Erro ao arquivar retirada: ${errorData.error?.message || appendResponse.statusText}`);
-                }
+        // PASSO 2: CAMADA 3 — deletar de PENDENTES com retry em caso de token expirado
+        const deleteOk = await deletarDePendentes(retiradaIndex);
+        if (!deleteOk) {
+            // O delete falhou mas o append já aconteceu.
+            // Na próxima vez que abrir a ficha, a Camada 2 vai detectar a duplicidade
+            // e só vai executar o delete, sem gravar de novo em ARQUIVADAS.
+            document.getElementById("progressText").textContent = 
+                "⚠️ Ficha arquivada, mas houve um erro ao remover de Pendentes. " +
+                "Ao tentar devolver novamente, o sistema corrigirá automaticamente.";
+            document.getElementById("spinner").style.display = "none";
+            return;
+        }
 
-                const rowIndex = retiradaIndex + 1;
-                const deleteResponse = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}:batchUpdate`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        requests: [{
-                            deleteDimension: {
-                                range: {
-                                    sheetId: sheetIds['RETIRADAS_PENDENTES'],
-                                    dimension: 'ROWS',
-                                    startIndex: rowIndex,
-                                    endIndex: rowIndex + 1
-                                }
+        // Atualiza dados locais
+        pendentesData.splice(retiradaIndex + 1, 1);
+        atualizarTabelas();
+        document.getElementById("progressText").textContent = 
+            "✅ Devolução registrada e arquivada com sucesso!";
+
+    } catch (error) {
+        document.getElementById("progressText").textContent = 
+            "Erro ao marcar devolução: " + error.message;
+        console.error(error);
+    } finally {
+        document.getElementById("spinner").style.display = "none";
+    }
+}
+
+// ─── FUNÇÃO AUXILIAR: deletar linha de PENDENTES com retry de token ────────
+async function deletarDePendentes(retiradaIndex) {
+    const rowIndex = retiradaIndex + 1;
+
+    const executarDelete = async () => {
+        return await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${FILE_ID}:batchUpdate`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    requests: [{
+                        deleteDimension: {
+                            range: {
+                                sheetId: sheetIds['RETIRADAS_PENDENTES'],
+                                dimension: 'ROWS',
+                                startIndex: rowIndex,
+                                endIndex: rowIndex + 1
                             }
-                        }]
-                    })
-                });
-                if (!deleteResponse.ok) {
-                    const errorData = await deleteResponse.json();
-                    throw new Error(`Erro ao remover retirada pendente: ${errorData.error?.message || deleteResponse.statusText}`);
-                }
-
-                pendentesData.splice(rowIndex, 1);
-                atualizarTabelas();
-                document.getElementById("progressText").textContent = "Devolução registrada e arquivada com sucesso!";
-            } catch (error) {
-                document.getElementById("progressText").textContent = "Erro ao marcar devolução: " + error.message;
-                console.error(error);
+                        }
+                    }]
+                })
             }
-        }
+        );
+    };
 
+    let deleteResp = await executarDelete();
+
+    // Se o token expirou durante o delete, tenta renovar e repetir UMA vez
+    if (deleteResp.status === 401) {
+        document.getElementById("progressText").textContent = 
+            "Token expirou durante a operação. Renovando...";
+        try {
+            // Tenta uma renovação silenciosa
+            await new Promise((resolve, reject) => {
+                const callbackOriginal = tokenClient.callback;
+                tokenClient.callback = (resp) => {
+                    tokenClient.callback = callbackOriginal;
+                    if (resp.error) { reject(new Error(resp.error)); return; }
+                    accessToken = resp.access_token;
+                    localStorage.setItem("access_token", accessToken);
+                    resolve();
+                };
+                tokenClient.requestAccessToken({ prompt: '' });
+            });
+            deleteResp = await executarDelete();
+        } catch (e) {
+            console.error("Falha ao renovar token para delete:", e);
+            return false;
+        }
+    }
+
+    if (!deleteResp.ok) {
+        const err = await deleteResp.json();
+        console.error("Erro no delete:", err);
+        return false;
+    }
+    return true;
+}
+
+        
         function imprimirFicha(rowIndex) {
             const ficha = pendentesData[rowIndex];
             const dadosFicha = {

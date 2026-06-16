@@ -776,7 +776,7 @@ function erroCritico(mensagem) {
         };
 
        // ─── INATIVIDADE: recarrega a página após 5 min se não houver preenchimento ─
-(function() {
+void function() {
     const TEMPO_MS = 5 * 60 * 1000;
     const AVISO_MS = 10 * 1000;
     let timerRecarregar = null;

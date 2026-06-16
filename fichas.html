@@ -741,8 +741,11 @@ async function marcarDevolucao(idFicha, operadorDevolucao, almoxarifadoDevolucao
             pendentesData.splice(retiradaIndex + 1, 1);
             atualizarTabelas();
             document.getElementById("progressText").textContent = 
-                "✅ Ficha já estava arquivada. Pendente removida com sucesso!";
+                "✅ Ficha já estava arquivada. Redirecionando...";
             document.getElementById("spinner").style.display = "none";
+            setTimeout(() => {
+                window.location.href = "fichas-arquivadas.html";
+            }, 1200);
             return;
         }
 
@@ -785,11 +788,13 @@ async function marcarDevolucao(idFicha, operadorDevolucao, almoxarifadoDevolucao
             return;
         }
 
-        // Atualiza dados locais
+      // Atualiza dados locais e redireciona para confirmar visualmente
         pendentesData.splice(retiradaIndex + 1, 1);
-        atualizarTabelas();
         document.getElementById("progressText").textContent = 
-            "✅ Devolução registrada e arquivada com sucesso!";
+            "✅ Devolução registrada! Redirecionando para Fichas Arquivadas...";
+        setTimeout(() => {
+            window.location.href = "fichas-arquivadas.html";
+        }, 1200);
 
     } catch (error) {
         document.getElementById("progressText").textContent = 

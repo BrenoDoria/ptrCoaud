@@ -406,6 +406,106 @@
             document.getElementById("progressText").textContent = "Busca limpa. Exibindo todas as fichas arquivadas.";
             atualizarTabelaArquivadas();
         }
+        // ─── SISTEMA DE INATIVIDADE: redireciona para index após 5 min sem ação ───
+(function() {
+    const TEMPO_INATIVIDADE_MS = 5 * 60 * 1000; // 5 minutos
+    const PAGINA_DESTINO = 'index-almoxarifado.html';
+    const AVISO_ANTECEDENCIA_MS = 30 * 1000; // avisa 30s antes
+
+    let timerRedirecionar = null;
+    let timerAviso = null;
+    let elementoAviso = null;
+    let pausado = false;
+
+    function criarElementoAviso() {
+        const div = document.createElement('div');
+        div.id = 'aviso-inatividade';
+        div.style.cssText = `
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 9999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            max-width: 280px;
+            line-height: 1.5;
+        `;
+        div.innerHTML = `
+            ⏱️ Redirecionando em <strong id="aviso-contador">30</strong>s por inatividade.
+            <br><span onclick="window.pausarInatividade()" 
+                style="text-decoration:underline;cursor:pointer;color:#7dd;">
+                Continuar aqui
+            </span>
+        `;
+        document.body.appendChild(div);
+        return div;
+    }
+
+    function mostrarAviso(segundosRestantes) {
+        if (!elementoAviso) elementoAviso = criarElementoAviso();
+        elementoAviso.style.display = 'block';
+        let conta = segundosRestantes;
+        const intervalo = setInterval(() => {
+            conta--;
+            const el = document.getElementById('aviso-contador');
+            if (el) el.textContent = conta;
+            if (conta <= 0) clearInterval(intervalo);
+        }, 1000);
+        // guarda referência para limpar se o usuário agir
+        elementoAviso._intervalo = intervalo;
+    }
+
+    function esconderAviso() {
+        if (!elementoAviso) return;
+        elementoAviso.style.display = 'none';
+        if (elementoAviso._intervalo) {
+            clearInterval(elementoAviso._intervalo);
+            elementoAviso._intervalo = null;
+        }
+    }
+
+    function resetarTimer() {
+        if (pausado) return;
+
+        clearTimeout(timerRedirecionar);
+        clearTimeout(timerAviso);
+        esconderAviso();
+
+        // Agenda o aviso 30s antes do redirecionamento
+        timerAviso = setTimeout(() => {
+            mostrarAviso(30);
+        }, TEMPO_INATIVIDADE_MS - AVISO_ANTECEDENCIA_MS);
+
+        // Agenda o redirecionamento
+        timerRedirecionar = setTimeout(() => {
+            window.location.href = PAGINA_DESTINO;
+        }, TEMPO_INATIVIDADE_MS);
+    }
+
+    // Expõe função para o botão "Continuar aqui" pausar o sistema
+    window.pausarInatividade = function() {
+        pausado = true;
+        clearTimeout(timerRedirecionar);
+        clearTimeout(timerAviso);
+        esconderAviso();
+        // Fica pausado — só volta a contar se o usuário chamar resumirInatividade()
+        // ou recarregar a página
+    };
+
+    // Eventos que reiniciam o contador
+    const EVENTOS = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'wheel'];
+    EVENTOS.forEach(evento => {
+        document.addEventListener(evento, resetarTimer, { passive: true });
+    });
+
+    // Inicia o timer assim que a página carregar
+    resetarTimer();
+})();
     </script>
 </body>
 </html>

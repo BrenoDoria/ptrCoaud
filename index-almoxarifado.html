@@ -815,26 +815,21 @@ function erroCritico(mensagem) {
     }
 
     function resetarTimer() {
-    // Só protege se tiver NRPs na lista — esses sim se perdem com reload
     const temNRPs = typeof patrimoniosSelecionados !== 'undefined' &&
                     patrimoniosSelecionados.length > 0;
 
-    if (temNRPs) {
-        clearTimeout(timerRecarregar);
-        clearTimeout(timerAviso);
-        esconderAviso();
-        return;
-    }
+    // Com NRPs na lista usa 10 min, sem NRPs usa 5 min
+    const TEMPO_ATUAL = temNRPs ? 2 * 60 * 1000 : TEMPO_MS;
 
     clearTimeout(timerRecarregar);
     clearTimeout(timerAviso);
     esconderAviso();
 
-    timerAviso = setTimeout(mostrarAviso, TEMPO_MS - AVISO_MS);
+    timerAviso = setTimeout(mostrarAviso, TEMPO_ATUAL - AVISO_MS);
 
     timerRecarregar = setTimeout(() => {
         window.location.reload();
-    }, TEMPO_MS);
+    }, TEMPO_ATUAL);
 }
 
     const EVENTOS = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'wheel'];

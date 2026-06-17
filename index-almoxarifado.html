@@ -815,17 +815,11 @@ function erroCritico(mensagem) {
     }
 
     function resetarTimer() {
+    // Só protege se tiver NRPs na lista — esses sim se perdem com reload
     const temNRPs = typeof patrimoniosSelecionados !== 'undefined' &&
                     patrimoniosSelecionados.length > 0;
 
-    const operador = document.getElementById('operador1Select')?.value;
-    const local = document.getElementById('localMontagemInput')?.value?.trim();
-    const evento = document.getElementById('eventoInput')?.value?.trim();
-
-    // Só considera preenchido se tiver valor real (não vazio e não o placeholder)
-    const temCampos = (operador && operador !== 'Obrigatório') || local || evento;
-
-    if (temNRPs || temCampos) {
+    if (temNRPs) {
         clearTimeout(timerRecarregar);
         clearTimeout(timerAviso);
         esconderAviso();

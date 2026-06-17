@@ -815,29 +815,33 @@ function erroCritico(mensagem) {
     }
 
     function resetarTimer() {
-        const temNRPs = typeof patrimoniosSelecionados !== 'undefined' &&
-                        patrimoniosSelecionados.length > 0;
-        const temCampos = document.getElementById('localMontagemInput')?.value?.trim() ||
-                          document.getElementById('eventoInput')?.value?.trim() ||
-                          document.getElementById('operador1Select')?.value;
+    const temNRPs = typeof patrimoniosSelecionados !== 'undefined' &&
+                    patrimoniosSelecionados.length > 0;
 
-        if (temNRPs || temCampos) {
-            clearTimeout(timerRecarregar);
-            clearTimeout(timerAviso);
-            esconderAviso();
-            return;
-        }
+    const operador = document.getElementById('operador1Select')?.value;
+    const local = document.getElementById('localMontagemInput')?.value?.trim();
+    const evento = document.getElementById('eventoInput')?.value?.trim();
 
+    // Só considera preenchido se tiver valor real (não vazio e não o placeholder)
+    const temCampos = (operador && operador !== 'Obrigatório') || local || evento;
+
+    if (temNRPs || temCampos) {
         clearTimeout(timerRecarregar);
         clearTimeout(timerAviso);
         esconderAviso();
-
-        timerAviso = setTimeout(mostrarAviso, TEMPO_MS - AVISO_MS);
-
-        timerRecarregar = setTimeout(() => {
-            window.location.reload();
-        }, TEMPO_MS);
+        return;
     }
+
+    clearTimeout(timerRecarregar);
+    clearTimeout(timerAviso);
+    esconderAviso();
+
+    timerAviso = setTimeout(mostrarAviso, TEMPO_MS - AVISO_MS);
+
+    timerRecarregar = setTimeout(() => {
+        window.location.reload();
+    }, TEMPO_MS);
+}
 
     const EVENTOS = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click', 'wheel'];
     EVENTOS.forEach(e => document.addEventListener(e, resetarTimer, { passive: true }));

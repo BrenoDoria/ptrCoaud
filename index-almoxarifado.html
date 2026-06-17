@@ -777,7 +777,7 @@ function erroCritico(mensagem) {
 
        // ─── INATIVIDADE: recarrega a página após 5 min se não houver preenchimento ─
 (function() {
-    const TEMPO_MS = 1 * 60 * 1000;
+    const TEMPO_MS = 5 * 60 * 1000;
     const AVISO_MS = 10 * 1000;
     let timerRecarregar = null;
     let timerAviso = null;
@@ -819,7 +819,7 @@ function erroCritico(mensagem) {
                     patrimoniosSelecionados.length > 0;
 
     // Com NRPs na lista usa 10 min, sem NRPs usa 5 min
-    const TEMPO_ATUAL = temNRPs ? 2 * 60 * 1000 : TEMPO_MS;
+    const TEMPO_ATUAL = temNRPs ? 10 * 60 * 1000 : TEMPO_MS;
 
     clearTimeout(timerRecarregar);
     clearTimeout(timerAviso);
